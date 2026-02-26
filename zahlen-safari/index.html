@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZahlenSafari</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 2s ease-in-out infinite; }
+        @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slideUpFade 0.4s ease-out forwards; }
+        @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spinSlow 8s linear infinite; }
+        
+        /* Verhindert Pull-to-Refresh auf mobilen Browsern */
+        body { overscroll-behavior-y: none; }
+    </style>
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel (übersetzt den React/JSX Code im Browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase Import Map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+        }
+      }
+    </script>
+</head>
+<body class="bg-sky-200">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, getDoc, arrayUnion, query, where, documentId } from 'firebase/firestore';
+
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // --- ICONS (Ersetzen externe Bibliotheken für die Single-File-Lösung) ---
+        const Calculator = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="16" y1="18" x2="16" y2="18"></line><line x1="12" y1="14" x2="12" y2="14"></line><line x1="12" y1="18" x2="12" y2="18"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="8" y1="18" x2="8" y2="18"></line></svg>;
+        const Play = ({size=24, className="", fill="none"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const ArrowLeft = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
+        const Check = ({size=24, className="", strokeWidth=2}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>;
+        const RefreshCw = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>;
+        const Trophy = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>;
+        const Medal = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"></path><path d="M11 12 5.12 2.2"></path><path d="M13 12l5.88-9.8"></path><path d="M8 7h8"></path><circle cx="12" cy="17" r="5"></circle><polyline points="12 15 12 17 14 19"></polyline></svg>;
+        const HelpCircle = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+        const Zap = ({size=24, className="", fill="none"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>;
+        const ShoppingCart = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
+        const BookOpen = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+        const Lock = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
+        const Unlock = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>;
+        const Users = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
+          authDomain: "zahlensafari.firebaseapp.com",
+          projectId: "zahlensafari",
+          storageBucket: "zahlensafari.firebasestorage.app",
+          messagingSenderId: "569809723706",
+          appId: "1:569809723706:web:7a1befeff13b36422c7003"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const MAX_PROBLEMS = 10;
+        const MAX_ATTEMPTS = 3;
+
+        const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
+        const STICKER_POOL = ['🍎', '🦋', '🦖', '🐙', '🦄', '🐉', '🪐', '🚀', '🏰', '💎', '🧸', '🍕', '🍦', '🎈', '🎁', '👑', '⚽', '🎨', '🎸', '🌈'];
+
+        // --- HILFSFUNKTION FÜR ABZEICHEN (BADGES) ---
+        const getBadge = (score, mode) => {
+          const baseMax = mode === 'gap' ? 1200 : 1000;
+          if (score >= baseMax + 150) return { icon: '👑', name: 'Rechen-Legende', color: 'text-yellow-500', bg: 'bg-yellow-100' };
+          if (score >= baseMax) return { icon: '💎', name: 'Diamant-Genie', color: 'text-cyan-500', bg: 'bg-cyan-100' };
+          if (score >= baseMax * 0.8) return { icon: '🥇', name: 'Gold-Rechner', color: 'text-yellow-400', bg: 'bg-yellow-50' };
+          if (score >= baseMax * 0.5) return { icon: '🥈', name: 'Silber-Fan', color: 'text-gray-400', bg: 'bg-gray-100' };
+          return { icon: '🥉', name: 'Bronze-Starter', color: 'text-amber-600', bg: 'bg-amber-50' };
+        };
+
+        // --- THEMEN DEFINITIONEN ---
+        const THEMES = {
+          classic: { id: 'classic', price: 0, name: 'Klassisch', icon: '🎒', pageBg: 'bg-sky-200', deviceBg: 'bg-red-600', deviceBorder: 'border-red-700', bandBg: 'bg-gray-900', displayBg: 'bg-[#a8c6a0]', displayBorder: 'border-gray-800', numpadBg: 'bg-gray-800', btnDefault: 'bg-gray-200 text-gray-800 hover:bg-white shadow-[0_6px_0_0_rgb(156,163,175)]', btnAction: 'bg-blue-500 hover:bg-blue-400 text-white shadow-[0_6px_0_0_rgb(37,99,235)]', btnDelete: 'bg-red-500 hover:bg-red-400 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-red-500', emojis: { title: '🦉', success: '🥳', retry: '🤔', fatal: '😢' }, problemIcons: ['🍎', '✏️', '📚', '🎒', '🖍️', '📏', '✂️', '🏫', '🤓', '💯'] },
+          construction: { id: 'construction', price: 200, name: 'Baustelle', icon: '🚧', pageBg: 'bg-amber-100', deviceBg: 'bg-yellow-500', deviceBorder: 'border-yellow-600', bandBg: 'bg-stone-900', displayBg: 'bg-amber-50', displayBorder: 'border-stone-800', numpadBg: 'bg-stone-800', btnDefault: 'bg-stone-200 text-stone-900 hover:bg-white shadow-[0_6px_0_0_rgb(214,211,209)]', btnAction: 'bg-amber-600 hover:bg-amber-500 text-white shadow-[0_6px_0_0_rgb(217,119,6)]', btnDelete: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-yellow-600', emojis: { title: '🚜', success: '🏗️🥳', retry: '🚧', fatal: '🔧' }, problemIcons: ['🚜', '🏗️', '🚧', '👷', '🧱', '🛠️', '🚛', '🔨', '🧰', '🔩'] },
+          animals: { id: 'animals', price: 400, name: 'Tiere', icon: '🦁', pageBg: 'bg-emerald-100', deviceBg: 'bg-emerald-500', deviceBorder: 'border-emerald-700', bandBg: 'bg-green-950', displayBg: 'bg-green-50', displayBorder: 'border-green-900', numpadBg: 'bg-green-900', btnDefault: 'bg-emerald-50 text-emerald-900 hover:bg-white shadow-[0_6px_0_0_rgb(167,243,208)]', btnAction: 'bg-teal-600 hover:bg-teal-500 text-white shadow-[0_6px_0_0_rgb(13,148,136)]', btnDelete: 'bg-orange-500 hover:bg-orange-400 text-white shadow-[0_6px_0_0_rgb(249,115,22)]', textMain: 'text-emerald-600', emojis: { title: '🐒', success: '🦁🎉', retry: '🙈', fatal: '🐢' }, problemIcons: ['🦁', '🐯', '🐼', '🐨', '🐸', '🐵', '🐘', '🦒', '🦊', '🐰'] },
+          space: { id: 'space', price: 600, name: 'Weltraum', icon: '🚀', pageBg: 'bg-indigo-950', deviceBg: 'bg-indigo-600', deviceBorder: 'border-indigo-800', bandBg: 'bg-slate-950', displayBg: 'bg-indigo-100', displayBorder: 'border-slate-800', numpadBg: 'bg-slate-900', btnDefault: 'bg-indigo-200 text-indigo-950 hover:bg-white shadow-[0_6px_0_0_rgb(165,180,252)]', btnAction: 'bg-violet-500 hover:bg-violet-400 text-white shadow-[0_6px_0_0_rgb(139,92,246)]', btnDelete: 'bg-rose-500 hover:bg-rose-400 text-white shadow-[0_6px_0_0_rgb(244,63,94)]', textMain: 'text-indigo-400', emojis: { title: '👨‍🚀', success: '🚀🌟', retry: '🛸', fatal: '💥' }, problemIcons: ['🚀', '🛸', '🌍', '🌙', '⭐', '🪐', '👽', '☄️', '👨‍🚀', '🛰️'] },
+          unicorn: { id: 'unicorn', price: 800, name: 'Einhorn', icon: '🦄', pageBg: 'bg-pink-200', deviceBg: 'bg-fuchsia-400', deviceBorder: 'border-fuchsia-600', bandBg: 'bg-purple-900', displayBg: 'bg-pink-100', displayBorder: 'border-purple-300', numpadBg: 'bg-purple-800', btnDefault: 'bg-pink-50 text-purple-900 hover:bg-white shadow-[0_6px_0_0_rgb(24bcfe8)]', btnAction: 'bg-pink-500 hover:bg-pink-400 text-white shadow-[0_6px_0_0_rgb(219,39,119)]', btnDelete: 'bg-purple-500 hover:bg-purple-400 text-white shadow-[0_6px_0_0_rgb(147,51,234)]', textMain: 'text-fuchsia-500', emojis: { title: '🦄', success: '✨🦄✨', retry: '🧐', fatal: '😿' }, problemIcons: ['🦄', '🌈', '✨', '💖', '🍭', '🎀', '🌸', '🧁', '🧚', '🌟'] }
+        };
+
+        // --- CUSTOM HOOKS ---
+        function useAudio() {
+          const ctxRef = useRef(null);
+          const init = useCallback(() => {
+            if (!ctxRef.current) ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
+          }, []);
+          const playTone = useCallback((freq, type, duration, vol = 0.1) => {
+            if (!ctxRef.current) return;
+            const ctx = ctxRef.current;
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(vol, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + duration);
+          }, []);
+          return {
+            initAudio: init,
+            playClick: useCallback(() => playTone(800, 'sine', 0.05, 0.05), [playTone]),
+            playSuccess: useCallback(() => {
+              playTone(523.25, 'sine', 0.1, 0.1); setTimeout(() => playTone(659.25, 'sine', 0.1, 0.1), 100);
+              setTimeout(() => playTone(783.99, 'sine', 0.2, 0.15), 200); setTimeout(() => playTone(1046.50, 'sine', 0.4, 0.2), 300);
+            }, [playTone]),
+            playError: useCallback(() => {
+              playTone(150, 'sawtooth', 0.3, 0.15); setTimeout(() => playTone(100, 'sawtooth', 0.4, 0.2), 200);
+            }, [playTone]),
+            playCoin: useCallback(() => playTone(1200, 'sine', 0.1, 0.05), [playTone]),
+            playTada: useCallback(() => {
+              playTone(440, 'sine', 0.1, 0.1); setTimeout(() => playTone(554.37, 'sine', 0.1, 0.1), 100);
+              setTimeout(() => playTone(659.25, 'sine', 0.4, 0.15), 200);
+            }, [playTone])
+          };
+        }
+
+        // --- HAUPTKOMPONENTE ---
+        function App() {
+          // Global State
+          const [user, setUser] = useState(null);
+          const [linkedProfileIds, setLinkedProfileIds] = useState([]); 
+          const [profiles, setProfiles] = useState([]); 
+          const [activeProfileId, setActiveProfileId] = useState(null);
+          const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+          const [highscores, setHighscores] = useState([]);
+          const { initAudio, playClick, playSuccess, playError, playCoin, playTada } = useAudio();
+          
+          // App Navigation
+          const [screen, setScreen] = useState('loading'); 
+          const [currentThemeId, setCurrentThemeId] = useState('classic');
+          const [level, setLevel] = useState(1);
+          const [gameMode, setGameMode] = useState('normal'); 
+          
+          // Game State
+          const [score, setScore] = useState(0);
+          const [problem, setProblem] = useState({ num1: 0, num2: 0, op: '+', answer: 0, missingPart: 'answer', icon: '❓' });
+          const [userAnswer, setUserAnswer] = useState('');
+          const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+          const [problemsDone, setProblemsDone] = useState(0);
+          const [problemStartTime, setProblemStartTime] = useState(0);
+          const [lastBonusEarned, setLastBonusEarned] = useState(0);
+          const [streak, setStreak] = useState(0); 
+          const [feedback, setFeedback] = useState(null);
+          
+          // Reward State (End of Game)
+          const [roundRewards, setRoundRewards] = useState({ coins: 0, sticker: null });
+          const [roundRank, setRoundRank] = useState(null);
+
+          // Setup Form State
+          const [setupName, setSetupName] = useState('');
+          const [setupAvatar, setSetupAvatar] = useState('🦊');
+
+          const profile = profiles.find(p => p.id === activeProfileId);
+          const theme = THEMES[currentThemeId] || THEMES.classic;
+          const sessionProblemsRef = useRef(new Set()); 
+
+          // --- THEME SYNC ---
+          useEffect(() => {
+            if (profile?.activeTheme && profile.activeTheme !== currentThemeId) {
+              setCurrentThemeId(profile.activeTheme);
+            }
+          }, [profile?.activeTheme]);
+
+          // --- FIREBASE INIT ---
+          useEffect(() => {
+            const initAuth = async () => {
+              try {
+                await signInAnonymously(auth);
+              } catch (e) { console.error("Auth error", e); }
+            };
+            initAuth();
+            return onAuthStateChanged(auth, setUser);
+          }, []);
+
+          // --- PROFILE & HIGHSCORES LADEN ---
+          // 1. Verknüpfte Profile für DIESES Gerät laden
+          useEffect(() => {
+            if (!user) return;
+
+            const userRef = doc(db, 'devices', user.uid);
+            const unsubUser = onSnapshot(userRef, (docSnap) => {
+              if (docSnap.exists()) {
+                setLinkedProfileIds(docSnap.data().linkedProfiles || []);
+              } else {
+                setLinkedProfileIds([]);
+                setIsLoadingProfile(false);
+                setScreen(prev => prev === 'loading' ? 'setup' : prev);
+              }
+            }, (err) => console.error("User Profile error:", err));
+
+            // Lade Highscores
+            const scoresRef = collection(db, 'highscores');
+            const unsubScores = onSnapshot(scoresRef, (snapshot) => {
+              const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              data.sort((a, b) => b.score - a.score);
+              setHighscores(data);
+            }, (err) => console.error("Firestore error:", err));
+
+            return () => { unsubUser(); unsubScores(); };
+          }, [user]); 
+
+          // 2. Eigentliche Profildaten aus der globalen Liste laden
+          useEffect(() => {
+            if (linkedProfileIds.length === 0) {
+              setProfiles([]);
+              return;
+            }
+
+            const idsToFetch = linkedProfileIds.slice(0, 10);
+            const profilesQuery = query(collection(db, 'global_profiles'), where(documentId(), 'in', idsToFetch));
+            
+            const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
+              const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              setProfiles(data);
+              setIsLoadingProfile(false);
+              
+              setScreen(prevScreen => {
+                if (prevScreen === 'loading') return 'profile_select';
+                return prevScreen;
+              });
+            }, (err) => console.error("Global Profile error:", err));
+
+            return () => unsubProfiles();
+          }, [linkedProfileIds]);
+
+          // --- PROFIL AKTIONEN ---
+          const saveProfile = async () => {
+            if (!user || !setupName.trim()) return;
+            initAudio();
+            
+            const profileId = setupName.trim().toLowerCase();
+            const profileRef = doc(db, 'global_profiles', profileId);
+            
+            const docSnap = await getDoc(profileRef);
+            let themeToSet = 'classic';
+
+            if (!docSnap.exists()) {
+              await setDoc(profileRef, {
+                name: setupName.trim(), 
+                avatar: setupAvatar,
+                coins: 0,
+                unlockedThemes: ['classic'],
+                activeTheme: 'classic', 
+                stickers: []
+              });
+            } else {
+              themeToSet = docSnap.data().activeTheme || 'classic';
+              
+              if (docSnap.data().avatar !== setupAvatar) {
+                await updateDoc(profileRef, {
+                  avatar: setupAvatar
+                });
+              }
+            }
+
+            const userRef = doc(db, 'devices', user.uid);
+            await setDoc(userRef, {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
+
+            setActiveProfileId(profileId);
+            setCurrentThemeId(themeToSet); 
+            setScreen('start');
+            setSetupName(''); 
+            setSetupAvatar('🦊');
+          };
+
+          const buyTheme = async (themeToBuy) => {
+            if (!profile || profile.coins < themeToBuy.price || profile.unlockedThemes.includes(themeToBuy.id)) return;
+            playCoin();
+            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            await updateDoc(profileRef, {
+              coins: profile.coins - themeToBuy.price,
+              unlockedThemes: [...profile.unlockedThemes, themeToBuy.id],
+              activeTheme: themeToBuy.id 
+            });
+            setCurrentThemeId(themeToBuy.id);
+          };
+
+          const changeTheme = async (newThemeId) => {
+            setCurrentThemeId(newThemeId);
+            playClick();
+            if (activeProfileId) {
+              const profileRef = doc(db, 'global_profiles', activeProfileId);
+              await updateDoc(profileRef, { activeTheme: newThemeId });
+            }
+          };
+
+          // --- SPIEL LOGIK ---
+          const generateProblem = useCallback((currentLevel, mode, themeId) => {
+            let num1, num2, op, answer;
+            let ops = [];
+            let problemSignature = '';
+            let attempts = 0;
+
+            do {
+              switch (currentLevel) {
+                case 0:
+                  op = '+'; 
+                  answer = Math.floor(Math.random() * 11); 
+                  num1 = Math.floor(Math.random() * (answer + 1)); 
+                  num2 = answer - num1; 
+                  break;
+                case 1:
+                  ops = ['+', '-']; op = ops[Math.floor(Math.random() * ops.length)];
+                  if (op === '+') { answer = Math.floor(Math.random() * 21); num1 = Math.floor(Math.random() * (answer + 1)); num2 = answer - num1; } 
+                  else { num1 = Math.floor(Math.random() * 21); num2 = Math.floor(Math.random() * (num1 + 1)); answer = num1 - num2; }
+                  break;
+                case 2:
+                  ops = ['+', '-', '*']; op = ops[Math.floor(Math.random() * ops.length)];
+                  if (op === '*') { num1 = Math.floor(Math.random() * 10) + 1; num2 = [2, 5, 10, 3, 4][Math.floor(Math.random() * 5)]; answer = num1 * num2; } 
+                  else if (op === '+') { answer = Math.floor(Math.random() * 91) + 10; num1 = Math.floor(Math.random() * (answer + 1)); num2 = answer - num1; } 
+                  else { num1 = Math.floor(Math.random() * 91) + 10; num2 = Math.floor(Math.random() * (num1 + 1)); answer = num1 - num2; }
+                  break;
+                case 3:
+                  ops = ['+', '-', '*']; op = ops[Math.floor(Math.random() * ops.length)];
+                  if (op === '*') { num1 = Math.floor(Math.random() * 10) + 1; num2 = Math.floor(Math.random() * 10) + 1; answer = num1 * num2; } 
+                  else if (op === '+') { num1 = (Math.floor(Math.random() * 50) + 10) * 10; num2 = (Math.floor(Math.random() * 40) + 1) * 10; answer = num1 + num2; } 
+                  else { num1 = (Math.floor(Math.random() * 50) + 50) * 10; num2 = (Math.floor(Math.random() * 40) + 10) * 10; answer = num1 - num2; }
+                  break;
+                case 4:
+                default:
+                  ops = ['+', '-', '*', '/']; op = ops[Math.floor(Math.random() * ops.length)];
+                  if (op === '*') { num1 = Math.floor(Math.random() * 15) + 2; num2 = Math.floor(Math.random() * 8) + 2; answer = num1 * num2; } 
+                  else if (op === '/') { num2 = Math.floor(Math.random() * 9) + 2; answer = Math.floor(Math.random() * 20) + 5; num1 = answer * num2; } 
+                  else if (op === '+') { num1 = (Math.floor(Math.random() * 50) + 10) * 100; num2 = (Math.floor(Math.random() * 40) + 10) * 100; answer = num1 + num2; } 
+                  else { num1 = (Math.floor(Math.random() * 90) + 10) * 100; num2 = (Math.floor(Math.random() * 80) + 1) * 100; if (num2 > num1) { let t = num1; num1 = num2; num2 = t; } answer = num1 - num2; }
+                  break;
+              }
+              problemSignature = `${num1}${op}${num2}`;
+              attempts++;
+            } while (sessionProblemsRef.current.has(problemSignature) && attempts < 50);
+            
+            if (attempts >= 50) {
+              sessionProblemsRef.current.clear();
+            }
+            sessionProblemsRef.current.add(problemSignature);
+
+            let missingPart = 'answer';
+            if (mode === 'gap') missingPart = ['num1', 'num2'][Math.floor(Math.random() * 2)];
+
+            const currentThemeData = THEMES[themeId] || THEMES.classic;
+            const randomIcon = currentThemeData.problemIcons[Math.floor(Math.random() * currentThemeData.problemIcons.length)];
+
+            setProblem({ num1, num2, op, answer, missingPart, icon: randomIcon });
+            setUserAnswer('');
+            setAttemptsLeft(MAX_ATTEMPTS);
+            setFeedback(null);
+            setLastBonusEarned(0);
+            setProblemStartTime(Date.now());
+          }, []);
+
+          const startGame = () => {
+            initAudio();
+            setScore(0);
+            setProblemsDone(0);
+            setStreak(0);
+            setRoundRank(null);
+            generateProblem(level, gameMode, currentThemeId);
+            setScreen('game');
+          };
+
+          const getExpectedAnswer = useCallback(() => {
+            if (problem.missingPart === 'num1') return problem.num1;
+            if (problem.missingPart === 'num2') return problem.num2;
+            return problem.answer;
+          }, [problem]);
+
+          const handleGameEnd = async (finalScore) => {
+            let earnedCoins = Math.floor(finalScore / 10); 
+            let newSticker = null;
+            let updatedStickers = [...(profile.stickers || [])];
+
+            if (finalScore >= 300) {
+              const missingStickers = STICKER_POOL.filter(s => !updatedStickers.includes(s));
+              if (missingStickers.length > 0) {
+                newSticker = missingStickers[Math.floor(Math.random() * missingStickers.length)];
+                updatedStickers.push(newSticker);
+                playTada();
+              } else {
+                earnedCoins += 50;
+              }
+            }
+
+            setRoundRewards({ coins: earnedCoins, sticker: newSticker });
+            
+            let rank = null;
+            if (finalScore > 0) {
+              const relevantScores = highscores.filter(h => Number(h.level) === Number(level) && (h.mode || 'normal') === gameMode);
+              let calculatedRank = 1;
+              for (let s of relevantScores) {
+                if (finalScore > s.score) break;
+                calculatedRank++;
+              }
+              if (calculatedRank <= 10) rank = calculatedRank;
+              setRoundRank(rank);
+
+              try {
+                await addDoc(collection(db, 'highscores'), {
+                  name: profile.name,
+                  avatar: profile.avatar,
+                  score: finalScore,
+                  level: level,
+                  mode: gameMode,
+                  theme: currentThemeId,
+                  timestamp: Date.now()
+                });
+              } catch (e) { console.error(e); }
+            }
+
+            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            await updateDoc(profileRef, {
+              coins: (profile.coins || 0) + earnedCoins,
+              stickers: updatedStickers
+            });
+
+            setScreen('result');
+          };
+
+          const checkAnswer = useCallback(() => {
+            if (userAnswer === '' || feedback) return;
+
+            const expected = getExpectedAnswer();
+            const isCorrect = parseInt(userAnswer, 10) === expected;
+
+            if (isCorrect) {
+              playSuccess();
+              setFeedback('success');
+              
+              let pointsEarned = attemptsLeft === 3 ? 100 : attemptsLeft === 2 ? 50 : 20;
+              if (gameMode === 'gap') pointsEarned += 20;
+
+              let currentStreak = attemptsLeft === 3 ? streak + 1 : 0;
+              setStreak(currentStreak);
+              let comboBonus = currentStreak >= 3 ? 30 : 0; 
+
+              let speedBonus = 0;
+              if (attemptsLeft === 3) {
+                const secondsTaken = (Date.now() - problemStartTime) / 1000;
+                speedBonus = Math.floor(50 / Math.log2((Math.max(0, secondsTaken) / 4) + 2));
+              }
+              
+              setLastBonusEarned(speedBonus + comboBonus);
+              const newScore = score + pointsEarned + speedBonus + comboBonus;
+              setScore(newScore);
+              
+              setTimeout(() => {
+                if (problemsDone + 1 >= MAX_PROBLEMS) {
+                  setProblemsDone(prev => prev + 1);
+                  handleGameEnd(newScore);
+                } else {
+                  setProblemsDone(prev => prev + 1);
+                  generateProblem(level, gameMode, currentThemeId);
+                }
+              }, 2000);
+            } else {
+              playError();
+              setStreak(0);
+              if (attemptsLeft > 1) {
+                setFeedback('error');
+                setAttemptsLeft(prev => prev - 1);
+                setUserAnswer('');
+                setTimeout(() => setFeedback(null), 1200);
+              } else {
+                setFeedback('fatal');
+                setTimeout(() => {
+                  if (problemsDone + 1 >= MAX_PROBLEMS) {
+                    setProblemsDone(prev => prev + 1);
+                    handleGameEnd(score);
+                  } else {
+                    setProblemsDone(prev => prev + 1);
+                    generateProblem(level, gameMode, currentThemeId);
+                  }
+                }, 3500); 
+              }
+            }
+          }, [userAnswer, feedback, getExpectedAnswer, playSuccess, attemptsLeft, gameMode, problemStartTime, problemsDone, level, generateProblem, playError, currentThemeId, score, streak]);
+
+          const handleInput = useCallback((val) => {
+            if (feedback === 'success' || feedback === 'fatal') return;
+            playClick();
+            setUserAnswer(prev => prev.length >= 5 ? prev : prev + val);
+          }, [feedback, playClick]);
+
+          const handleDelete = useCallback(() => {
+            if (feedback === 'success' || feedback === 'fatal') return;
+            playClick();
+            setUserAnswer('');
+          }, [feedback, playClick]);
+
+          // Tastatursteuerung
+          const stateRef = useRef({ screen, checkAnswer, handleInput, handleDelete });
+          useEffect(() => { stateRef.current = { screen, checkAnswer, handleInput, handleDelete }; }, [screen, checkAnswer, handleInput, handleDelete]);
+          useEffect(() => {
+            const handleKeyDown = (e) => {
+              const { screen, checkAnswer, handleInput, handleDelete } = stateRef.current;
+              if (screen !== 'game') return;
+              if (e.key >= '0' && e.key <= '9') handleInput(e.key);
+              else if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
+              else if (e.key === 'Backspace' || e.key === 'Delete' || e.key.toLowerCase() === 'c') handleDelete();
+            };
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+          }, []);
+
+          const getOpSymbol = (op) => { switch(op) { case '*': return '×'; case '/': return '÷'; default: return op; } };
+          const renderCalculatorButton = (label, onClick, customClass = null) => (
+            <button key={label} onClick={onClick} className={`aspect-square rounded-xl text-3xl sm:text-4xl font-black flex items-center justify-center transition-all active:translate-y-2 active:shadow-none ${customClass ? customClass : theme.btnDefault}`}>
+              {label}
+            </button>
+          );
+
+          const renderPlaceholder = () => (
+            <span className="text-blue-600 border-b-[6px] border-blue-600 min-w-[1.2em] inline-block text-center pb-1 leading-none mx-1">
+              {userAnswer === '' ? '\u00A0' : userAnswer}
+            </span>
+          );
+
+          // --- RENDER HILFS-KOMPONENTEN ---
+          const TopBar = () => {
+            if (!profile || screen === 'setup' || screen === 'profile_select') return null; 
+            return (
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
+                <button onClick={() => { setActiveProfileId(null); setScreen('profile_select'); playClick(); }} className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up">
+                  <span className="text-2xl">{profile.avatar}</span>
+                  <span className="font-bold text-gray-800 hidden sm:inline">{profile.name}</span>
+                  <Users size={16} className="text-sky-500 ml-1" />
+                </button>
+                <div className="bg-yellow-400 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200 animate-slide-up">
+                  <span className="font-black text-yellow-900 text-lg">{profile.coins}</span>
+                  <span className="text-xl">🪙</span>
+                </div>
+              </div>
+            );
+          };
+
+          if (isLoadingProfile) {
+            return <div className="min-h-screen bg-sky-200 flex items-center justify-center font-sans font-bold text-xl text-sky-800">Lade...</div>;
+          }
+
+          // --- PROFIL AUSWAHL BILDSCHIRM ---
+          if (screen === 'profile_select') {
+            return (
+              <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center animate-pop-in border-4 border-sky-300">
+                  <h1 className="text-3xl font-extrabold text-sky-600 mb-6">Wer spielt gerade?</h1>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-h-[50vh] overflow-y-auto p-1">
+                    {profiles.map(p => (
+                      <button 
+                        key={p.id}
+                        onClick={() => { 
+                          setActiveProfileId(p.id); 
+                          setCurrentThemeId(p.activeTheme || 'classic'); 
+                          setScreen('start'); 
+                          playClick(); 
+                        }} 
+                        className="bg-gray-50 hover:bg-sky-50 border-2 border-gray-200 hover:border-sky-300 rounded-2xl p-4 flex flex-col items-center gap-3 transition-all active:scale-95 shadow-sm"
+                      >
+                        <div className="text-5xl">{p.avatar}</div>
+                        <div className="font-bold text-gray-800 text-lg truncate w-full">{p.name}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button 
+                    onClick={() => { setScreen('setup'); playClick(); }} 
+                    className="w-full bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors border-2 border-sky-200 border-dashed"
+                  >
+                    <Users size={20} /> Neues Kind hinzufügen
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // --- SETUP (ANMELDUNG) BILDSCHIRM ---
+          if (screen === 'setup') {
+            return (
+              <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center animate-pop-in border-4 border-sky-300">
+                  <h1 className="text-3xl font-extrabold text-sky-600 mb-2">Wer bist du?</h1>
+                  <p className="text-gray-500 font-medium mb-6 text-sm">
+                    Tipp: Wenn du schon auf einem anderen Gerät gespielt hast, benutze genau denselben Namen!
+                  </p>
+                  
+                  <div className="mb-6">
+                    <label className="block text-left font-bold text-gray-700 mb-2">Dein Name:</label>
+                    <input 
+                      type="text" 
+                      maxLength={12}
+                      value={setupName}
+                      onChange={(e) => setSetupName(e.target.value)}
+                      placeholder="z.B. Leo"
+                      className="w-full bg-gray-50 border-2 border-sky-200 rounded-xl px-4 py-3 font-bold text-gray-800 text-xl focus:outline-none focus:border-sky-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="mb-8">
+                    <label className="block text-left font-bold text-gray-700 mb-2">Wähle dein Tier:</label>
+                    <div className="grid grid-cols-5 gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-100">
+                      {AVATAR_POOL.map((avatar) => (
+                        <button
+                          key={avatar}
+                          onClick={() => { playClick(); setSetupAvatar(avatar); }}
+                          className={`aspect-square text-3xl flex items-center justify-center rounded-lg transition-all ${setupAvatar === avatar ? 'bg-sky-200 scale-110 shadow-sm' : 'hover:bg-gray-200 grayscale-0 opacity-70 hover:opacity-100'}`}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={saveProfile} 
+                    disabled={!setupName.trim()}
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:translate-y-0 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_0_rgb(21,128,61)] disabled:shadow-none active:shadow-none active:translate-y-2 transition-all"
+                  >
+                    Profil speichern!
+                  </button>
+                  
+                  {profiles.length > 0 && (
+                    <button onClick={() => setScreen('profile_select')} className="mt-4 text-gray-500 font-bold hover:text-gray-700 underline">
+                      Abbrechen
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // --- STARTBILDSCHIRM ---
+          if (screen === 'start') {
+            return (
+              <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
+                <TopBar />
+                
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-6 sm:p-8 text-center relative overflow-hidden transition-colors duration-500">
+                  <div className={`absolute top-0 left-0 w-full h-32 ${theme.deviceBg} rounded-b-[50%] -translate-y-10 transition-colors duration-500`}></div>
+                  
+                  <div className="relative z-10">
+                    <div className="w-28 h-28 mx-auto bg-white rounded-full border-4 border-white shadow-lg mb-4 flex items-center justify-center text-6xl animate-float">
+                      {theme.emojis.title}
+                    </div>
+                    <h1 className="text-4xl font-extrabold text-gray-800 mb-2 tracking-tight">Zahlen<span className={`${theme.textMain}`}>Safari</span></h1>
+                    
+                    <div className="flex justify-center flex-wrap gap-2 mb-4 mt-2">
+                      {Object.values(THEMES).filter(t => profile?.unlockedThemes.includes(t.id)).map((t) => (
+                        <button key={t.id} onClick={() => changeTheme(t.id)} title={t.name}
+                          className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform ${currentThemeId === t.id ? 'scale-110 ring-4 ring-offset-2 ring-gray-300 z-10 shadow-md' : 'opacity-60 hover:opacity-100 hover:scale-105'} ${t.deviceBg}`}>
+                          {t.icon}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex bg-gray-100 rounded-xl p-1 mb-4 shadow-inner">
+                      <button onClick={() => { playClick(); setGameMode('normal'); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${gameMode === 'normal' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>
+                        Normal (A+B=?)
+                      </button>
+                      <button onClick={() => { playClick(); setGameMode('gap'); }} title="Lücken-Aufgaben bringen Extra-Punkte!" className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1 ${gameMode === 'gap' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                        Lücken (A+?=C) <HelpCircle size={14}/>
+                      </button>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          { lvl: 0, label: 'K', desc: 'Kindergarten (nur +, bis 10)' },
+                          { lvl: 1, label: '1', desc: '1. Klasse (bis 20)' },
+                          { lvl: 2, label: '2', desc: '2. Klasse (bis 100, erstes 1x1)' },
+                          { lvl: 3, label: '3', desc: '3. Klasse (bis 1.000, 1x1)' },
+                          { lvl: 4, label: '4', desc: '4. Klasse (Große Zahlen, ÷)' }
+                        ].map((item) => (
+                          <button key={item.lvl} onClick={() => { playClick(); setLevel(item.lvl); }} className={`py-2 px-4 rounded-xl border-2 font-bold text-left flex items-center transition-all ${level === item.lvl ? 'bg-gray-100 border-gray-400 text-gray-800 shadow-md transform scale-105' : 'border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 text-xs ${level === item.lvl ? theme.deviceBg + ' text-white font-black' : 'bg-gray-200 text-gray-500'}`}>
+                              {item.label}
+                            </div>
+                            {item.desc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button onClick={startGame} className="w-full bg-green-500 hover:bg-green-600 text-white font-black text-2xl py-4 rounded-2xl shadow-[0_8px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-2 transition-all flex items-center justify-center gap-3 mb-4">
+                      <Play fill="currentColor" size={28} /> LOS!
+                    </button>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors">
+                        <Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Ränge</span>
+                      </button>
+                      <button onClick={() => { playClick(); setScreen('shop'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors">
+                        <ShoppingCart size={20} className="text-blue-500"/> <span className="text-xs">Shop</span>
+                      </button>
+                      <button onClick={() => { playClick(); setScreen('stickers'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors">
+                        <BookOpen size={20} className="text-pink-500"/> <span className="text-xs">Sticker</span>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // --- SHOP BILDSCHIRM ---
+          if (screen === 'shop') {
+            return (
+              <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
+                <TopBar />
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-6 sm:p-8 animate-pop-in flex flex-col max-h-[90vh]">
+                  <div className="text-center mb-6">
+                    <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-blue-500">
+                      <ShoppingCart size={40} />
+                    </div>
+                    <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
+                    <p className="text-gray-500 font-medium">Schalte neue Welten frei!</p>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 mb-6 space-y-3">
+                    {Object.values(THEMES).sort((a, b) => a.price - b.price).map(t => {
+                      const isOwned = profile.unlockedThemes.includes(t.id);
+                      const canAfford = profile.coins >= t.price;
+                      return (
+                        <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${isOwned ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${t.deviceBg}`}>
+                              {t.icon}
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-800">{t.name}</div>
+                              {!isOwned && <div className="text-sm font-bold text-yellow-600 flex items-center gap-1">{t.price} 🪙</div>}
+                              {isOwned && <div className="text-sm font-bold text-green-600 flex items-center gap-1"><Check size={20} strokeWidth={3}/></div>}
+                            </div>
+                          </div>
+                          
+                          {!isOwned ? (
+                            <button 
+                              onClick={() => buyTheme(t)} 
+                              disabled={!canAfford}
+                              className={`px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-1 transition-all ${canAfford ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
+                            >
+                              {canAfford ? <Unlock size={16}/> : <Lock size={16}/>} Kaufen
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => changeTheme(t.id)} 
+                              className={`px-4 py-2 rounded-lg font-bold transition-all ${currentThemeId === t.id ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            >
+                              {currentThemeId === t.id ? 'Aktiv' : 'Wählen'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button onClick={() => { playClick(); setScreen('start'); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft size={20} /> Zurück
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // --- STICKERHEFT BILDSCHIRM ---
+          if (screen === 'stickers') {
+            return (
+              <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
+                <TopBar />
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-6 sm:p-8 animate-pop-in flex flex-col max-h-[90vh]">
+                  <div className="text-center mb-6">
+                    <div className="w-20 h-20 mx-auto bg-pink-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-pink-500">
+                      <BookOpen size={40} />
+                    </div>
+                    <h2 className="text-3xl font-extrabold text-gray-800">Stickerheft</h2>
+                    <p className="text-gray-500 font-medium">Spiele gut, um Tüten zu finden!</p>
+                  </div>
+                  
+                  <div className="bg-gray-100 rounded-2xl p-1 mb-4">
+                    <div className="bg-white rounded-xl py-2 text-center font-bold text-gray-700">
+                      Gesammelt: <span className="text-pink-500">{profile.stickers?.length || 0}</span> / {STICKER_POOL.length}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 mb-6">
+                    <div className="grid grid-cols-4 gap-3">
+                      {STICKER_POOL.map((sticker, idx) => {
+                        const isOwned = profile.stickers?.includes(sticker);
+                        return (
+                          <div key={idx} className={`aspect-square rounded-xl border-2 flex items-center justify-center text-4xl transition-all ${isOwned ? 'bg-white border-pink-200 shadow-sm' : 'bg-gray-100 border-gray-200 opacity-40 grayscale'}`}>
+                            {isOwned ? sticker : '?'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <button onClick={() => { playClick(); setScreen('start'); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft size={20} /> Zurück
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // --- HIGHSCORE BILDSCHIRM ---
+          if (screen === 'highscores') {
+            const topScores = highscores.filter(h => 
+              Number(h.level) === Number(level) && 
+              (h.mode || 'normal') === gameMode
+            ).slice(0, 10);
+
+            return (
+              <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
+                <TopBar />
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-6 sm:p-8 animate-pop-in flex flex-col max-h-[90vh]">
+                  <div className="text-center mb-6">
+                    <div className="w-20 h-20 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-4xl mb-2 shadow-inner">🏆</div>
+                    <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Bestenliste</h2>
+                    
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-center gap-1 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
+                        {[
+                          { id: 0, label: 'K' },
+                          { id: 1, label: '1' },
+                          { id: 2, label: '2' },
+                          { id: 3, label: '3' },
+                          { id: 4, label: '4' }
+                        ].map(l => (
+                          <button 
+                            key={l.id}
+                            onClick={() => { playClick(); setLevel(l.id); }}
+                            className={`w-10 h-10 rounded-lg font-bold transition-all ${level === l.id ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                          >
+                            {l.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex justify-center gap-1 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
+                        <button 
+                          onClick={() => { playClick(); setGameMode('normal'); }}
+                          className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${gameMode === 'normal' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                        >
+                          Normal
+                        </button>
+                        <button 
+                          onClick={() => { playClick(); setGameMode('gap'); }}
+                          className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${gameMode === 'gap' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                        >
+                          Lücken
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 mb-6 relative min-h-[250px]">
+                    {topScores.length === 0 ? (
+                      <div className="text-center text-gray-400 mt-10"><p>Noch keine Einträge vorhanden.</p><p>Sei der Erste!</p></div>
+                    ) : (
+                      <ul className="space-y-3">
+                        {topScores.map((entry, index) => (
+                          <li key={entry.id} className={`flex items-center justify-between p-3 rounded-xl shadow-sm border ${entry.name === profile.name ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-100'}`}>
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${index === 0 ? 'bg-yellow-400 text-yellow-900' : index === 1 ? 'bg-gray-300 text-gray-800' : index === 2 ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                {index + 1}
+                              </div>
+                              <span className="text-xl shrink-0" title={getBadge(entry.score, entry.mode).name}>{getBadge(entry.score, entry.mode).icon}</span>
+                              
+                              <div className="flex items-center gap-1 min-w-0">
+                                <span className="text-lg shrink-0">{entry.avatar || '👤'}</span>
+                                <span className="font-bold text-gray-800 truncate" title={entry.name}>{entry.name}</span>
+                              </div>
+                            </div>
+                            <div className="font-black text-blue-600 shrink-0 ml-2">{entry.score} <span className="text-xs text-gray-400 font-normal">Pkt</span></div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button onClick={() => { playClick(); setScreen('start'); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-2xl flex items-center justify-center gap-2 transition-colors"><ArrowLeft size={20} /> Menü</button>
+                    <button onClick={startGame} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all"><Play size={20} /> Spielen</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // --- ERGEBNISBILDSCHIRM ---
+          if (screen === 'result') {
+            const baseScorePerProblem = 100 + (gameMode === 'gap' ? 20 : 0);
+            const maxBaseScore = MAX_PROBLEMS * baseScorePerProblem;
+            const percentage = Math.min(100, (score / maxBaseScore) * 100); 
+            const earnedBadge = getBadge(score, gameMode);
+            
+            let resultMessage = "Gut gemacht!";
+            if (percentage === 100) resultMessage = "Perfekt! Ein Genie!";
+            else if (percentage >= 80) resultMessage = "Super Leistung!";
+            else if (percentage >= 50) resultMessage = "Weiter so!";
+            else resultMessage = "Übung macht den Meister!";
+
+            return (
+              <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
+                <TopBar />
+                
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center animate-pop-in">
+                  
+                  <div className="text-7xl mb-4 animate-float">{theme.emojis.success.substring(0,2)}</div>
+                  <h2 className="text-4xl font-extrabold text-gray-800 mb-2">Zeugnis</h2>
+                  <p className="text-xl text-blue-600 font-bold mb-4">{resultMessage}</p>
+
+                  <div className={`flex items-center justify-center gap-2 mx-auto w-max px-5 py-2 rounded-full mb-6 ${earnedBadge.bg} border-2 border-white shadow-sm`}>
+                    <span className="text-2xl">{earnedBadge.icon}</span>
+                    <span className={`font-black ${earnedBadge.color}`}>{earnedBadge.name}</span>
+                  </div>
+                  
+                  <div className="bg-sky-50 rounded-3xl p-6 mb-4 border-2 border-sky-100 relative">
+                    <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3"><Medal size={40} className="text-yellow-500 drop-shadow-md" /></div>
+                    <div className="text-6xl font-black text-gray-800 mb-2">{score}</div>
+                    <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">Punkte (Lvl {level === 0 ? 'K' : level})</div>
+                  </div>
+
+                  {/* BELOHNUNGEN ANZEIGEN */}
+                  <div className="flex gap-2 mb-6">
+                    <div className="flex-1 bg-yellow-50 rounded-2xl p-3 border border-yellow-200 flex flex-col items-center justify-center">
+                      <div className="text-sm font-bold text-yellow-800 mb-1">Verdient</div>
+                      <div className="font-black text-xl text-yellow-600 flex items-center gap-1">+{roundRewards.coins} 🪙</div>
+                    </div>
+                    
+                    {roundRewards.sticker && (
+                      <div className="flex-1 bg-pink-50 rounded-2xl p-3 border border-pink-200 flex flex-col items-center justify-center animate-pop-in" style={{animationDelay: '0.5s'}}>
+                        <div className="text-sm font-bold text-pink-800 mb-1">Neuer Sticker!</div>
+                        <div className="text-4xl animate-bounce">{roundRewards.sticker}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {roundRank && (
+                    <div className="bg-yellow-100 rounded-2xl p-4 mb-6 border-2 border-yellow-300 animate-pop-in shadow-sm">
+                      <div className="text-4xl mb-2 animate-bounce">🏆</div>
+                      <div className="font-black text-yellow-900 text-lg uppercase tracking-wider">
+                        Glückwunsch!
+                      </div>
+                      <div className="font-bold text-yellow-800 mt-1">
+                        Du bist auf <span className="text-xl font-black text-yellow-600 bg-white px-2 py-0.5 rounded-md shadow-sm mx-1">Platz {roundRank}</span> der Bestenliste!
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button onClick={() => { playClick(); setScreen('start'); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"><ArrowLeft size={20} /> Menü</button>
+                    <button onClick={startGame} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all"><RefreshCw size={20} /> Nochmal</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // --- GAME SCREEN ---
+          return (
+            <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-2 sm:p-4 pt-20 font-sans transition-colors duration-500`}>
+              <TopBar />
+              <div className={`${theme.deviceBg} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md border-8 ${theme.deviceBorder} overflow-hidden flex flex-col transition-colors duration-500 ${feedback === 'error' || feedback === 'fatal' ? 'animate-shake' : ''}`}>
+                
+                <div className={`${theme.bandBg} py-2 px-6 flex justify-between items-center text-gray-300 transition-colors duration-500`}>
+                  <div className="font-black text-sm tracking-widest uppercase flex items-center gap-2"><Calculator size={16} /> ZAHLEN SAFARI</div>
+                  <div className="flex gap-1.5">
+                    {[...Array(MAX_ATTEMPTS)].map((_, i) => (
+                      <div key={i} className={`w-4 h-4 rounded-full border-2 border-black/30 ${i < attemptsLeft ? 'bg-green-500 shadow-[0_0_8px_rgb(34,197,94)]' : 'bg-white/20'}`} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className={`p-4 sm:p-6 ${theme.deviceBg} transition-colors duration-500`}>
+                  <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
+                    
+                    <div className="flex justify-between items-start text-gray-800 font-mono text-xs sm:text-sm font-bold opacity-70 z-10">
+                      <div>Lvl{level === 0 ? 'K' : level} {gameMode==='gap'? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
+                      <div className="flex items-center gap-2">
+                        {streak >= 3 && <span className="text-orange-600 animate-pulse drop-shadow-sm" title={`${streak} in Folge richtig!`}>🔥 x{streak}</span>}
+                        <div>Pkte: {score}</div>
+                      </div>
+                    </div>
+
+                    {!feedback && (
+                      <div className="absolute top-[35%] left-3 sm:left-6 transform -translate-y-1/2 text-4xl sm:text-5xl animate-float opacity-50 z-0 pointer-events-none">
+                        {problem.icon}
+                      </div>
+                    )}
+
+                    {feedback === 'success' && (
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center ${theme.displayBg} z-20 animate-pop-in`}>
+                        <div className="text-6xl mb-1 animate-bounce">{theme.emojis.success}</div>
+                        <div className="font-bold text-xl text-green-800 uppercase tracking-widest">Richtig!</div>
+                        {lastBonusEarned > 0 && (
+                           <div className="mt-1 bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1 rounded-full animate-slide-up flex items-center gap-1 shadow-sm">
+                             <Zap size={14} fill="currentColor"/> +{lastBonusEarned} Bonus!
+                           </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {feedback === 'error' && (
+                      <div className={`absolute inset-0 flex items-center justify-center ${theme.displayBg} z-20`}>
+                        <div className="text-center animate-pulse">
+                          <div className="text-6xl mb-1">{theme.emojis.retry}</div>
+                          <div className="font-bold text-xl text-red-800 uppercase tracking-widest">Versuch's nochmal!</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {feedback === 'fatal' && (
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center ${theme.displayBg} z-20 animate-pop-in`}>
+                        <div className="text-5xl mb-1">{theme.emojis.fatal}</div>
+                        <div className="font-bold text-lg text-gray-800">Die Lösung ist:</div>
+                        <div className="font-mono text-4xl text-red-800 font-black">{getExpectedAnswer()}</div>
+                      </div>
+                    )}
+
+                    <div className={`text-right font-mono text-4xl sm:text-5xl font-black text-gray-800 tracking-tight z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
+                      {problem.missingPart === 'num1' ? renderPlaceholder() : problem.num1}
+                      {' '}{getOpSymbol(problem.op)}{' '}
+                      {problem.missingPart === 'num2' ? renderPlaceholder() : problem.num2}
+                      <br className="sm:hidden"/> = {' '}
+                      {problem.missingPart === 'answer' ? renderPlaceholder() : problem.answer}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`${theme.numpadBg} p-4 sm:p-6 rounded-b-2xl transition-colors duration-500`}>
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    {renderCalculatorButton('7', () => handleInput('7'))} {renderCalculatorButton('8', () => handleInput('8'))} {renderCalculatorButton('9', () => handleInput('9'))}
+                    {renderCalculatorButton('4', () => handleInput('4'))} {renderCalculatorButton('5', () => handleInput('5'))} {renderCalculatorButton('6', () => handleInput('6'))}
+                    {renderCalculatorButton('1', () => handleInput('1'))} {renderCalculatorButton('2', () => handleInput('2'))} {renderCalculatorButton('3', () => handleInput('3'))}
+                    {renderCalculatorButton('C', handleDelete, theme.btnDelete)} {renderCalculatorButton('0', () => handleInput('0'))}
+                    <button onClick={checkAnswer} className={`aspect-square rounded-xl text-2xl font-black flex flex-col items-center justify-center active:translate-y-2 active:shadow-none transition-all ${theme.btnAction}`}>
+                      <Check size={32} strokeWidth={4} /><span className="text-sm">GO</span>
+                    </button>
+                  </div>
+                  
+                  <div className="mt-8 text-center">
+                    <button onClick={() => { playClick(); setScreen('start'); }} className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors mx-auto font-bold uppercase tracking-wider text-sm">
+                      <ArrowLeft size={18} /> Menü
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
