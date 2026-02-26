@@ -8,7 +8,7 @@ Willkommen im LernKumpel Repository! Dies ist eine Sammlung von motivierenden, s
 
 1. Zahlen-Safari (Mathe-App)
 
-👉 Zahlen-Safari spielen
+👉 Zahlen-Safari spielen: https://mainkai.github.io/LernKumpel/zahlen-safari/
 
 Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 
