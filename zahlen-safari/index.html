@@ -91,11 +91,11 @@
         // --- HILFSFUNKTION FÜR ABZEICHEN (BADGES) ---
         const getBadge = (score, mode) => {
           const baseMax = mode === 'gap' ? 1200 : 1000;
-          if (score >= baseMax * 1.5) return { icon: '👑', name: 'Rechen-Legende', color: 'text-yellow-500', bg: 'bg-yellow-100' };
-          if (score >= baseMax * 1.25) return { icon: '💎', name: 'Diamant-Genie', color: 'text-cyan-500', bg: 'bg-cyan-100' };
-          if (score >= baseMax * 1.0) return { icon: '🥇', name: 'Gold-Rechner', color: 'text-yellow-400', bg: 'bg-yellow-50' };
-          if (score >= baseMax * 0.75) return { icon: '🥈', name: 'Silber-Fan', color: 'text-gray-400', bg: 'bg-gray-100' };
-          return { icon: '🥉', name: 'Bronze-Starter', color: 'text-amber-600', bg: 'bg-amber-50' };
+          if (score >= baseMax * 1.8) return { icon: '👑', name: 'Rechen-Legende', color: 'text-yellow-500', bg: 'bg-yellow-100', message: 'Perfekt! Eine Rechen-Legende!' };
+          if (score >= baseMax * 1.5) return { icon: '💎', name: 'Diamant-Genie', color: 'text-cyan-500', bg: 'bg-cyan-100', message: 'Mega! Ein echtes Diamant-Genie!' };
+          if (score >= baseMax * 1.0) return { icon: '🥇', name: 'Gold-Rechner', color: 'text-yellow-400', bg: 'bg-yellow-50', message: 'Super Leistung!' };
+          if (score >= baseMax * 0.5) return { icon: '🥈', name: 'Silber-Fan', color: 'text-gray-400', bg: 'bg-gray-100', message: 'Weiter so!' };
+          return { icon: '🥉', name: 'Bronze-Starter', color: 'text-amber-600', bg: 'bg-amber-50', message: 'Übung macht den Meister!' };
         };
 
         // --- THEMEN DEFINITIONEN ---
@@ -965,16 +965,7 @@
 
           // --- ERGEBNISBILDSCHIRM ---
           if (screen === 'result') {
-            const baseScorePerProblem = 100 + (gameMode === 'gap' ? 20 : 0);
-            const maxBaseScore = MAX_PROBLEMS * baseScorePerProblem;
-            const percentage = Math.min(100, (score / maxBaseScore) * 100); 
             const earnedBadge = getBadge(score, gameMode);
-            
-            let resultMessage = "";
-            if (percentage === 100) resultMessage = "Perfekt! Ein Genie!";
-            else if (percentage >= 80) resultMessage = "Super Leistung!";
-            else if (percentage >= 50) resultMessage = "Weiter so!";
-            else resultMessage = "Übung macht den Meister!";
 
             return (
               <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
@@ -984,7 +975,7 @@
                   
                   <div className="text-7xl mb-4 animate-float">{theme.emojis.success.substring(0,2)}</div>
                   <h2 className="text-4xl font-extrabold text-gray-800 mb-2">Zeugnis</h2>
-                  <p className="text-xl text-blue-600 font-bold mb-4">{resultMessage}</p>
+                  <p className="text-xl text-blue-600 font-bold mb-4">{earnedBadge.message}</p>
 
                   <div className={`flex items-center justify-center gap-2 mx-auto w-max px-5 py-2 rounded-full mb-6 ${earnedBadge.bg} border-2 border-white shadow-sm`}>
                     <span className="text-2xl">{earnedBadge.icon}</span>
