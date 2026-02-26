@@ -66,9 +66,20 @@
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
         const BRUSH_COLORS = ['#111827', '#ef4444', '#f97316', '#eab308', '#22c55e', '#0ea5e9', '#6366f1', '#ec4899'];
         const MAX_ROUNDS = 5;
+        const UNDO_LIMIT = 25;
         const AI_EDIT_COST = 50;
-        const DEFAULT_EVALUATION_MODEL = 'openai/gpt-4o-mini';
-        const DEFAULT_IMAGE_EDIT_MODEL = 'bytedance-seed/seedream-4.5';
+        const DEFAULT_EVALUATION_MODEL = 'openai/gpt-4o-mini';  // 0.0041 $/request, fast, cheap and good
+        const IMAGE_EDIT_MODEL_OPTIONS = [
+          { value: 'black-forest-labs/flux.2-klein-4b', label: 'FLUX.2 Klein 4B - 0.015 $/img, fast, cheap and good' },
+          { value: 'sourceful/riverflow-v2-fast', label: 'Riverflow V2 Fast - 0.02 $/img' },
+          { value: 'google/gemini-2.5-flash-image', label: 'Nano Banana (Gemini 2.5 Flash Image) - 0.0393 $/img, fast, output good' },
+          { value: 'bytedance-seed/seedream-4.5', label: 'Seedream 4.5 - 0.04 $/img, output not convincing' },
+          { value: 'openai/gpt-5-image-mini', label: 'GPT-5 Image Mini - 0.0447 $/img, very slow, output is nice though' },
+          { value: 'google/gemini-3.1-flash-image-preview', label: 'Nano Banana 2 (Gemini 3.1 Flash Image Preview) - 0.0678 $/img, fast, very nice output' },
+          { value: 'google/gemini-3-pro-image-preview', label: 'Nano Banana Pro (Gemini 3 Pro Image Preview)- 0.139 $/img, extremely slow, very nice output' },
+          { value: 'sourceful/riverflow-v2-pro', label: 'Riverflow V2 Pro - 0.15 $/img' }
+        ];
+        const DEFAULT_IMAGE_EDIT_MODEL = IMAGE_EDIT_MODEL_OPTIONS[0].value;
         const DRAW_TASKS = [
             { prompt: 'eine Katze', emoji: '🐱' },
             { prompt: 'ein Haus mit Baum', emoji: '🏠' },
@@ -161,6 +172,17 @@
         };
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const hexToRgb = (hexColor) => {
+          const normalized = (hexColor || '').replace('#', '').trim();
+          if (normalized.length !== 6) return { r: 0, g: 0, b: 0 };
+          const value = Number.parseInt(normalized, 16);
+          if (Number.isNaN(value)) return { r: 0, g: 0, b: 0 };
+          return {
+            r: (value >> 16) & 255,
+            g: (value >> 8) & 255,
+            b: value & 255
+          };
+        };
         const fileTimestamp = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
         const extensionFromMime = (mimeType) => {
           if (!mimeType || typeof mimeType !== 'string') return 'png';
@@ -216,6 +238,8 @@
 
           const [brushColor, setBrushColor] = useState(BRUSH_COLORS[0]);
           const [brushSize, setBrushSize] = useState(8);
+          const [tool, setTool] = useState('brush');
+          const [canUndo, setCanUndo] = useState(false);
           const [generatedImageUrl, setGeneratedImageUrl] = useState('');
 
           const [openRouterApiKey, setOpenRouterApiKey] = useState(localStorage.getItem('malAtelierOpenRouterKey') || '');
@@ -226,6 +250,7 @@
           const canvasCssSizeRef = useRef({ width: 0, height: 0 });
           const drawingRef = useRef(false);
           const lastPointRef = useRef(null);
+          const undoStackRef = useRef([]);
 
           const profile = useMemo(() => profiles.find((p) => p.id === activeProfileId), [profiles, activeProfileId]);
           const currentTask = roundTasks[roundIndex] || null;
@@ -407,6 +432,8 @@
             setResultText('');
             setEarnedCoins(0);
             setErrorText('');
+            undoStackRef.current = [];
+            setCanUndo(false);
             setScreen('game');
           };
 
@@ -446,6 +473,11 @@
             const canvas = canvasRef.current;
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
+            undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            if (undoStackRef.current.length > UNDO_LIMIT) {
+              undoStackRef.current.shift();
+            }
+            setCanUndo(undoStackRef.current.length > 0);
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             setGeneratedImageUrl('');
@@ -478,9 +510,92 @@
             ctx.stroke();
           };
 
+          const fillCanvasAtPoint = (point) => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const x = clamp(Math.floor(point.x), 0, width - 1);
+            const y = clamp(Math.floor(point.y), 0, height - 1);
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            const startIndex = (y * width + x) * 4;
+
+            const targetR = data[startIndex];
+            const targetG = data[startIndex + 1];
+            const targetB = data[startIndex + 2];
+            const targetA = data[startIndex + 3];
+            const fillColor = hexToRgb(brushColor);
+
+            if (targetR === fillColor.r && targetG === fillColor.g && targetB === fillColor.b && targetA === 255) {
+              return;
+            }
+
+            const matchesTarget = (index) => (
+              data[index] === targetR &&
+              data[index + 1] === targetG &&
+              data[index + 2] === targetB &&
+              data[index + 3] === targetA
+            );
+
+            const stack = [[x, y]];
+
+            while (stack.length) {
+              const [currentX, currentY] = stack.pop();
+              if (currentX < 0 || currentY < 0 || currentX >= width || currentY >= height) continue;
+
+              const index = (currentY * width + currentX) * 4;
+              if (!matchesTarget(index)) continue;
+
+              data[index] = fillColor.r;
+              data[index + 1] = fillColor.g;
+              data[index + 2] = fillColor.b;
+              data[index + 3] = 255;
+
+              stack.push([currentX + 1, currentY]);
+              stack.push([currentX - 1, currentY]);
+              stack.push([currentX, currentY + 1]);
+              stack.push([currentX, currentY - 1]);
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            setGeneratedImageUrl('');
+          };
+
+          const undoLastAction = () => {
+            const canvas = canvasRef.current;
+            if (!canvas || !undoStackRef.current.length) return;
+            const ctx = canvas.getContext('2d');
+            const previousState = undoStackRef.current.pop();
+            if (!previousState) return;
+            ctx.putImageData(previousState, 0, 0);
+            setCanUndo(undoStackRef.current.length > 0);
+            setGeneratedImageUrl('');
+          };
+
           const onPointerDown = (event) => {
             event.preventDefault();
             const point = pointFromEvent(event);
+
+            const canvas = canvasRef.current;
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+              if (undoStackRef.current.length > UNDO_LIMIT) {
+                undoStackRef.current.shift();
+              }
+              setCanUndo(undoStackRef.current.length > 0);
+            }
+
+            if (tool === 'fill') {
+              fillCanvasAtPoint(point);
+              drawingRef.current = false;
+              lastPointRef.current = null;
+              return;
+            }
+
             drawingRef.current = true;
             lastPointRef.current = point;
             drawSegment(point, point);
@@ -557,29 +672,49 @@
               throw new Error('Bitte trage einen OpenRouter API-Key ein.');
             }
 
-            const body = {
-              model,
-              messages,
-              temperature: 0.2
+            const sendRequest = async (includeTemperature) => {
+              const body = {
+                model,
+                messages
+              };
+
+              if (includeTemperature) {
+                body.temperature = 0.2;
+              }
+
+              if (responseFormat) {
+                body.response_format = responseFormat;
+              }
+
+              return fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${openRouterApiKey.trim()}`,
+                  'HTTP-Referer': window.location.href,
+                  'X-Title': 'LernKumpel-Malatelier'
+                },
+                body: JSON.stringify(body)
+              });
             };
 
-            if (responseFormat) {
-              body.response_format = responseFormat;
-            }
-
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${openRouterApiKey.trim()}`,
-                'HTTP-Referer': window.location.href,
-                'X-Title': 'LernKumpel-Malatelier'
-              },
-              body: JSON.stringify(body)
-            });
+            let response = await sendRequest(true);
 
             if (!response.ok) {
               const text = await response.text();
+              const rejectsTemperature =
+                response.status === 400 &&
+                /unsupported parameter[^\n]*temperature|temperature[^\n]*not supported/i.test(text);
+
+              if (rejectsTemperature) {
+                response = await sendRequest(false);
+                if (!response.ok) {
+                  const retryText = await response.text();
+                  throw new Error(`KI-API Fehler (${response.status}): ${retryText.slice(0, 220)}`);
+                }
+                return response.json();
+              }
+
               throw new Error(`KI-API Fehler (${response.status}): ${text.slice(0, 220)}`);
             }
 
@@ -595,7 +730,7 @@
               setFeedback('KI bewertet dein Bild...');
 
               const imageDataUrl = getCanvasDataUrl();
-              const prompt = `Du bist ein KI-Bildbewerter für Kinderzeichnungen. Aufgabe: "Male ${currentTask.prompt}".\nBewerte, wie gut die Zeichnung zur Aufgabe passt.\nEs gibt mehr Punkte für viele Details, verschiedene Farben und klar erkennbare Motive.\nAntworte nur als JSON mit den Feldern:\n- score: ganze Zahl 0 bis 100\n- feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
+              const prompt = `Du bist ein KI-Bildbewerter für Kinderzeichnungen. Aufgabe: "Male ${currentTask.prompt}".\nBewerte, wie gut die Zeichnung zur Aufgabe passt.\nAntworte nur als JSON mit den Feldern:\n- score: ganze Zahl 0 bis 100\n- feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
 
               const result = await callOpenRouter({
                 model: evaluationModel,
@@ -739,6 +874,8 @@
             setHasRoundScored(false);
             setErrorText('');
             setGeneratedImageUrl('');
+            undoStackRef.current = [];
+            setCanUndo(false);
           };
 
           const selectProfile = (profileId) => {
@@ -900,13 +1037,15 @@
                       placeholder="Bewertungsmodell, z.B. openai/gpt-4o-mini"
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
                     />
-                    <input
-                      type="text"
+                    <select
                       value={imageEditModel}
                       onChange={(event) => setImageEditModel(event.target.value)}
-                      placeholder="Image-Edit Modell, z.B. sourceful/riverflow-v2-fast"
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
-                    />
+                    >
+                      {IMAGE_EDIT_MODEL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <button
@@ -951,13 +1090,43 @@
                         onPointerUp={onPointerUp}
                         onPointerLeave={onPointerUp}
                         className="w-full h-[500px] md:h-[560px] bg-white rounded-xl border-2 border-slate-200"
+                        style={{ cursor: tool === 'fill' ? 'crosshair' : 'default' }}
                       />
                     </div>
 
                     <div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200 mb-4">
                       <div className="grid md:grid-cols-3 gap-4 items-end">
                         <div>
-                          <p className="font-black text-slate-800 mb-2">🎨</p>
+                          <p className="font-black text-slate-800 mb-2">🛠️ Werkzeug</p>
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            <button
+                              onClick={() => setTool('brush')}
+                              title="Stift"
+                              className={`py-2 rounded-xl font-bold border-2 ${tool === 'brush' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                            >
+                              🖌️
+                            </button>
+                            <button
+                              onClick={() => setTool('fill')}
+                              title="Fill"
+                              className={`py-2 rounded-xl font-bold border-2 ${tool === 'fill' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                            >
+                              🪣
+                            </button>
+
+                            <button
+                              onClick={undoLastAction}
+                              disabled={!canUndo}
+                              title="Undo"
+                              className="py-2 rounded-xl font-bold border-2 bg-amber-400 hover:bg-amber-500 disabled:bg-slate-300 text-slate-900 border-amber-300"
+                            >
+                              ↩️
+                            </button>
+                          </div>
+
+                          <p className="text-xs font-bold text-slate-500 mb-3">Cursor: {tool === 'fill' ? '🪣' : '🖌️'}</p>
+
+                          <p className="font-black text-slate-800 mb-2">🎨 Farbe</p>
                           <div className="grid grid-cols-4 gap-2">
                             {BRUSH_COLORS.map((color) => (
                               <button
