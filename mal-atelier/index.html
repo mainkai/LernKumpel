@@ -68,7 +68,17 @@
         const MAX_ROUNDS = 5;
         const UNDO_LIMIT = 25;
         const AI_EDIT_COST = 50;
-        const DEFAULT_EVALUATION_MODEL = 'openai/gpt-4o-mini';  // 0.0041 $/request, fast, cheap and good
+        const EVALUATION_MODEL_OPTIONS = [
+          { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash Preview - ? $/request, very fast, good' },
+          { value: 'bytedance-seed/seed-1.6-flash', label: 'Seed 1.6 Flash - ? $/request, fast, good' },
+          { value: 'qwen/qwen3.5-flash-02-23', label: 'Qwen3.5-Flash - ? $/request, very fast, good' },
+          { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini - 0.0041 $/request, fast, cheap and good' },
+          { value: 'bytedance-seed/seed-2.0-mini', label: 'Seed-2.0-Mini - ? $/request, very fast, good' },
+          { value: 'nvidia/nemotron-nano-12b-v2-vl:free', label: 'Nemotron Nano 12B 2 VL (free) - 0 $/request, slow, ok' },
+          { value: 'openrouter/free', label: 'Free Models Router - 0 $/request, fast enough, good output. Fails often' },
+          { value: 'moonshotai/kimi-k2.5', label: 'Kimi K2.5 - ? $/request, very slow, not so good' }
+        ];
+        const DEFAULT_EVALUATION_MODEL = EVALUATION_MODEL_OPTIONS[0].value;
         const IMAGE_EDIT_MODEL_OPTIONS = [
           { value: 'black-forest-labs/flux.2-klein-4b', label: 'FLUX.2 Klein 4B - 0.015 $/img, fast, cheap and good' },
           { value: 'sourceful/riverflow-v2-fast', label: 'Riverflow V2 Fast - 0.02 $/img' },
@@ -76,6 +86,8 @@
           { value: 'bytedance-seed/seedream-4.5', label: 'Seedream 4.5 - 0.04 $/img, output not convincing' },
           { value: 'openai/gpt-5-image-mini', label: 'GPT-5 Image Mini - 0.0447 $/img, very slow, output is nice though' },
           { value: 'google/gemini-3.1-flash-image-preview', label: 'Nano Banana 2 (Gemini 3.1 Flash Image Preview) - 0.0678 $/img, fast, very nice output' },
+          { value: 'black-forest-labs/flux.2-flex', label: 'FLUX.2 Flex - 0.1 $/img, fast, good' },
+          { value: 'black-forest-labs/flux.2-max', label: 'FLUX.2 Max - 0.1 $/img, slow, quality ok' },
           { value: 'google/gemini-3-pro-image-preview', label: 'Nano Banana Pro (Gemini 3 Pro Image Preview)- 0.139 $/img, extremely slow, very nice output' },
           { value: 'sourceful/riverflow-v2-pro', label: 'Riverflow V2 Pro - 0.15 $/img' }
         ];
@@ -730,7 +742,13 @@
               setFeedback('KI bewertet dein Bild...');
 
               const imageDataUrl = getCanvasDataUrl();
-              const prompt = `Du bist ein KI-Bildbewerter für Kinderzeichnungen. Aufgabe: "Male ${currentTask.prompt}".\nBewerte, wie gut die Zeichnung zur Aufgabe passt.\nAntworte nur als JSON mit den Feldern:\n- score: ganze Zahl 0 bis 100\n- feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
+              const prompt = `Du bist ein KI-Bildbewerter für Kinderzeichnungen. Aufgabe: "Male ${currentTask.prompt}".
+                    Bewerte, wie gut die Zeichnung zur Aufgabe passt.
+                    Außerdem soll die Qualität (Farben, Details) der Zeichnung berücksichtigt werden.
+                    Je mehr Details, Kreativität und Farbauswahl, desto höher die Bewertung.
+                    Antworte nur als JSON mit den Feldern:
+                    - score: ganze Zahl 0 bis 100
+                    - feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
 
               const result = await callOpenRouter({
                 model: evaluationModel,
@@ -1030,13 +1048,15 @@
                       placeholder="OpenRouter API-Key"
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
                     />
-                    <input
-                      type="text"
+                    <select
                       value={evaluationModel}
                       onChange={(event) => setEvaluationModel(event.target.value)}
-                      placeholder="Bewertungsmodell, z.B. openai/gpt-4o-mini"
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
-                    />
+                    >
+                      {EVALUATION_MODEL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
                     <select
                       value={imageEditModel}
                       onChange={(event) => setImageEditModel(event.target.value)}
