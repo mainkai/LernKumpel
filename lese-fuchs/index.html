@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lese-Fuchs</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 2.4s ease-in-out infinite; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in { animation: popIn 0.28s ease-out; }
+
+        body { overscroll-behavior-y: none; }
+    </style>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+        }
+      }
+    </script>
+</head>
+<body class="bg-sky-100">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, arrayUnion, collection, query, where, documentId } from 'firebase/firestore';
+
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        const Users = ({size=20, className=""}) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        );
+
+        const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
+        const MAX_ROUNDS = 10;
+        const MAX_BASE_POINTS_PER_SENTENCE = 100;
+        const MAX_SPEED_BONUS = 40;
+        const SPEED_BONUS_BASE_SECONDS = 4;
+
+        const SENTENCES = [
+          "Die Katze schläft auf dem Sofa.",
+          "Wir spielen gerne im Garten.",
+          "Der Apfel ist rot und süß.",
+          "Ich fahre mit dem Rad zur Schule.",
+          "Heute scheint die Sonne sehr hell.",
+          "Mein Freund hat einen neuen Ball.",
+          "Wir backen heute einen Kuchen.",
+          "Der kleine Hund bellt laut.",
+          "Ein Vogel singt ein schönes Lied.",
+          "Am Abend lese ich ein Buch.",
+          "Lina malt ein buntes Bild.",
+          "Paul trägt seine blaue Mütze.",
+          "Im Wald steht ein hoher Baum.",
+          "Das Brot liegt auf dem Teller.",
+          "Wir hören zusammen eine Geschichte.",
+          "Mama kocht eine Suppe.",
+          "Tom findet eine Muschel.",
+          "Im Hof steht ein Roller.",
+          "Oma gießt die Blumen.",
+          "Wir bauen eine Burg aus Sand.",
+          "Der Zug fährt in den Tunnel.",
+          "Mila trägt einen warmen Schal.",
+          "Ben öffnet leise die Tür.",
+          "Im See schwimmt eine Ente.",
+          "Der Mond leuchtet über dem Haus.",
+          "Nina liest heute im Bett.",
+          "Leo sammelt bunte Blätter.",
+          "Wir laufen schnell zum Sport.",
+          "Ein Hase hoppelt über die Wiese.",
+          "Der Frosch sitzt am Teich.",
+          "Im Zoo sehen wir einen Tiger.",
+          "Der Bäcker verkauft frische Brötchen.",
+          "Papa repariert mein Fahrrad.",
+          "Heute schreiben wir einen Satz.",
+          "Mona zählt zehn Murmeln.",
+          "Das Heft liegt neben dem Stift.",
+          "Wir teilen ein großes Eis.",
+          "Der Wind weht durch die Bäume.",
+          "Im Winter fällt weicher Schnee.",
+          "Im Sommer essen wir Wassermelone.",
+          "Das Kind trägt rote Stiefel.",
+          "Ein Bär sucht Honig im Wald.",
+          "Wir hören Musik im Zimmer.",
+          "Mia putzt ihre Zähne gründlich.",
+          "Der Lehrer liest laut vor.",
+          "Luca schreibt seinen Namen.",
+          "Die Kinder spielen Verstecken.",
+          "Im Regal stehen viele Bücher.",
+          "Der Ball rollt unter den Tisch.",
+          "Auf dem Pausenhof lachen alle.",
+          "Wir rechnen bis zwanzig.",
+          "Emma bringt ihren Ranzen mit.",
+          "Die Maus läuft in ihr Haus.",
+          "Ein Stern funkelt am Himmel.",
+          "Der Arzt hilft dem kranken Kind.",
+          "Paul trinkt ein Glas Wasser.",
+          "Im Kino sehen wir einen Film.",
+          "Das Pferd frisst frisches Heu.",
+          "Wir waschen uns die Hände.",
+          "Die Ampel springt auf Grün.",
+          "Ein Schmetterling sitzt auf der Blume.",
+          "Nele backt Kekse mit Oma.",
+          "Der Kran hebt schwere Steine.",
+          "Mats sucht seinen blauen Schuh.",
+          "Wir gehen heute in die Bücherei.",
+          "Die Spinne baut ein Netz.",
+          "Im Herbst sammeln wir Kastanien.",
+          "Jonas trägt einen dicken Pullover.",
+          "Die Sonne trocknet die Wäsche.",
+          "Unser Hund wartet vor der Tür.",
+          "Im Bus ist noch ein Platz frei.",
+          "Die Schere liegt in der Tasche.",
+          "Wir schneiden Obst für den Salat.",
+          "Leni malt einen grünen Drachen.",
+          "Der Vogel findet einen Ast.",
+          "Heute üben wir das Lesen.",
+          "Das Mädchen trägt eine Brille.",
+          "Der Junge stellt viele Fragen.",
+          "Wir hören die Klingel im Flur.",
+          "Im Garten wachsen Tomaten.",
+          "Sina öffnet das Fenster weit.",
+          "Der Regen trommelt auf das Dach.",
+          "Wir brauchen Milch für den Kakao.",
+          "Das Auto parkt vor dem Tor.",
+          "Ein Igel schläft im Laubhaufen.",
+          "Die Klasse startet einen Ausflug.",
+          "Rita packt Brot in die Dose.",
+          "Wir legen Karten auf den Tisch.",
+          "Der Turm ist sehr hoch.",
+          "Auf der Wiese steht ein Zelt.",
+          "Mona übt die Wörter mit Mama.",
+          "Die Glocke klingt laut im Dorf.",
+          "Tim wartet an der Haltestelle.",
+          "Wir feiern heute ein kleines Fest.",
+          "Die Wolken ziehen über den Berg.",
+          "Felix findet einen Schatz im Sand.",
+          "Ich kann schon viele Sätze lesen."
+        ];
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
+          authDomain: "zahlensafari.firebaseapp.com",
+          projectId: "zahlensafari",
+          storageBucket: "zahlensafari.firebasestorage.app",
+          messagingSenderId: "569809723706",
+          appId: "1:569809723706:web:7a1befeff13b36422c7003"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const normalize = (text) =>
+          text
+            .toLowerCase()
+            .replace(/[.,!?;:"„“‚‘()]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const levenshtein = (a, b) => {
+          const rows = b.length + 1;
+          const cols = a.length + 1;
+          const matrix = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+          for (let i = 0; i < rows; i++) matrix[i][0] = i;
+          for (let j = 0; j < cols; j++) matrix[0][j] = j;
+
+          for (let i = 1; i < rows; i++) {
+            for (let j = 1; j < cols; j++) {
+              if (b[i - 1] === a[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+              } else {
+                matrix[i][j] = Math.min(
+                  matrix[i - 1][j - 1] + 1,
+                  matrix[i - 1][j] + 1,
+                  matrix[i][j - 1] + 1
+                );
+              }
+            }
+          }
+
+          return matrix[b.length][a.length];
+        };
+
+        const getReadingScore = (targetSentence, spokenTranscript) => {
+          const targetWords = normalize(targetSentence).split(' ').filter(Boolean);
+          const spokenWords = normalize(spokenTranscript).split(' ').filter(Boolean);
+
+          if (targetWords.length === 0 || spokenWords.length === 0) {
+            return { ratio: 0, basePoints: 0 };
+          }
+
+          let matched = 0;
+          for (const targetWord of targetWords) {
+            const hasMatch = spokenWords.some((spokenWord) => {
+              if (targetWord === spokenWord) return true;
+              const allowedTypos = targetWord.length > 6 ? 2 : targetWord.length > 3 ? 1 : 0;
+              return levenshtein(targetWord, spokenWord) <= allowedTypos;
+            });
+            if (hasMatch) matched += 1;
+          }
+
+          const ratio = matched / targetWords.length;
+          if (ratio >= 0.95) return { ratio, basePoints: MAX_BASE_POINTS_PER_SENTENCE };
+          if (ratio >= 0.85) return { ratio, basePoints: 80 };
+          if (ratio >= 0.75) return { ratio, basePoints: 60 };
+          if (ratio >= 0.65) return { ratio, basePoints: 40 };
+          return { ratio, basePoints: 0 };
+        };
+
+        const getSpeedBonus = (durationSeconds) => {
+          if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return 0;
+          return Math.floor(MAX_SPEED_BONUS / Math.log2((Math.max(0, durationSeconds) / SPEED_BONUS_BASE_SECONDS) + 2));
+        };
+
+        function App() {
+          const [user, setUser] = useState(null);
+          const [linkedProfileIds, setLinkedProfileIds] = useState([]);
+          const [profiles, setProfiles] = useState([]);
+          const [activeProfileId, setActiveProfileId] = useState(null);
+          const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+          const [screen, setScreen] = useState('loading');
+
+          const [setupName, setSetupName] = useState('');
+          const [setupAvatar, setSetupAvatar] = useState('🦊');
+
+          const [roundSentences, setRoundSentences] = useState([]);
+          const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+          const [score, setScore] = useState(0);
+          const [isListening, setIsListening] = useState(false);
+          const [transcript, setTranscript] = useState('');
+          const [feedback, setFeedback] = useState(null);
+          const [lastAwardedPoints, setLastAwardedPoints] = useState(0);
+          const [lastSpeedBonus, setLastSpeedBonus] = useState(0);
+          const [lastMatchPercent, setLastMatchPercent] = useState(0);
+          const [sentenceAttempts, setSentenceAttempts] = useState(0);
+          const [resultText, setResultText] = useState('');
+          const [earnedCoins, setEarnedCoins] = useState(0);
+          const [errorText, setErrorText] = useState('');
+          const [isSupported, setIsSupported] = useState(true);
+          const [hasMicPermission, setHasMicPermission] = useState(false);
+          const [isCapturingSentence, setIsCapturingSentence] = useState(false);
+
+          const recognitionRef = useRef(null);
+          const micStreamRef = useRef(null);
+          const shouldKeepListeningRef = useRef(false);
+          const isCapturingSentenceRef = useRef(false);
+          const captureStartResultIndexRef = useRef(0);
+          const captureStartedAtRef = useRef(0);
+          const latestResultsLengthRef = useRef(0);
+          const transcriptRef = useRef('');
+          const profile = profiles.find((p) => p.id === activeProfileId);
+
+          useEffect(() => {
+            transcriptRef.current = transcript;
+          }, [transcript]);
+
+          useEffect(() => {
+            isCapturingSentenceRef.current = isCapturingSentence;
+          }, [isCapturingSentence]);
+
+          useEffect(() => {
+            const initAuth = async () => {
+              try {
+                await signInAnonymously(auth);
+              } catch (err) {
+                console.error('Auth error:', err);
+              }
+            };
+
+            initAuth();
+            return onAuthStateChanged(auth, setUser);
+          }, []);
+
+          useEffect(() => {
+            if (!user) return;
+
+            const deviceRef = doc(db, 'devices', user.uid);
+            const unsubDevice = onSnapshot(deviceRef, (docSnap) => {
+              if (docSnap.exists()) {
+                setLinkedProfileIds(docSnap.data().linkedProfiles || []);
+              } else {
+                setLinkedProfileIds([]);
+                setIsLoadingProfile(false);
+                setScreen((prev) => (prev === 'loading' ? 'setup' : prev));
+              }
+            }, (err) => {
+              console.error('Device error:', err);
+              setErrorText('Das Profil konnte nicht geladen werden.');
+            });
+
+            return () => unsubDevice();
+          }, [user]);
+
+          useEffect(() => {
+            if (!linkedProfileIds.length) {
+              setProfiles([]);
+              return;
+            }
+
+            const ids = linkedProfileIds.slice(0, 10);
+            const profilesQuery = query(collection(db, 'global_profiles'), where(documentId(), 'in', ids));
+
+            const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
+              const loadedProfiles = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+              loadedProfiles.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+              setProfiles(loadedProfiles);
+              setIsLoadingProfile(false);
+              setScreen((prev) => (prev === 'loading' ? 'profile_select' : prev));
+            }, (err) => {
+              console.error('Profiles error:', err);
+              setIsLoadingProfile(false);
+              setErrorText('Profile konnten nicht geladen werden.');
+            });
+
+            return () => unsubProfiles();
+          }, [linkedProfileIds]);
+
+          useEffect(() => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+              setIsSupported(false);
+              return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+              latestResultsLengthRef.current = event.results.length;
+              if (!isCapturingSentenceRef.current) return;
+
+              let liveTranscript = '';
+              for (let i = captureStartResultIndexRef.current; i < event.results.length; i++) {
+                liveTranscript += `${event.results[i][0].transcript} `;
+              }
+
+              setTranscript(liveTranscript.replace(/\s+/g, ' ').trim());
+            };
+
+            recognition.onerror = (event) => {
+              setIsListening(false);
+              if (event.error === 'not-allowed') {
+                setErrorText('Bitte erlaube den Mikrofonzugriff.');
+              }
+            };
+
+            recognition.onend = () => {
+              setIsListening(false);
+              if (!shouldKeepListeningRef.current) return;
+
+              try {
+                recognition.start();
+                setIsListening(true);
+              } catch (err) {
+                setTimeout(() => {
+                  if (!shouldKeepListeningRef.current) return;
+                  try {
+                    recognition.start();
+                    setIsListening(true);
+                  } catch (startErr) {
+                    console.error('Mic restart error:', startErr);
+                  }
+                }, 150);
+              }
+            };
+
+            recognitionRef.current = recognition;
+
+            return () => {
+              if (recognitionRef.current) {
+                recognitionRef.current.abort();
+              }
+            };
+          }, []);
+
+          useEffect(() => {
+            return () => {
+              if (micStreamRef.current) {
+                micStreamRef.current.getTracks().forEach((track) => track.stop());
+              }
+            };
+          }, []);
+
+          const saveProfile = async () => {
+            const name = setupName.trim();
+            if (!user || !name) return;
+
+            const profileId = name.toLowerCase();
+            const profileRef = doc(db, 'global_profiles', profileId);
+            const profileSnap = await getDoc(profileRef);
+
+            if (!profileSnap.exists()) {
+              await setDoc(profileRef, {
+                name,
+                avatar: setupAvatar,
+                coins: 0,
+                unlockedThemes: ['classic'],
+                activeTheme: 'classic',
+                stickers: []
+              });
+            } else if (profileSnap.data().avatar !== setupAvatar) {
+              await updateDoc(profileRef, { avatar: setupAvatar });
+            }
+
+            await setDoc(doc(db, 'devices', user.uid), {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
+
+            setActiveProfileId(profileId);
+            setScreen('start');
+            setSetupName('');
+            setSetupAvatar('🦊');
+          };
+
+          const sampleSentences = useCallback(() => {
+            const shuffled = [...SENTENCES].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, MAX_ROUNDS);
+          }, []);
+
+          const ensureMicrophonePermission = async () => {
+            if (hasMicPermission) return true;
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return true;
+
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              micStreamRef.current = stream;
+              setHasMicPermission(true);
+              return true;
+            } catch (err) {
+              console.error('Mic permission error:', err);
+              setErrorText('Bitte erlaube den Mikrofonzugriff einmal am Anfang.');
+              setHasMicPermission(false);
+              return false;
+            }
+          };
+
+          const startListeningSession = () => {
+            if (!recognitionRef.current || !isSupported) return;
+            shouldKeepListeningRef.current = true;
+            try {
+              recognitionRef.current.start();
+              setIsListening(true);
+            } catch (err) {
+              console.error('Mic start error:', err);
+            }
+          };
+
+          const stopListeningSession = () => {
+            shouldKeepListeningRef.current = false;
+            if (recognitionRef.current) {
+              try {
+                recognitionRef.current.stop();
+              } catch (err) {
+                console.error('Mic stop error:', err);
+              }
+            }
+            setIsListening(false);
+          };
+
+          const startGame = () => {
+            setRoundSentences(sampleSentences());
+            setCurrentSentenceIndex(0);
+            setScore(0);
+            setTranscript('');
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastSpeedBonus(0);
+            setLastMatchPercent(0);
+            setSentenceAttempts(0);
+            setIsCapturingSentence(false);
+            setResultText('');
+            setErrorText('');
+            setScreen('game');
+          };
+
+          const speakSentence = () => {
+            if (!roundSentences[currentSentenceIndex] || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(roundSentences[currentSentenceIndex]);
+            utterance.lang = 'de-DE';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+          };
+
+          const evaluateCurrentSentence = (spokenText = transcriptRef.current, captureDurationSeconds = 0) => {
+            const currentSentence = roundSentences[currentSentenceIndex];
+            const result = getReadingScore(currentSentence, spokenText);
+            setLastMatchPercent(Math.round(result.ratio * 100));
+            const attemptNumber = sentenceAttempts + 1;
+            setSentenceAttempts(attemptNumber);
+
+            const attemptMultiplier = attemptNumber === 1 ? 1 : attemptNumber === 2 ? 0.5 : 0.2;
+            const awardedBasePoints = Math.round(result.basePoints * attemptMultiplier);
+            const speedBonus = awardedBasePoints > 0 && attemptNumber === 1 ? getSpeedBonus(captureDurationSeconds) : 0;
+            const totalPoints = awardedBasePoints + speedBonus;
+
+            if (awardedBasePoints > 0) {
+              setFeedback('success');
+              setLastAwardedPoints(totalPoints);
+              setLastSpeedBonus(speedBonus);
+              setScore((prev) => prev + totalPoints);
+            } else {
+              setFeedback('try_again');
+              setLastAwardedPoints(0);
+              setLastSpeedBonus(0);
+            }
+          };
+
+          const startSentenceCapture = async () => {
+            if (!isListening) {
+              const permissionOk = await ensureMicrophonePermission();
+              if (!permissionOk) return;
+              startListeningSession();
+            }
+
+            setTranscript('');
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastSpeedBonus(0);
+            setErrorText('');
+            captureStartResultIndexRef.current = latestResultsLengthRef.current;
+            captureStartedAtRef.current = Date.now();
+            setIsCapturingSentence(true);
+          };
+
+          const finishSentenceCapture = () => {
+            setIsCapturingSentence(false);
+
+            setTimeout(() => {
+              const spokenText = transcriptRef.current.trim();
+              if (!spokenText) {
+                setErrorText('Ich habe noch nichts verstanden. Bitte nochmal vorlesen.');
+                return;
+              }
+              const captureDurationSeconds = captureStartedAtRef.current ? (Date.now() - captureStartedAtRef.current) / 1000 : 0;
+              evaluateCurrentSentence(spokenText, captureDurationSeconds);
+            }, 160);
+          };
+
+          const toggleSentenceCapture = () => {
+            if (isCapturingSentence) {
+              finishSentenceCapture();
+            } else {
+              startSentenceCapture();
+            }
+          };
+
+          const endGame = async (finalScore) => {
+            stopListeningSession();
+            const coins = Math.floor(finalScore / 10);
+            setEarnedCoins(coins);
+
+            if (profile && activeProfileId) {
+              const profileRef = doc(db, 'global_profiles', activeProfileId);
+              await updateDoc(profileRef, {
+                coins: (profile.coins || 0) + coins
+              });
+            }
+
+            setResultText(finalScore >= 900 ? 'Stark gelesen! Du bist ein echter Lese-Fuchs! 🦊' : 'Super gemacht! Mit jedem Mal liest du sicherer. 🌟');
+            setScreen('result');
+          };
+
+          const nextSentence = async () => {
+            setIsCapturingSentence(false);
+            const isLast = currentSentenceIndex >= roundSentences.length - 1;
+
+            if (isLast) {
+              await endGame(score);
+              return;
+            }
+
+            setCurrentSentenceIndex((prev) => prev + 1);
+            setTranscript('');
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastSpeedBonus(0);
+            setLastMatchPercent(0);
+            setSentenceAttempts(0);
+            setErrorText('');
+          };
+
+          const retrySentence = () => {
+            setIsCapturingSentence(false);
+            setTranscript('');
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastMatchPercent(0);
+            setErrorText('');
+          };
+
+          const selectProfile = (profileId) => {
+            stopListeningSession();
+            setActiveProfileId(profileId);
+            setScreen('start');
+          };
+
+          const TopBar = () => {
+            if (!profile || screen === 'setup' || screen === 'profile_select' || screen === 'loading') return null;
+
+            return (
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30 pointer-events-none">
+                <button
+                  onClick={() => {
+                    stopListeningSession();
+                    setActiveProfileId(null);
+                    setScreen('profile_select');
+                  }}
+                  className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-white/70"
+                >
+                  <span className="text-2xl">{profile.avatar}</span>
+                  <span className="font-bold text-slate-800 hidden sm:inline">{profile.name}</span>
+                  <Users size={16} className="text-sky-500 ml-1" />
+                </button>
+
+                <div className="bg-yellow-300 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200">
+                  <span className="font-black text-yellow-900 text-lg">{profile.coins || 0}</span>
+                  <span className="text-xl">🪙</span>
+                </div>
+              </div>
+            );
+          };
+
+          if (isLoadingProfile) {
+            return (
+              <div className="min-h-screen bg-sky-100 flex items-center justify-center font-bold text-xl text-sky-700">
+                Lade...
+              </div>
+            );
+          }
+
+          if (screen === 'profile_select') {
+            return (
+              <div className="min-h-screen bg-sky-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-sky-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-sky-700 mb-6">Wer liest heute?</h1>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-h-[50vh] overflow-y-auto p-1">
+                    {profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => selectProfile(p.id)}
+                        className="bg-slate-50 hover:bg-sky-50 border-2 border-slate-200 hover:border-sky-300 rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+                      >
+                        <div className="text-5xl">{p.avatar}</div>
+                        <div className="font-bold text-slate-700 text-lg truncate w-full">{p.name}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('setup')}
+                    className="w-full bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-sky-200 border-dashed"
+                  >
+                    <Users size={20} /> Neuen Spieler hinzufügen
+                  </button>
+
+                  {errorText && <p className="mt-4 text-sm text-red-500 font-semibold">{errorText}</p>}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'setup') {
+            return (
+              <div className="min-h-screen bg-sky-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-sky-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-sky-700 mb-2">Neues Profil</h1>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">Nutze denselben Namen wie in Zahlen-Safari, um dieselben Münzen zu verwenden.</p>
+
+                  <div className="mb-6">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Dein Name:</label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={setupName}
+                      onChange={(event) => setSetupName(event.target.value)}
+                      placeholder="z.B. Mia"
+                      className="w-full bg-slate-50 border-2 border-sky-200 rounded-xl px-4 py-3 font-bold text-slate-800 text-xl focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div className="mb-8">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Wähle dein Tier:</label>
+                    <div className="grid grid-cols-5 gap-2 bg-slate-50 p-3 rounded-xl border-2 border-slate-100">
+                      {AVATAR_POOL.map((avatar) => (
+                        <button
+                          key={avatar}
+                          onClick={() => setSetupAvatar(avatar)}
+                          className={`aspect-square text-3xl flex items-center justify-center rounded-lg transition-all ${setupAvatar === avatar ? 'bg-sky-200 scale-110 shadow-sm' : 'hover:bg-slate-200 opacity-70 hover:opacity-100'}`}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={saveProfile}
+                    disabled={!setupName.trim()}
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white font-black text-xl py-4 rounded-2xl"
+                  >
+                    Start!
+                  </button>
+
+                  {profiles.length > 0 && (
+                    <button onClick={() => { stopListeningSession(); setScreen('profile_select'); }} className="mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                      Abbrechen
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'start') {
+            return (
+              <div className="min-h-screen bg-sky-100 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl p-8 text-center border-4 border-sky-200 animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🦊</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-2">Lese-<span className="text-sky-600">Fuchs</span></h1>
+                  <p className="text-slate-600 font-medium mb-2">Lies Sätze laut vor und sammle Punkte.</p>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">10 Sätze pro Runde · bis zu +140 Punkte pro Satz</p>
+
+                  <div className="bg-sky-50 border-2 border-sky-100 rounded-2xl p-4 mb-6 text-left">
+                    <p className="font-bold text-sky-800 mb-1">So funktioniert's:</p>
+                    <ul className="text-slate-600 text-sm space-y-1">
+                      <li>• Höre den Satz auf Wunsch mit 🔊 an.</li>
+                      <li>• Tippe auf das Mikrofon und lies deutlich vor.</li>
+                      <li>• Erster Versuch + schnelles Lesen bringt Extra-Punkte.</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={startGame}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-black text-2xl py-4 rounded-2xl"
+                  >
+                    Loslesen!
+                  </button>
+
+                  <a href="../index.html" className="inline-block mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'game') {
+            const currentSentence = roundSentences[currentSentenceIndex] || '';
+
+            return (
+              <div className="min-h-screen bg-sky-50 relative flex flex-col items-center justify-center p-4 pt-24 font-sans">
+                <TopBar />
+
+                <div className="w-full max-w-xl flex justify-between items-center mb-4 px-1">
+                  <div className="bg-white px-4 py-2 rounded-full shadow border-2 border-yellow-100">
+                    <span className="text-yellow-500 text-xl mr-1">⭐</span>
+                    <span className="text-xl font-black text-slate-800">{score}</span>
+                  </div>
+                  <div className="text-sky-600 font-bold bg-white px-4 py-2 rounded-full shadow">
+                    {currentSentenceIndex + 1} / {roundSentences.length}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] shadow-2xl border border-sky-100 w-full max-w-xl overflow-hidden animate-pop-in">
+                  <div className="p-8 text-center">
+                    <div className="flex justify-end mb-2">
+                      <button
+                        onClick={speakSentence}
+                        className="text-3xl hover:scale-110 transition-transform"
+                        title="Satz anhören"
+                      >
+                        🔊
+                      </button>
+                    </div>
+
+                    <h2 className="text-xs sm:text-sm font-bold text-sky-500 uppercase tracking-widest mb-4">Lies diesen Satz:</h2>
+                    <p className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-6">{currentSentence}</p>
+
+                    <div className="min-h-[60px] flex items-center justify-center mb-6">
+                      {transcript ? (
+                        <p className="text-lg text-slate-500 italic bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">"{transcript}"</p>
+                      ) : (
+                        <p className="text-lg text-slate-300 italic">Drücke das Mikrofon und lies los.</p>
+                      )}
+                    </div>
+
+                    {!feedback && (
+                      <div className="flex flex-col items-center gap-3">
+                        {isListening && !isCapturingSentence && (
+                          <div className="px-4 py-2 rounded-full text-sm font-bold bg-sky-100 text-sky-700">
+                            🎤 Mikrofon bereit
+                          </div>
+                        )}
+                        <button
+                          onClick={toggleSentenceCapture}
+                          disabled={!isSupported}
+                          className={`mx-auto w-24 h-24 rounded-full text-4xl shadow-lg transition-all text-white ${isCapturingSentence ? 'bg-red-500 animate-pulse' : 'bg-green-500 hover:scale-105'}`}
+                        >
+                          {isCapturingSentence ? '◼' : '🎤'}
+                        </button>
+                      </div>
+                    )}
+
+                    {!isSupported && (
+                      <p className="text-red-500 font-semibold text-sm mt-4">Dein Browser unterstützt keine Spracherkennung. Nutze am besten Chrome oder Safari.</p>
+                    )}
+
+                    {errorText && <p className="text-red-500 font-semibold text-sm mt-4">{errorText}</p>}
+
+                    {feedback && (
+                      <div className="mt-6">
+                        {feedback === 'success' ? (
+                          <div className="bg-green-100 text-green-800 p-4 rounded-2xl mb-5">
+                            <p className="text-xl font-black">Klasse vorgelesen! 🎉</p>
+                            <p className="font-semibold">+{lastAwardedPoints} Punkte</p>
+                            {lastSpeedBonus > 0 && <p className="text-sm font-semibold mt-1">inkl. +{lastSpeedBonus} Tempo-Bonus</p>}
+                            <p className="text-sm font-semibold mt-1">Match: {lastMatchPercent}%</p>
+                            {sentenceAttempts > 1 && (
+                              <p className="text-sm font-medium mt-1">Wiederholungsversuch: reduzierte Punkte.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-orange-100 text-orange-800 p-4 rounded-2xl mb-5">
+                            <p className="text-xl font-black">Fast richtig 😊</p>
+                            <p className="text-sm font-semibold mt-1">Match: {lastMatchPercent}%</p>
+                            <p className="text-sm font-semibold mt-1">Nächster Versuch bringt weniger Punkte.</p>
+                            <p className="font-semibold">Versuche es nochmal oder gehe weiter.</p>
+                          </div>
+                        )}
+
+                        <div className="flex gap-3 justify-center flex-wrap">
+                          {feedback === 'try_again' && (
+                            <button
+                              onClick={retrySentence}
+                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-full"
+                            >
+                              Nochmal
+                            </button>
+                          )}
+
+                          <button
+                            onClick={nextSentence}
+                            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-full shadow"
+                          >
+                            Weiter
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'result') {
+            return (
+              <div className="min-h-screen bg-yellow-50 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border-4 border-yellow-300 text-center animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🏆</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-3">Runde fertig!</h1>
+                  <p className="text-slate-600 font-semibold mb-6">{resultText}</p>
+
+                  <div className="bg-yellow-100 rounded-2xl p-5 mb-6 border border-yellow-200">
+                    <p className="text-slate-700 font-bold">Deine Punkte</p>
+                    <p className="text-5xl font-black text-yellow-600 mt-1">{score}</p>
+                  </div>
+
+                  <div className="bg-sky-50 rounded-2xl p-4 mb-6 border border-sky-100">
+                    <p className="text-slate-700 font-bold">Münzen aus dieser Runde</p>
+                    <p className="text-3xl font-black text-sky-600 mt-1">+{earnedCoins} 🪙</p>
+                  </div>
+
+                  <button
+                    onClick={() => { stopListeningSession(); setScreen('start'); }}
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-black py-4 rounded-2xl mb-3"
+                  >
+                    Noch eine Runde
+                  </button>
+
+                  <a href="../index.html" className="text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

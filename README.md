@@ -21,9 +21,22 @@ Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 - 👥 **Multi-User fähig:** Geschwister können sich ein Tablet teilen. Die App merkt sich alle Profile und Spielstände auf dem Gerät.
 - 🏆 **Globale Bestenliste:** Echtzeit-Highscores pro Level und Spielmodus.
 
+### 2. Lese-Fuchs (Vorlesen-App)
+
+👉 **[Lese-Fuchs spielen](https://mainkai.github.io/LernKumpel/lese-fuchs/)**
+
+Der Lese-Fuchs unterstützt Kinder dabei, Sätze laut vorzulesen und sicherer im Lesen zu werden.
+
+**Features:**
+
+- 🎤 **Vorlesen mit Mikrofon:** Kinder lesen Sätze laut vor, die App erkennt den gesprochenen Text.
+- ✅ **Fehlertolerante Prüfung:** Kleine Versprecher werden durch fuzzy matching verziehen.
+- ⭐ **Punktesystem:** Für korrekt vorgelesene Sätze gibt es Punkte.
+- 🪙 **Gemeinsames Münzsystem:** Dieselben Profile und Münzen wie in der Zahlen-Safari.
+
 ## 🚀 Geplante Apps (Roadmap)
 
-- 📖 **Lese-Abenteuer:** Eine geplante App zur Leseförderung.
+- Weitere Lern-Abenteuer folgen.
 
 Das Besondere: Dank der geteilten Datenbank können erspielte Münzen und Profile aus der Zahlen-Safari nahtlos auch in zukünftigen Apps genutzt werden!
 
@@ -48,7 +61,7 @@ LernKumpel/
  ├── zahlen-safari/          # Die fertige Mathe-App
  │   └── index.html          # Single-File React App
  │
- └── lese-abenteuer/         # Geplante Lese-App
+ └── lese-fuchs/             # Vorlesen-App
      └── index.html
 ```
 
@@ -57,9 +70,11 @@ LernKumpel/
 Jeder kann dieses Projekt klonen und sofort lokal ausführen, ohne etwas installieren zu müssen!
 
 1. **Repository klonen:**
+
    ```bash
    git clone https://github.com/mainkai/LernKumpel.git
    ```
+
 2. Ordner im Code-Editor (z.B. VS Code) öffnen.
 3. Die Datei `zahlen-safari/index.html` z.B. mit der Erweiterung "Live Server" öffnen.
 4. Fertig! Die App läuft im Browser.
