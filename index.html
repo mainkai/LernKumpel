@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LernKumpel - Lern-Apps für Kinder</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-sky-200 min-h-screen font-sans text-slate-800 flex flex-col items-center p-6">
+
+    <header class="text-center mt-10 mb-12">
+        <div class="text-6xl mb-4 animate-float">🎒</div>
+        <h1 class="text-4xl md:text-5xl font-black text-sky-900 mb-4 drop-shadow-sm">
+            Willkommen beim LernKumpel!
+        </h1>
+        <p class="text-xl text-sky-800 font-medium max-w-xl mx-auto">
+            Entdecke spannende Lern-Abenteuer. Sammle Münzen, schalte coole Themes frei und lerne spielerisch!
+        </p>
+    </header>
+
+    <main class="w-full max-w-4xl">
+        <h2 class="text-2xl font-bold text-sky-900 mb-6 text-center">Wähle dein Abenteuer:</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Zahlen-Safari (Aktiv) -->
+            <a href="./zahlen-safari/index.html" class="block group">
+                <div class="bg-white rounded-3xl p-6 shadow-lg border-4 border-transparent group-hover:border-sky-400 group-hover:shadow-xl transition-all transform group-hover:-translate-y-2 h-full flex flex-col items-center text-center">
+                    <div class="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center text-5xl mb-4 group-hover:scale-110 transition-transform">
+                        🦁
+                    </div>
+                    <h3 class="text-2xl font-black text-amber-600 mb-2">Zahlen-Safari</h3>
+                    <p class="text-slate-600 font-medium mb-4 flex-grow">
+                        Trainiere Kopfrechnen von Plus bis Geteilt. Sammle Sticker und werde zum Rechen-Profi!
+                    </p>
+                    <span class="bg-amber-500 text-white px-6 py-2 rounded-full font-bold shadow-md group-hover:bg-amber-400 transition-colors">
+                        Jetzt spielen! 🚀
+                    </span>
+                </div>
+            </a>
+
+            <!-- Lese-Abenteuer (Geplant) -->
+            <div class="bg-slate-100 rounded-3xl p-6 shadow-md border-4 border-slate-200 opacity-80 h-full flex flex-col items-center text-center relative overflow-hidden">
+                <div class="absolute top-4 right-4 bg-slate-300 text-slate-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Bald verfügbar
+                </div>
+                <div class="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center text-5xl mb-4 grayscale">
+                    📖
+                </div>
+                <h3 class="text-2xl font-black text-slate-500 mb-2">Lese-Abenteuer</h3>
+                <p class="text-slate-500 font-medium mb-4 flex-grow">
+                    Spannende Geschichten und Leseübungen warten auf dich. Das nächste große Abenteuer!
+                </p>
+                <span class="bg-slate-300 text-slate-500 px-6 py-2 rounded-full font-bold cursor-not-allowed">
+                    In Entwicklung 🛠️
+                </span>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="mt-auto pt-12 pb-6 text-center text-sky-700 font-medium">
+        <p>Mit ❤️ gemacht für kleine Entdecker.</p>
+    </footer>
+
+</body>
+</html>
