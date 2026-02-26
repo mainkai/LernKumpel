@@ -392,12 +392,12 @@
             return problem.answer;
           }, [problem]);
 
-          const handleGameEnd = async (finalScore) => {
+          const handleGameEnd = async (finalScore, finalStreak) => {
             let earnedCoins = Math.floor(finalScore / 10); 
             let newSticker = null;
             let updatedStickers = [...(profile.stickers || [])];
 
-            if (finalScore >= 300) {
+            if (finalStreak === MAX_PROBLEMS) {
               const missingStickers = STICKER_POOL.filter(s => !updatedStickers.includes(s));
               if (missingStickers.length > 0) {
                 newSticker = missingStickers[Math.floor(Math.random() * missingStickers.length)];
@@ -473,7 +473,7 @@
               setTimeout(() => {
                 if (problemsDone + 1 >= MAX_PROBLEMS) {
                   setProblemsDone(prev => prev + 1);
-                  handleGameEnd(newScore);
+                  handleGameEnd(newScore, currentStreak);
                 } else {
                   setProblemsDone(prev => prev + 1);
                   generateProblem(level, gameMode, currentThemeId);
@@ -492,7 +492,7 @@
                 setTimeout(() => {
                   if (problemsDone + 1 >= MAX_PROBLEMS) {
                     setProblemsDone(prev => prev + 1);
-                    handleGameEnd(score);
+                    handleGameEnd(score, 0);
                   } else {
                     setProblemsDone(prev => prev + 1);
                     generateProblem(level, gameMode, currentThemeId);
@@ -1062,7 +1062,7 @@
                     {renderCalculatorButton('1', () => handleInput('1'))} {renderCalculatorButton('2', () => handleInput('2'))} {renderCalculatorButton('3', () => handleInput('3'))}
                     {renderCalculatorButton('C', handleDelete, theme.btnDelete)} {renderCalculatorButton('0', () => handleInput('0'))}
                     <button onClick={checkAnswer} className={`aspect-square rounded-xl text-2xl font-black flex flex-col items-center justify-center active:translate-y-2 active:shadow-none transition-all ${theme.btnAction}`}>
-                      <Check size={32} strokeWidth={4} /><span className="text-sm">GO</span>
+                      <Check size={32} strokeWidth={4} /><span className="text-sm"></span>
                     </button>
                   </div>
                   
