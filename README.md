@@ -2,7 +2,7 @@
 
 Willkommen im LernKumpel Repository! Dies ist eine Sammlung von motivierenden, spielerischen Lern-Apps für Grundschulkinder. Die Apps sind so gestaltet, dass sie direkt im Browser laufen, kinderleicht zu bedienen sind und durch Gamification (Münzen, Sticker, Themes) den Spaß am Lernen fördern.
 
-👉 Hier geht's zur Live-Version! (Füge hier später den Link zum Hauptmenü ein)
+👉 Hier geht's zur Live-Version!
 
 🦁 Aktuelle Apps im LernKumpel-Universum
 
@@ -10,7 +10,7 @@ Willkommen im LernKumpel Repository! Dies ist eine Sammlung von motivierenden, s
 
 👉 Zahlen-Safari spielen
 
-Die Zahlen-Safari (ehemals Kleiner Professor) hilft Kindern, spielerisch Kopfrechnen zu üben.
+Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 
 Features:
 
@@ -64,7 +64,6 @@ LernKumpel/
 Jeder kann dieses Projekt klonen und sofort lokal ausführen, ohne etwas installieren zu müssen!
 
 Repository klonen:
-
 git clone [https://github.com/mainkai/LernKumpel.git](https://github.com/mainkai/LernKumpel.git)
 
 
