@@ -83,6 +83,7 @@
 
         const MAX_PROBLEMS = 10;
         const MAX_ATTEMPTS = 3;
+        const MAX_OWNED_THEMES = 3;
 
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
         const STICKER_POOL = ['🍎', '🦋', '🦖', '🐙', '🦄', '🐉', '🪐', '🚀', '🏰', '💎', '🧸', '🍕', '🍦', '🎈', '🎁', '👑', '⚽', '🎨', '🎸', '🌈'];
@@ -101,9 +102,12 @@
         const THEMES = {
           classic: { id: 'classic', price: 0, name: 'Klassisch', icon: '🎒', pageBg: 'bg-sky-200', deviceBg: 'bg-red-600', deviceBorder: 'border-red-700', bandBg: 'bg-gray-900', displayBg: 'bg-[#a8c6a0]', displayBorder: 'border-gray-800', numpadBg: 'bg-gray-800', btnDefault: 'bg-gray-200 text-gray-800 hover:bg-white shadow-[0_6px_0_0_rgb(156,163,175)]', btnAction: 'bg-blue-500 hover:bg-blue-400 text-white shadow-[0_6px_0_0_rgb(37,99,235)]', btnDelete: 'bg-red-500 hover:bg-red-400 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-red-500', emojis: { title: '🦉', success: '🥳', retry: '🤔', fatal: '😢' }, problemIcons: ['🍎', '✏️', '📚', '🎒', '🖍️', '📏', '✂️', '🏫', '🤓', '💯'] },
           construction: { id: 'construction', price: 200, name: 'Baustelle', icon: '🚧', pageBg: 'bg-amber-100', deviceBg: 'bg-yellow-500', deviceBorder: 'border-yellow-600', bandBg: 'bg-stone-900', displayBg: 'bg-amber-50', displayBorder: 'border-stone-800', numpadBg: 'bg-stone-800', btnDefault: 'bg-stone-200 text-stone-900 hover:bg-white shadow-[0_6px_0_0_rgb(214,211,209)]', btnAction: 'bg-amber-600 hover:bg-amber-500 text-white shadow-[0_6px_0_0_rgb(217,119,6)]', btnDelete: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-yellow-600', emojis: { title: '🚜', success: '🏗️🥳', retry: '🚧', fatal: '🔧' }, problemIcons: ['🚜', '🏗️', '🚧', '👷', '🧱', '🛠️', '🚛', '🔨', '🧰', '🔩'] },
-          animals: { id: 'animals', price: 400, name: 'Tiere', icon: '🦁', pageBg: 'bg-emerald-100', deviceBg: 'bg-emerald-500', deviceBorder: 'border-emerald-700', bandBg: 'bg-green-950', displayBg: 'bg-green-50', displayBorder: 'border-green-900', numpadBg: 'bg-green-900', btnDefault: 'bg-emerald-50 text-emerald-900 hover:bg-white shadow-[0_6px_0_0_rgb(167,243,208)]', btnAction: 'bg-teal-600 hover:bg-teal-500 text-white shadow-[0_6px_0_0_rgb(13,148,136)]', btnDelete: 'bg-orange-500 hover:bg-orange-400 text-white shadow-[0_6px_0_0_rgb(249,115,22)]', textMain: 'text-emerald-600', emojis: { title: '🐒', success: '🦁🎉', retry: '🙈', fatal: '🐢' }, problemIcons: ['🦁', '🐯', '🐼', '🐨', '🐸', '🐵', '🐘', '🦒', '🦊', '🐰'] },
-          space: { id: 'space', price: 600, name: 'Weltraum', icon: '🚀', pageBg: 'bg-indigo-950', deviceBg: 'bg-indigo-600', deviceBorder: 'border-indigo-800', bandBg: 'bg-slate-950', displayBg: 'bg-indigo-100', displayBorder: 'border-slate-800', numpadBg: 'bg-slate-900', btnDefault: 'bg-indigo-200 text-indigo-950 hover:bg-white shadow-[0_6px_0_0_rgb(165,180,252)]', btnAction: 'bg-violet-500 hover:bg-violet-400 text-white shadow-[0_6px_0_0_rgb(139,92,246)]', btnDelete: 'bg-rose-500 hover:bg-rose-400 text-white shadow-[0_6px_0_0_rgb(244,63,94)]', textMain: 'text-indigo-400', emojis: { title: '👨‍🚀', success: '🚀🌟', retry: '🛸', fatal: '💥' }, problemIcons: ['🚀', '🛸', '🌍', '🌙', '⭐', '🪐', '👽', '☄️', '👨‍🚀', '🛰️'] },
-          unicorn: { id: 'unicorn', price: 800, name: 'Einhorn', icon: '🦄', pageBg: 'bg-pink-200', deviceBg: 'bg-fuchsia-400', deviceBorder: 'border-fuchsia-600', bandBg: 'bg-purple-900', displayBg: 'bg-pink-100', displayBorder: 'border-purple-300', numpadBg: 'bg-purple-800', btnDefault: 'bg-pink-50 text-purple-900 hover:bg-white shadow-[0_6px_0_0_rgb(24bcfe8)]', btnAction: 'bg-pink-500 hover:bg-pink-400 text-white shadow-[0_6px_0_0_rgb(219,39,119)]', btnDelete: 'bg-purple-500 hover:bg-purple-400 text-white shadow-[0_6px_0_0_rgb(147,51,234)]', textMain: 'text-fuchsia-500', emojis: { title: '🦄', success: '✨🦄✨', retry: '🧐', fatal: '😿' }, problemIcons: ['🦄', '🌈', '✨', '💖', '🍭', '🎀', '🌸', '🧁', '🧚', '🌟'] }
+          animals: { id: 'animals', price: 200, name: 'Tiere', icon: '🦁', pageBg: 'bg-emerald-100', deviceBg: 'bg-emerald-500', deviceBorder: 'border-emerald-700', bandBg: 'bg-green-950', displayBg: 'bg-green-50', displayBorder: 'border-green-900', numpadBg: 'bg-green-900', btnDefault: 'bg-emerald-50 text-emerald-900 hover:bg-white shadow-[0_6px_0_0_rgb(167,243,208)]', btnAction: 'bg-teal-600 hover:bg-teal-500 text-white shadow-[0_6px_0_0_rgb(13,148,136)]', btnDelete: 'bg-orange-500 hover:bg-orange-400 text-white shadow-[0_6px_0_0_rgb(249,115,22)]', textMain: 'text-emerald-600', emojis: { title: '🐒', success: '🦁🎉', retry: '🙈', fatal: '🐢' }, problemIcons: ['🦁', '🐯', '🐼', '🐨', '🐸', '🐵', '🐘', '🦒', '🦊', '🐰'] },
+          pirate: { id: 'pirate', price: 400, name: 'Piraten', icon: '🏴‍☠️', pageBg: 'bg-orange-200', deviceBg: 'bg-red-800', deviceBorder: 'border-red-950', bandBg: 'bg-stone-900', displayBg: 'bg-amber-100', displayBorder: 'border-stone-800', numpadBg: 'bg-stone-800', btnDefault: 'bg-amber-50 text-stone-900 hover:bg-white shadow-[0_6px_0_0_rgb(253,230,138)]', btnAction: 'bg-yellow-500 hover:bg-yellow-400 text-stone-900 shadow-[0_6px_0_0_rgb(234,179,8)]', btnDelete: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-red-800', emojis: { title: '🦜', success: '💰🏴‍☠️', retry: '⚓', fatal: '💣' }, problemIcons: ['🏴‍☠️', '🦜', '⚓', '⛵', '🗺️', '💎', '💰', '🪙', '💣', '🗡️'] },
+          ocean: { id: 'ocean', price: 600, name: 'Ozean', icon: '🌊', pageBg: 'bg-cyan-200', deviceBg: 'bg-blue-500', deviceBorder: 'border-blue-700', bandBg: 'bg-cyan-900', displayBg: 'bg-cyan-50', displayBorder: 'border-cyan-800', numpadBg: 'bg-cyan-800', btnDefault: 'bg-cyan-100 text-cyan-900 hover:bg-white shadow-[0_6px_0_0_rgb(165,243,252)]', btnAction: 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_6px_0_0_rgb(37,99,235)]', btnDelete: 'bg-teal-500 hover:bg-teal-400 text-white shadow-[0_6px_0_0_rgb(20,184,166)]', textMain: 'text-blue-600', emojis: { title: '🐋', success: '🐬🌊', retry: '🐡', fatal: '🦈' }, problemIcons: ['🐟', '🐠', '🐡', '🦈', '🐙', '🐚', '🦀', '🦞', '🦑', '🐋'] },
+          dinosaur: { id: 'dinosaur', price: 800, name: 'Dinos', icon: '🦖', pageBg: 'bg-lime-200', deviceBg: 'bg-green-600', deviceBorder: 'border-green-800', bandBg: 'bg-stone-800', displayBg: 'bg-lime-50', displayBorder: 'border-stone-700', numpadBg: 'bg-stone-700', btnDefault: 'bg-lime-100 text-stone-900 hover:bg-white shadow-[0_6px_0_0_rgb(217,249,157)]', btnAction: 'bg-green-700 hover:bg-green-600 text-white shadow-[0_6px_0_0_rgb(21,128,61)]', btnDelete: 'bg-orange-600 hover:bg-orange-500 text-white shadow-[0_6px_0_0_rgb(234,88,12)]', textMain: 'text-green-700', emojis: { title: '🦕', success: '🦖🔥', retry: '🥚', fatal: '🌋' }, problemIcons: ['🦖', '🦕', '🐊', '🐢', '🦎', '🐍', '🐉', '🐲', '🌋', '🦴'] },
+          space: { id: 'space', price: 1000, name: 'Weltraum', icon: '🚀', pageBg: 'bg-indigo-950', deviceBg: 'bg-indigo-600', deviceBorder: 'border-indigo-800', bandBg: 'bg-slate-950', displayBg: 'bg-indigo-100', displayBorder: 'border-slate-800', numpadBg: 'bg-slate-900', btnDefault: 'bg-indigo-200 text-indigo-950 hover:bg-white shadow-[0_6px_0_0_rgb(165,180,252)]', btnAction: 'bg-violet-500 hover:bg-violet-400 text-white shadow-[0_6px_0_0_rgb(139,92,246)]', btnDelete: 'bg-rose-500 hover:bg-rose-400 text-white shadow-[0_6px_0_0_rgb(244,63,94)]', textMain: 'text-indigo-400', emojis: { title: '👨‍🚀', success: '🚀🌟', retry: '🛸', fatal: '💥' }, problemIcons: ['🚀', '🛸', '🌍', '🌙', '⭐', '🪐', '👽', '☄️', '👨‍🚀', '🛰️'] },
+          unicorn: { id: 'unicorn', price: 1000, name: 'Einhorn', icon: '🦄', pageBg: 'bg-pink-200', deviceBg: 'bg-fuchsia-400', deviceBorder: 'border-fuchsia-600', bandBg: 'bg-purple-900', displayBg: 'bg-pink-100', displayBorder: 'border-purple-300', numpadBg: 'bg-purple-800', btnDefault: 'bg-pink-50 text-purple-900 hover:bg-white shadow-[0_6px_0_0_rgb(24bcfe8)]', btnAction: 'bg-pink-500 hover:bg-pink-400 text-white shadow-[0_6px_0_0_rgb(219,39,119)]', btnDelete: 'bg-purple-500 hover:bg-purple-400 text-white shadow-[0_6px_0_0_rgb(147,51,234)]', textMain: 'text-fuchsia-500', emojis: { title: '🦄', success: '✨🦄✨', retry: '🧐', fatal: '😿' }, problemIcons: ['🦄', '🌈', '✨', '💖', '🍭', '🎀', '🌸', '🧁', '🧚', '🌟'] }
         };
 
         // --- CUSTOM HOOKS ---
@@ -292,7 +296,12 @@
           };
 
           const buyTheme = async (themeToBuy) => {
-            if (!profile || profile.coins < themeToBuy.price || profile.unlockedThemes.includes(themeToBuy.id)) return;
+            if (
+              !profile ||
+              profile.coins < themeToBuy.price ||
+              profile.unlockedThemes.includes(themeToBuy.id) ||
+              profile.unlockedThemes.length >= MAX_OWNED_THEMES
+            ) return;
             playCoin();
             const profileRef = doc(db, 'global_profiles', activeProfileId);
             await updateDoc(profileRef, {
@@ -301,6 +310,26 @@
               activeTheme: themeToBuy.id 
             });
             setCurrentThemeId(themeToBuy.id);
+          };
+
+          const sellTheme = async (themeToSell) => {
+            if (!profile || themeToSell.id === 'classic' || !profile.unlockedThemes.includes(themeToSell.id)) return;
+
+            const refund = Math.floor(themeToSell.price * 0.5);
+            const updatedThemes = profile.unlockedThemes.filter(id => id !== themeToSell.id);
+            const nextActiveTheme = currentThemeId === themeToSell.id ? 'classic' : currentThemeId;
+
+            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            await updateDoc(profileRef, {
+              coins: (profile.coins || 0) + refund,
+              unlockedThemes: updatedThemes,
+              activeTheme: nextActiveTheme
+            });
+
+            if (currentThemeId === themeToSell.id) {
+              setCurrentThemeId('classic');
+            }
+            playCoin();
           };
 
           const changeTheme = async (newThemeId) => {
@@ -642,7 +671,7 @@
                     disabled={!setupName.trim()}
                     className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:translate-y-0 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_0_rgb(21,128,61)] disabled:shadow-none active:shadow-none active:translate-y-2 transition-all"
                   >
-                    Profil speichern!
+                    Start!
                   </button>
                   
                   {profiles.length > 0 && (
@@ -731,6 +760,9 @@
 
           // --- SHOP BILDSCHIRM ---
           if (screen === 'shop') {
+            const ownedThemeCount = profile.unlockedThemes.length;
+            const atThemeLimit = ownedThemeCount >= MAX_OWNED_THEMES;
+
             return (
               <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-4 pt-20 font-sans transition-colors duration-500`}>
                 <TopBar />
@@ -741,12 +773,15 @@
                     </div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
                     <p className="text-gray-500 font-medium">Schalte neue Welten frei!</p>
+                    <p className="text-sm font-bold text-blue-600 mt-2">Themes im Besitz: {ownedThemeCount} / {MAX_OWNED_THEMES}</p>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 mb-6 space-y-3">
                     {Object.values(THEMES).sort((a, b) => a.price - b.price).map(t => {
                       const isOwned = profile.unlockedThemes.includes(t.id);
+                      const isClassic = t.id === 'classic';
                       const canAfford = profile.coins >= t.price;
+                      const canBuy = canAfford && !atThemeLimit;
                       return (
                         <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${isOwned ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
                           <div className="flex items-center gap-3">
@@ -763,18 +798,32 @@
                           {!isOwned ? (
                             <button 
                               onClick={() => buyTheme(t)} 
-                              disabled={!canAfford}
-                              className={`px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-1 transition-all ${canAfford ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
+                              disabled={!canBuy}
+                              aria-label="Theme kaufen"
+                              title={canBuy ? 'Kaufen' : atThemeLimit ? `Maximal ${MAX_OWNED_THEMES} Themes gleichzeitig` : 'Nicht genug Münzen'}
+                              className={`w-10 h-10 rounded-lg font-bold shadow-sm flex items-center justify-center transition-all ${canBuy ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
                             >
-                              {canAfford ? <Unlock size={16}/> : <Lock size={16}/>} Kaufen
+                              {canBuy ? <ShoppingCart size={16}/> : <Lock size={16}/>}
                             </button>
                           ) : (
-                            <button 
-                              onClick={() => changeTheme(t.id)} 
-                              className={`px-4 py-2 rounded-lg font-bold transition-all ${currentThemeId === t.id ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                            >
-                              {currentThemeId === t.id ? 'Aktiv' : 'Wählen'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => changeTheme(t.id)} 
+                                className={`px-4 py-2 rounded-lg font-bold transition-all ${currentThemeId === t.id ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                              >
+                                {currentThemeId === t.id ? 'Aktiv' : 'Wählen'}
+                              </button>
+                              {!isClassic && (
+                                <button
+                                  onClick={() => sellTheme(t)}
+                                  aria-label="Theme verkaufen"
+                                  className="w-10 h-10 rounded-lg font-bold transition-all bg-yellow-100 text-yellow-800 hover:bg-yellow-200 flex items-center justify-center"
+                                  title={`Verkaufen für ${Math.floor(t.price * 0.5)} Münzen`}
+                                >
+                                  💸
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
