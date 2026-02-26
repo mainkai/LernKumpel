@@ -182,7 +182,10 @@
 
           const profile = profiles.find(p => p.id === activeProfileId);
           const theme = THEMES[currentThemeId] || THEMES.classic;
-          const sessionProblemsRef = useRef(new Set()); 
+          const sessionProblemsRef = useRef(new Set());
+          const calculatorViewportRef = useRef(null);
+          const calculatorRef = useRef(null);
+          const [calculatorScale, setCalculatorScale] = useState(1);
 
           // --- THEME SYNC ---
           useEffect(() => {
@@ -557,6 +560,43 @@
             window.addEventListener('keydown', handleKeyDown);
             return () => window.removeEventListener('keydown', handleKeyDown);
           }, []);
+
+          useEffect(() => {
+            if (screen !== 'game') {
+              setCalculatorScale(1);
+              return;
+            }
+
+            const MAX_CALCULATOR_SCALE = 1.25;
+            const updateCalculatorScale = () => {
+              const viewportEl = calculatorViewportRef.current;
+              const calculatorEl = calculatorRef.current;
+              if (!viewportEl || !calculatorEl) return;
+
+              const availableWidth = viewportEl.clientWidth;
+              const availableHeight = viewportEl.clientHeight;
+              if (!availableWidth || !availableHeight) return;
+
+              const widthScale = availableWidth / calculatorEl.offsetWidth;
+              const heightScale = availableHeight / calculatorEl.offsetHeight;
+              const nextScale = Math.min(widthScale, heightScale, MAX_CALCULATOR_SCALE);
+              setCalculatorScale(nextScale);
+            };
+
+            const rafId = requestAnimationFrame(updateCalculatorScale);
+            window.addEventListener('resize', updateCalculatorScale);
+            window.visualViewport?.addEventListener('resize', updateCalculatorScale);
+            const resizeObserver = new ResizeObserver(updateCalculatorScale);
+            if (calculatorViewportRef.current) resizeObserver.observe(calculatorViewportRef.current);
+            if (calculatorRef.current) resizeObserver.observe(calculatorRef.current);
+
+            return () => {
+              cancelAnimationFrame(rafId);
+              window.removeEventListener('resize', updateCalculatorScale);
+              window.visualViewport?.removeEventListener('resize', updateCalculatorScale);
+              resizeObserver.disconnect();
+            };
+          }, [screen, level, gameMode, feedback]);
 
           const getOpSymbol = (op) => { switch(op) { case '*': return '×'; case '/': return '÷'; default: return op; } };
           const renderCalculatorButton = (label, onClick, customClass = null) => (
@@ -1028,7 +1068,13 @@
           return (
             <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-2 sm:p-4 pt-20 font-sans transition-colors duration-500`}>
               <TopBar />
-              <div className={`${theme.deviceBg} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md border-8 ${theme.deviceBorder} overflow-hidden flex flex-col transition-colors duration-500 ${feedback === 'error' || feedback === 'fatal' ? 'animate-shake' : ''}`}>
+              <div ref={calculatorViewportRef} className="w-full flex-1 flex items-start justify-center overflow-hidden">
+                <div
+                  ref={calculatorRef}
+                  className="max-w-none"
+                  style={{ width: '28rem', transform: `scale(${calculatorScale})`, transformOrigin: 'top center', transition: 'transform 180ms ease-out' }}
+                >
+              <div className={`${theme.deviceBg} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full border-8 ${theme.deviceBorder} overflow-hidden flex flex-col transition-colors duration-500 ${feedback === 'error' || feedback === 'fatal' ? 'animate-shake' : ''}`}>
                 
                 <div className={`${theme.bandBg} py-2 px-6 flex justify-between items-center text-gray-300 transition-colors duration-500`}>
                   <div className="font-black text-sm tracking-widest uppercase flex items-center gap-2"><Calculator size={16} /> ZAHLEN SAFARI</div>
@@ -1112,6 +1158,9 @@
                     </button>
                   </div>
                 </div>
+
+                </div>
+              </div>
 
               </div>
             </div>
