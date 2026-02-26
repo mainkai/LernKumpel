@@ -91,10 +91,10 @@
         // --- HILFSFUNKTION FÜR ABZEICHEN (BADGES) ---
         const getBadge = (score, mode) => {
           const baseMax = mode === 'gap' ? 1200 : 1000;
-          if (score >= baseMax + 150) return { icon: '👑', name: 'Rechen-Legende', color: 'text-yellow-500', bg: 'bg-yellow-100' };
-          if (score >= baseMax) return { icon: '💎', name: 'Diamant-Genie', color: 'text-cyan-500', bg: 'bg-cyan-100' };
-          if (score >= baseMax * 0.8) return { icon: '🥇', name: 'Gold-Rechner', color: 'text-yellow-400', bg: 'bg-yellow-50' };
-          if (score >= baseMax * 0.5) return { icon: '🥈', name: 'Silber-Fan', color: 'text-gray-400', bg: 'bg-gray-100' };
+          if (score >= baseMax * 1.5) return { icon: '👑', name: 'Rechen-Legende', color: 'text-yellow-500', bg: 'bg-yellow-100' };
+          if (score >= baseMax * 1.25) return { icon: '💎', name: 'Diamant-Genie', color: 'text-cyan-500', bg: 'bg-cyan-100' };
+          if (score >= baseMax * 1.0) return { icon: '🥇', name: 'Gold-Rechner', color: 'text-yellow-400', bg: 'bg-yellow-50' };
+          if (score >= baseMax * 0.75) return { icon: '🥈', name: 'Silber-Fan', color: 'text-gray-400', bg: 'bg-gray-100' };
           return { icon: '🥉', name: 'Bronze-Starter', color: 'text-amber-600', bg: 'bg-amber-50' };
         };
 
@@ -622,7 +622,7 @@
                     onClick={() => { setScreen('setup'); playClick(); }} 
                     className="w-full bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors border-2 border-sky-200 border-dashed"
                   >
-                    <Users size={20} /> Neues Kind hinzufügen
+                    <Users size={20} /> Neuen Spieler hinzufügen
                   </button>
                 </div>
               </div>
@@ -849,7 +849,7 @@
                       <BookOpen size={40} />
                     </div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Stickerheft</h2>
-                    <p className="text-gray-500 font-medium">Spiele gut, um Tüten zu finden!</p>
+                    <p className="text-gray-500 font-medium">Löse alle Aufgaben, um Sticker zu bekommen!</p>
                   </div>
                   
                   <div className="bg-gray-100 rounded-2xl p-1 mb-4">
@@ -970,7 +970,7 @@
             const percentage = Math.min(100, (score / maxBaseScore) * 100); 
             const earnedBadge = getBadge(score, gameMode);
             
-            let resultMessage = "Gut gemacht!";
+            let resultMessage = "";
             if (percentage === 100) resultMessage = "Perfekt! Ein Genie!";
             else if (percentage >= 80) resultMessage = "Super Leistung!";
             else if (percentage >= 50) resultMessage = "Weiter so!";
