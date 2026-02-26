@@ -34,6 +34,19 @@ Der Lese-Fuchs unterstützt Kinder dabei, Sätze laut vorzulesen und sicherer im
 - ⭐ **Punktesystem:** Für korrekt vorgelesene Sätze gibt es Punkte.
 - 🪙 **Gemeinsames Münzsystem:** Dieselben Profile und Münzen wie in der Zahlen-Safari.
 
+### 3. Mal-Atelier (Malen + KI)
+
+👉 **[Mal-Atelier spielen](https://mainkai.github.io/LernKumpel/mal-atelier/)**
+
+Das Mal-Atelier verbindet freies Zeichnen mit kindgerechter KI-Unterstützung.
+
+**Features:**
+
+- 🎨 **Einfaches Zeichnen:** Fokus auf wenige Werkzeuge (Farbe + Strichdicke).
+- 🧠 **KI-Bewertung:** Die KI bewertet auf einer Skala von 0–100%, wie gut die Zeichnung zur Aufgabe passt.
+- 🪙 **Gemeinsames Profilsystem:** Dieselben Profile und Münzen wie in Zahlen-Safari und Lese-Fuchs.
+- ✨ **KI-Zauberbild:** Gegen Münz-Einsatz wird aus der Kinderzeichnung ein KI-Bild (Image-Edit) erzeugt.
+
 ## 🚀 Geplante Apps (Roadmap)
 
 - Weitere Lern-Abenteuer folgen.
@@ -62,7 +75,10 @@ LernKumpel/
  │   └── index.html          # Single-File React App
  │
  └── lese-fuchs/             # Vorlesen-App
-     └── index.html
+ │   └── index.html
+ │
+ └── mal-atelier/            # Malen + KI-Bewertung + KI-Image-Edit
+   └── index.html
 ```
 
 ## 🛠️ Lokale Entwicklung / Setup

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mal-Atelier</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 2.6s ease-in-out infinite; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in { animation: popIn 0.28s ease-out; }
+
+        @keyframes scoreReveal {
+          0% { transform: translateY(8px) scale(0.92); opacity: 0; }
+          65% { transform: translateY(-2px) scale(1.05); opacity: 1; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-score-reveal { animation: scoreReveal 0.42s ease-out; }
+
+        body { overscroll-behavior-y: none; }
+        canvas { touch-action: none; }
+    </style>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+        }
+      }
+    </script>
+</head>
+<body class="bg-indigo-100">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, arrayUnion, collection, query, where, documentId } from 'firebase/firestore';
+
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+        const Users = ({size=20, className=""}) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        );
+
+        const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
+        const BRUSH_COLORS = ['#111827', '#ef4444', '#f97316', '#eab308', '#22c55e', '#0ea5e9', '#6366f1', '#ec4899'];
+        const MAX_ROUNDS = 5;
+        const AI_EDIT_COST = 50;
+        const DEFAULT_EVALUATION_MODEL = 'openai/gpt-4o-mini';
+        const DEFAULT_IMAGE_EDIT_MODEL = 'bytedance-seed/seedream-4.5';
+        const DRAW_TASKS = [
+            { prompt: 'eine Katze', emoji: '🐱' },
+            { prompt: 'ein Haus mit Baum', emoji: '🏠' },
+            { prompt: 'eine Rakete', emoji: '🚀' },
+            { prompt: 'einen Regenbogen', emoji: '🌈' },
+            { prompt: 'einen Fisch im Meer', emoji: '🐟' },
+            { prompt: 'ein Auto', emoji: '🚗' },
+            { prompt: 'eine Blume', emoji: '🌸' },
+            { prompt: 'einen Dinosaurier', emoji: '🦖' },
+            { prompt: 'einen Hund', emoji: '🐶' },
+            { prompt: 'eine Burg', emoji: '🏰' },
+            { prompt: 'einen Schmetterling', emoji: '🦋' },
+            { prompt: 'einen Drachen', emoji: '🐉' },
+            { prompt: 'einen Vogel', emoji: '🐦' },
+            { prompt: 'eine Prinzessin oder einen Prinzen', emoji: '👑' },
+            { prompt: 'einen Roboter', emoji: '🤖' },
+            { prompt: 'einen Baum', emoji: '🌳' },
+            { prompt: 'einen Elefanten', emoji: '🐘' },
+            { prompt: 'einen Superhelden', emoji: '🦸' },
+            { prompt: 'eine Meerjungfrau oder einen Meermann', emoji: '🧜' },
+            { prompt: 'einen Clown', emoji: '🤡' },
+            { prompt: 'einen Apfelbaum', emoji: '🍎🌳' },
+            { prompt: 'einen Schneemann', emoji: '⛄' },
+            { prompt: 'eine Eule', emoji: '🦉' },
+            { prompt: 'einen Marienkäfer', emoji: '🐞' },
+            { prompt: 'eine Giraffe', emoji: '🦒' },
+            { prompt: 'einen Affen', emoji: '🐵' },
+            { prompt: 'eine Biene auf einer Blume', emoji: '🐝🌸' },
+            { prompt: 'einen Frosch', emoji: '🐸' },
+            { prompt: 'einen Schmetterling auf einer Blume', emoji: '🦋🌼' },
+            { prompt: 'einen Löwen', emoji: '🦁' },
+            { prompt: 'eine Eisdiele', emoji: '🍦' },
+            { prompt: 'einen Wal im Meer', emoji: '🐋' },
+            { prompt: 'einen Panda', emoji: '🐼' },
+            { prompt: 'eine Rakete zum Mond', emoji: '🚀🌕' },
+            { prompt: 'einen Bären', emoji: '🐻' },
+            { prompt: 'eine Hexe oder einen Zauberer', emoji: '🧙' },
+            { prompt: 'einen Regenbogen mit Wolken', emoji: '🌈☁️' },
+            { prompt: 'einen Hund, der einen Ball fängt', emoji: '🐶⚽' },
+            { prompt: 'eine Katze auf einem Baum', emoji: '🐱🌳' },
+            { prompt: 'einen Vogel auf einem Ast', emoji: '🐦🌿' },
+            { prompt: 'einen Dinosaurier in der Stadt', emoji: '🦖🏙️' },
+            { prompt: 'einen Roboter, der tanzt', emoji: '🤖💃' },
+            { prompt: 'eine Meerjungfrau unter Wasser', emoji: '🧜🌊' },
+            { prompt: 'einen Superhelden, der fliegt', emoji: '🦸‍♂️✈️' },
+            { prompt: 'einen Clown mit Luftballons', emoji: '🤡🎈' },
+            { prompt: 'einen Apfelbaum mit Äpfeln', emoji: '🍎🌳' },
+            { prompt: 'einen Schneemann mit Hut', emoji: '⛄🎩' },
+            { prompt: 'eine Eule auf einem Ast', emoji: '🦉🌿' },
+            { prompt: 'einen Marienkäfer auf einem Blatt', emoji: '🐞🍃' },
+            { prompt: 'eine Giraffe, die Blätter frisst', emoji: '🦒🍂' },
+            { prompt: 'einen Affen, der eine Banane isst', emoji: '🐵🍌' },
+            { prompt: 'eine Biene, die Honig macht', emoji: '🐝🍯' },
+            { prompt: 'einen Frosch auf einem Seerosenblatt', emoji: '🐸🌺' },
+            { prompt: 'einen Schmetterling, der aus einem Kokon schlüpft', emoji: '🦋🪱' }
+        ];
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
+          authDomain: "zahlensafari.firebaseapp.com",
+          projectId: "zahlensafari",
+          storageBucket: "zahlensafari.firebasestorage.app",
+          messagingSenderId: "569809723706",
+          appId: "1:569809723706:web:7a1befeff13b36422c7003"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
+
+        const parseJsonFromText = (text) => {
+          if (!text) return null;
+          const direct = text.trim();
+          try {
+            return JSON.parse(direct);
+          } catch {
+            const start = direct.indexOf('{');
+            const end = direct.lastIndexOf('}');
+            if (start >= 0 && end > start) {
+              try {
+                return JSON.parse(direct.slice(start, end + 1));
+              } catch {
+                return null;
+              }
+            }
+            return null;
+          }
+        };
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const fileTimestamp = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const extensionFromMime = (mimeType) => {
+          if (!mimeType || typeof mimeType !== 'string') return 'png';
+          if (mimeType.includes('png')) return 'png';
+          if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return 'jpg';
+          if (mimeType.includes('webp')) return 'webp';
+          if (mimeType.includes('gif')) return 'gif';
+          return 'png';
+        };
+
+        const getCanvasMetrics = (canvas) => {
+          const rect = canvas.getBoundingClientRect();
+          const style = window.getComputedStyle(canvas);
+          const borderLeft = Number.parseFloat(style.borderLeftWidth || '0') || 0;
+          const borderRight = Number.parseFloat(style.borderRightWidth || '0') || 0;
+          const borderTop = Number.parseFloat(style.borderTopWidth || '0') || 0;
+          const borderBottom = Number.parseFloat(style.borderBottomWidth || '0') || 0;
+
+          const cssWidth = Math.max(1, rect.width - borderLeft - borderRight);
+          const cssHeight = Math.max(1, rect.height - borderTop - borderBottom);
+
+          return {
+            cssWidth,
+            cssHeight,
+            offsetLeft: rect.left + borderLeft,
+            offsetTop: rect.top + borderTop
+          };
+        };
+
+        function App() {
+          const [user, setUser] = useState(null);
+          const [linkedProfileIds, setLinkedProfileIds] = useState([]);
+          const [profiles, setProfiles] = useState([]);
+          const [activeProfileId, setActiveProfileId] = useState(null);
+          const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+          const [screen, setScreen] = useState('loading');
+
+          const [setupName, setSetupName] = useState('');
+          const [setupAvatar, setSetupAvatar] = useState('🦊');
+
+          const [roundTasks, setRoundTasks] = useState([]);
+          const [roundIndex, setRoundIndex] = useState(0);
+          const [score, setScore] = useState(0);
+          const [feedback, setFeedback] = useState('');
+          const [lastRoundScore, setLastRoundScore] = useState(0);
+          const [lastRoundComment, setLastRoundComment] = useState('');
+          const [hasRoundScored, setHasRoundScored] = useState(false);
+          const [resultText, setResultText] = useState('');
+          const [earnedCoins, setEarnedCoins] = useState(0);
+          const [errorText, setErrorText] = useState('');
+          const [isBusy, setIsBusy] = useState(false);
+          const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+          const [brushColor, setBrushColor] = useState(BRUSH_COLORS[0]);
+          const [brushSize, setBrushSize] = useState(8);
+          const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+
+          const [openRouterApiKey, setOpenRouterApiKey] = useState(localStorage.getItem('malAtelierOpenRouterKey') || '');
+          const [evaluationModel, setEvaluationModel] = useState(DEFAULT_EVALUATION_MODEL);
+          const [imageEditModel, setImageEditModel] = useState(DEFAULT_IMAGE_EDIT_MODEL);
+
+          const canvasRef = useRef(null);
+          const canvasCssSizeRef = useRef({ width: 0, height: 0 });
+          const drawingRef = useRef(false);
+          const lastPointRef = useRef(null);
+
+          const profile = useMemo(() => profiles.find((p) => p.id === activeProfileId), [profiles, activeProfileId]);
+          const currentTask = roundTasks[roundIndex] || null;
+
+          useEffect(() => {
+            localStorage.setItem('malAtelierOpenRouterKey', openRouterApiKey);
+          }, [openRouterApiKey]);
+
+          useEffect(() => {
+            const initAuth = async () => {
+              try {
+                await signInAnonymously(auth);
+              } catch (err) {
+                console.error('Auth error:', err);
+              }
+            };
+
+            initAuth();
+            return onAuthStateChanged(auth, setUser);
+          }, []);
+
+          useEffect(() => {
+            if (!user) return;
+
+            const deviceRef = doc(db, 'devices', user.uid);
+            const unsubDevice = onSnapshot(deviceRef, (docSnap) => {
+              if (docSnap.exists()) {
+                setLinkedProfileIds(docSnap.data().linkedProfiles || []);
+              } else {
+                setLinkedProfileIds([]);
+                setIsLoadingProfile(false);
+                setScreen((prev) => (prev === 'loading' ? 'setup' : prev));
+              }
+            }, (err) => {
+              console.error('Device error:', err);
+              setErrorText('Das Profil konnte nicht geladen werden.');
+            });
+
+            return () => unsubDevice();
+          }, [user]);
+
+          useEffect(() => {
+            if (!linkedProfileIds.length) {
+              setProfiles([]);
+              return;
+            }
+
+            const ids = linkedProfileIds.slice(0, 10);
+            const profilesQuery = query(collection(db, 'global_profiles'), where(documentId(), 'in', ids));
+
+            const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
+              const loadedProfiles = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+              loadedProfiles.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+              setProfiles(loadedProfiles);
+              setIsLoadingProfile(false);
+              setScreen((prev) => (prev === 'loading' ? 'profile_select' : prev));
+            }, (err) => {
+              console.error('Profiles error:', err);
+              setIsLoadingProfile(false);
+              setErrorText('Profile konnten nicht geladen werden.');
+            });
+
+            return () => unsubProfiles();
+          }, [linkedProfileIds]);
+
+          const resizeCanvasToDisplay = useCallback((preserveDrawing = false) => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const { cssWidth, cssHeight } = getCanvasMetrics(canvas);
+            const ratio = window.devicePixelRatio || 1;
+            const pixelWidth = Math.max(1, Math.round(cssWidth * ratio));
+            const pixelHeight = Math.max(1, Math.round(cssHeight * ratio));
+
+            if (canvas.width === pixelWidth && canvas.height === pixelHeight) {
+              canvasCssSizeRef.current = { width: cssWidth, height: cssHeight };
+              if (!preserveDrawing) {
+                const ctx = canvas.getContext('2d');
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+              }
+              return;
+            }
+
+            let snapshotCanvas = null;
+            if (preserveDrawing && canvas.width > 0 && canvas.height > 0) {
+              snapshotCanvas = document.createElement('canvas');
+              snapshotCanvas.width = canvas.width;
+              snapshotCanvas.height = canvas.height;
+              const snapshotCtx = snapshotCanvas.getContext('2d');
+              snapshotCtx.drawImage(canvas, 0, 0);
+            }
+
+            canvas.width = pixelWidth;
+            canvas.height = pixelHeight;
+            canvasCssSizeRef.current = { width: cssWidth, height: cssHeight };
+
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (snapshotCanvas) {
+              ctx.drawImage(snapshotCanvas, 0, 0, snapshotCanvas.width, snapshotCanvas.height, 0, 0, canvas.width, canvas.height);
+            }
+          }, []);
+
+          useEffect(() => {
+            if (screen !== 'game') return;
+            resizeCanvasToDisplay(false);
+          }, [screen, roundIndex, resizeCanvasToDisplay]);
+
+          useEffect(() => {
+            if (screen !== 'game') return;
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            resizeCanvasToDisplay(true);
+
+            const resizeObserver = new ResizeObserver(() => {
+              resizeCanvasToDisplay(true);
+            });
+            const onWindowResize = () => resizeCanvasToDisplay(true);
+
+            resizeObserver.observe(canvas);
+            window.addEventListener('resize', onWindowResize);
+
+            return () => {
+              resizeObserver.disconnect();
+              window.removeEventListener('resize', onWindowResize);
+            };
+          }, [screen, resizeCanvasToDisplay]);
+
+          const saveProfile = async () => {
+            const name = setupName.trim();
+            if (!user || !name) return;
+
+            const profileId = name.toLowerCase();
+            const profileRef = doc(db, 'global_profiles', profileId);
+            const profileSnap = await getDoc(profileRef);
+
+            if (!profileSnap.exists()) {
+              await setDoc(profileRef, {
+                name,
+                avatar: setupAvatar,
+                coins: 0,
+                unlockedThemes: ['classic'],
+                activeTheme: 'classic',
+                stickers: []
+              });
+            } else if (profileSnap.data().avatar !== setupAvatar) {
+              await updateDoc(profileRef, { avatar: setupAvatar });
+            }
+
+            await setDoc(doc(db, 'devices', user.uid), {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
+
+            setActiveProfileId(profileId);
+            setScreen('start');
+            setSetupName('');
+            setSetupAvatar('🦊');
+          };
+
+          const startGame = () => {
+            setRoundTasks(shuffle(DRAW_TASKS).slice(0, MAX_ROUNDS));
+            setRoundIndex(0);
+            setScore(0);
+            setFeedback('');
+            setLastRoundScore(0);
+            setLastRoundComment('');
+            setHasRoundScored(false);
+            setGeneratedImageUrl('');
+            setResultText('');
+            setEarnedCoins(0);
+            setErrorText('');
+            setScreen('game');
+          };
+
+          const getCanvasDataUrl = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return '';
+            return canvas.toDataURL('image/png');
+          };
+
+          const getCanvasDataUrlForDownload = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return '';
+
+            const { cssWidth, cssHeight } = getCanvasMetrics(canvas);
+            const displayAspect = cssWidth / cssHeight;
+            const pixelAspect = canvas.width / canvas.height;
+
+            if (Math.abs(displayAspect - pixelAspect) < 0.001) {
+              return canvas.toDataURL('image/png');
+            }
+
+            const exportWidth = canvas.width;
+            const exportHeight = Math.max(1, Math.round(exportWidth / displayAspect));
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = exportWidth;
+            exportCanvas.height = exportHeight;
+
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCtx.fillStyle = '#ffffff';
+            exportCtx.fillRect(0, 0, exportWidth, exportHeight);
+            exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, exportWidth, exportHeight);
+
+            return exportCanvas.toDataURL('image/png');
+          };
+
+          const clearCanvas = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            setGeneratedImageUrl('');
+          };
+
+          const pointFromEvent = (event) => {
+            const canvas = canvasRef.current;
+            const { cssWidth, cssHeight, offsetLeft, offsetTop } = getCanvasMetrics(canvas);
+            const scaleX = canvas.width / cssWidth;
+            const scaleY = canvas.height / cssHeight;
+            const cssX = clamp(event.clientX - offsetLeft, 0, cssWidth);
+            const cssY = clamp(event.clientY - offsetTop, 0, cssHeight);
+            return {
+              x: cssX * scaleX,
+              y: cssY * scaleY
+            };
+          };
+
+          const drawSegment = (start, end) => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const { width } = canvasCssSizeRef.current;
+            const scale = width ? (canvas.width / width) : 1;
+            ctx.strokeStyle = brushColor;
+            ctx.lineWidth = brushSize * scale;
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+          };
+
+          const onPointerDown = (event) => {
+            event.preventDefault();
+            const point = pointFromEvent(event);
+            drawingRef.current = true;
+            lastPointRef.current = point;
+            drawSegment(point, point);
+          };
+
+          const onPointerMove = (event) => {
+            if (!drawingRef.current || !lastPointRef.current) return;
+            event.preventDefault();
+            const point = pointFromEvent(event);
+            drawSegment(lastPointRef.current, point);
+            lastPointRef.current = point;
+          };
+
+          const onPointerUp = () => {
+            drawingRef.current = false;
+            lastPointRef.current = null;
+          };
+
+          const downloadBlob = (blob, filename) => {
+            const link = document.createElement('a');
+            const objectUrl = URL.createObjectURL(blob);
+            link.href = objectUrl;
+            link.download = filename;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+          };
+
+          const downloadUrl = async (url, fileBaseName) => {
+            if (!url) throw new Error('Kein Bild zum Speichern vorhanden.');
+
+            if (url.startsWith('data:')) {
+              const parts = url.match(/^data:([^;]+);/);
+              const mimeType = parts?.[1] || 'image/png';
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const extension = extensionFromMime(mimeType);
+              downloadBlob(blob, `${fileBaseName}.${extension}`);
+              return;
+            }
+
+            try {
+              const response = await fetch(url);
+              if (!response.ok) throw new Error('Download fehlgeschlagen.');
+              const blob = await response.blob();
+              const extension = extensionFromMime(blob.type);
+              downloadBlob(blob, `${fileBaseName}.${extension}`);
+            } catch {
+              window.open(url, '_blank', 'noopener,noreferrer');
+              throw new Error('Direkter Download war nicht möglich. Bild wurde in neuem Tab geöffnet.');
+            }
+          };
+
+          const saveOwnDrawing = async () => {
+            try {
+              setErrorText('');
+              const imageDataUrl = getCanvasDataUrlForDownload();
+              await downloadUrl(imageDataUrl, `${fileTimestamp()}-malatelier-zeichnung`);
+            } catch (error) {
+              setErrorText(error.message || 'Zeichnung konnte nicht gespeichert werden.');
+            }
+          };
+
+          const saveGeneratedImage = async () => {
+            try {
+              setErrorText('');
+              await downloadUrl(generatedImageUrl, `${fileTimestamp()}-malatelier-zauberbild`);
+            } catch (error) {
+              setErrorText(error.message || 'KI-Bild konnte nicht gespeichert werden.');
+            }
+          };
+
+          const callOpenRouter = async ({ model, messages, responseFormat }) => {
+            if (!openRouterApiKey.trim()) {
+              throw new Error('Bitte trage einen OpenRouter API-Key ein.');
+            }
+
+            const body = {
+              model,
+              messages,
+              temperature: 0.2
+            };
+
+            if (responseFormat) {
+              body.response_format = responseFormat;
+            }
+
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openRouterApiKey.trim()}`,
+                'HTTP-Referer': window.location.href,
+                'X-Title': 'LernKumpel-Malatelier'
+              },
+              body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+              const text = await response.text();
+              throw new Error(`KI-API Fehler (${response.status}): ${text.slice(0, 220)}`);
+            }
+
+            return response.json();
+          };
+
+          const evaluateDrawing = async () => {
+            if (!currentTask || hasRoundScored || isBusy) return;
+
+            try {
+              setIsBusy(true);
+              setErrorText('');
+              setFeedback('KI bewertet dein Bild...');
+
+              const imageDataUrl = getCanvasDataUrl();
+              const prompt = `Du bist ein KI-Bildbewerter für Kinderzeichnungen. Aufgabe: "Male ${currentTask.prompt}".\nBewerte, wie gut die Zeichnung zur Aufgabe passt.\nEs gibt mehr Punkte für viele Details, verschiedene Farben und klar erkennbare Motive.\nAntworte nur als JSON mit den Feldern:\n- score: ganze Zahl 0 bis 100\n- feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
+
+              const result = await callOpenRouter({
+                model: evaluationModel,
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: prompt },
+                      { type: 'image_url', image_url: { url: imageDataUrl } }
+                    ]
+                  }
+                ],
+                responseFormat: { type: 'json_object' }
+              });
+
+              const text = result?.choices?.[0]?.message?.content || '';
+              const parsed = parseJsonFromText(text) || {};
+              const aiScore = clamp(Number(parsed.score) || 0, 0, 100);
+              const aiFeedback = (parsed.feedback || 'Danke fürs Malen!').toString().slice(0, 120);
+
+              setLastRoundScore(aiScore);
+              setLastRoundComment(aiFeedback);
+              setHasRoundScored(true);
+              setScore((prev) => prev + aiScore);
+              setFeedback('');
+            } catch (err) {
+              console.error(err);
+              setErrorText(err.message || 'KI-Bewertung fehlgeschlagen.');
+              setFeedback('');
+            } finally {
+              setIsBusy(false);
+            }
+          };
+
+          const extractGeneratedImageUrl = (apiResult) => {
+            const choice = apiResult?.choices?.[0]?.message;
+            if (!choice) return '';
+
+            if (Array.isArray(choice.images) && choice.images[0]?.image_url?.url) {
+              return choice.images[0].image_url.url;
+            }
+
+            if (Array.isArray(choice.content)) {
+              for (const part of choice.content) {
+                if (part?.type === 'image_url' && part?.image_url?.url) {
+                  return part.image_url.url;
+                }
+                if (part?.type === 'output_image' && part?.image_url) {
+                  return part.image_url;
+                }
+              }
+            }
+
+            const maybeText = choice.content;
+            if (typeof maybeText === 'string') {
+              const match = maybeText.match(/https?:\/\/\S+/);
+              if (match) return match[0];
+            }
+
+            return '';
+          };
+
+          const createAiImageVariant = async () => {
+            if (!profile || !activeProfileId || !currentTask || isBusy) return;
+
+            if ((profile.coins || 0) < AI_EDIT_COST) {
+              setErrorText(`Du brauchst mindestens ${AI_EDIT_COST} Münzen für den KI-Zauber.`);
+              return;
+            }
+
+            try {
+              setIsBusy(true);
+              setIsGeneratingImage(true);
+              setErrorText('');
+
+              const imageDataUrl = getCanvasDataUrl();
+              const prompt = `Verwandle diese Kinderzeichnung in ein buntes, freundliches Bild im Kinderbuch-Stil. Motiv: ${currentTask.prompt}. Behalte die Grundidee der Zeichnung bei.`;
+
+              const result = await callOpenRouter({
+                model: imageEditModel,
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: prompt },
+                      { type: 'image_url', image_url: { url: imageDataUrl } }
+                    ]
+                  }
+                ]
+              });
+
+              const generatedUrl = extractGeneratedImageUrl(result);
+              if (!generatedUrl) {
+                throw new Error('Die KI hat kein Bild zurückgegeben. Prüfe Modell/API-Key.');
+              }
+
+              await updateDoc(doc(db, 'global_profiles', activeProfileId), {
+                coins: (profile.coins || 0) - AI_EDIT_COST
+              });
+
+              setGeneratedImageUrl(generatedUrl);
+            } catch (err) {
+              console.error(err);
+              setErrorText(err.message || 'KI-Bild konnte nicht erstellt werden.');
+            } finally {
+              setIsGeneratingImage(false);
+              setIsBusy(false);
+            }
+          };
+
+          const finishGame = async (finalScore) => {
+            const coins = Math.floor(finalScore / 10);
+            setEarnedCoins(coins);
+
+            if (profile && activeProfileId) {
+              await updateDoc(doc(db, 'global_profiles', activeProfileId), {
+                coins: (profile.coins || 0) + coins
+              });
+            }
+
+            setResultText(finalScore >= 600 ? 'Wow, du bist ein echter Mal-Profi! 🎨' : 'Super gemalt! Jede Runde macht dich besser. ✨');
+            setScreen('result');
+          };
+
+          const nextRound = async () => {
+            if (!hasRoundScored) {
+              setErrorText('Bitte zuerst KI-Bewertung durchführen.');
+              return;
+            }
+
+            const isLastRound = roundIndex >= roundTasks.length - 1;
+            if (isLastRound) {
+              await finishGame(score);
+              return;
+            }
+
+            setRoundIndex((prev) => prev + 1);
+            setFeedback('');
+            setLastRoundScore(0);
+            setLastRoundComment('');
+            setHasRoundScored(false);
+            setErrorText('');
+            setGeneratedImageUrl('');
+          };
+
+          const selectProfile = (profileId) => {
+            setActiveProfileId(profileId);
+            setScreen('start');
+          };
+
+          const TopBar = () => {
+            if (!profile || screen === 'setup' || screen === 'profile_select' || screen === 'loading') return null;
+
+            return (
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30 pointer-events-none">
+                <button
+                  onClick={() => {
+                    setActiveProfileId(null);
+                    setScreen('profile_select');
+                  }}
+                  className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-white/70"
+                >
+                  <span className="text-2xl">{profile.avatar}</span>
+                  <span className="font-bold text-slate-800 hidden sm:inline">{profile.name}</span>
+                  <Users size={16} className="text-indigo-500 ml-1" />
+                </button>
+
+                <div className="bg-yellow-300 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200">
+                  <span className="font-black text-yellow-900 text-lg">{profile.coins || 0}</span>
+                  <span className="text-xl">🪙</span>
+                </div>
+              </div>
+            );
+          };
+
+          if (isLoadingProfile) {
+            return (
+              <div className="min-h-screen bg-indigo-100 flex items-center justify-center font-bold text-xl text-indigo-700">
+                Lade...
+              </div>
+            );
+          }
+
+          if (screen === 'profile_select') {
+            return (
+              <div className="min-h-screen bg-indigo-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-indigo-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-indigo-700 mb-6">Wer malt heute?</h1>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-h-[50vh] overflow-y-auto p-1">
+                    {profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => selectProfile(p.id)}
+                        className="bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-300 rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+                      >
+                        <div className="text-5xl">{p.avatar}</div>
+                        <div className="font-bold text-slate-700 text-lg truncate w-full">{p.name}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('setup')}
+                    className="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-indigo-200 border-dashed"
+                  >
+                    <Users size={20} /> Neuen Spieler hinzufügen
+                  </button>
+
+                  {errorText && <p className="mt-4 text-sm text-red-500 font-semibold">{errorText}</p>}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'setup') {
+            return (
+              <div className="min-h-screen bg-indigo-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-indigo-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-indigo-700 mb-2">Neues Profil</h1>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">Nutze denselben Namen wie in Zahlen-Safari/Lese-Fuchs für gemeinsame Münzen.</p>
+
+                  <div className="mb-6">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Dein Name:</label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={setupName}
+                      onChange={(event) => setSetupName(event.target.value)}
+                      placeholder="z.B. Mia"
+                      className="w-full bg-slate-50 border-2 border-indigo-200 rounded-xl px-4 py-3 font-bold text-slate-800 text-xl focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="mb-8">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Wähle dein Tier:</label>
+                    <div className="grid grid-cols-5 gap-2 bg-slate-50 p-3 rounded-xl border-2 border-slate-100">
+                      {AVATAR_POOL.map((avatar) => (
+                        <button
+                          key={avatar}
+                          onClick={() => setSetupAvatar(avatar)}
+                          className={`aspect-square text-3xl flex items-center justify-center rounded-lg transition-all ${setupAvatar === avatar ? 'bg-indigo-200 scale-110 shadow-sm' : 'hover:bg-slate-200 opacity-70 hover:opacity-100'}`}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={saveProfile}
+                    disabled={!setupName.trim()}
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white font-black text-xl py-4 rounded-2xl"
+                  >
+                    Start!
+                  </button>
+
+                  {profiles.length > 0 && (
+                    <button onClick={() => setScreen('profile_select')} className="mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                      Abbrechen
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'start') {
+            return (
+              <div className="min-h-screen bg-indigo-100 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl p-8 text-center border-4 border-indigo-200 animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🎨</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-2">Mal-<span className="text-indigo-600">Atelier</span></h1>
+                  <p className="text-slate-600 font-medium mb-2">Male die vorgegebene Aufgabe und lass KI dein Bild bewerten.</p>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">8 Aufgaben pro Runde · bis zu 100 Punkte pro Bild</p>
+
+                  <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 mb-4 text-left">
+                    <p className="font-bold text-indigo-800 mb-1">So funktioniert's:</p>
+                    <ul className="text-slate-600 text-sm space-y-1">
+                      <li>• Male das Motiv mit Farbe und Strichdicke deiner Wahl.</li>
+                      <li>• KI vergibt pro Bild einen Score von 0–100%.</li>
+                      <li>• Für die Gesamtpunkte bekommst du Münzen.</li>
+                      <li>• Optional: KI-Zauberbild aus deiner Zeichnung für {AI_EDIT_COST} Münzen.</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 mb-6 text-left space-y-3">
+                    <p className="font-bold text-slate-800">KI-Einstellungen (OpenRouter)</p>
+                    <input
+                      type="password"
+                      value={openRouterApiKey}
+                      onChange={(event) => setOpenRouterApiKey(event.target.value)}
+                      placeholder="OpenRouter API-Key"
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
+                    />
+                    <input
+                      type="text"
+                      value={evaluationModel}
+                      onChange={(event) => setEvaluationModel(event.target.value)}
+                      placeholder="Bewertungsmodell, z.B. openai/gpt-4o-mini"
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
+                    />
+                    <input
+                      type="text"
+                      value={imageEditModel}
+                      onChange={(event) => setImageEditModel(event.target.value)}
+                      placeholder="Image-Edit Modell, z.B. sourceful/riverflow-v2-fast"
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
+                    />
+                  </div>
+
+                  <button
+                    onClick={startGame}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-black text-2xl py-4 rounded-2xl"
+                  >
+                    Losmalen!
+                  </button>
+
+                  <a href="../index.html" className="inline-block mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'game') {
+            return (
+              <div className="min-h-screen bg-indigo-50 relative flex flex-col items-center justify-center p-4 pt-24 font-sans">
+                <TopBar />
+
+                <div className="w-full max-w-5xl flex justify-between items-center mb-4 px-1">
+                  <div className="bg-white px-5 py-3 rounded-full shadow border-2 border-yellow-100">
+                    <span className="text-yellow-500 text-2xl mr-2">⭐</span>
+                    <span key={score} className="inline-block text-3xl md:text-4xl font-black text-slate-800 animate-score-reveal">{score}</span>
+                  </div>
+                  <div className="text-indigo-600 font-bold bg-white px-4 py-2 rounded-full shadow">
+                    {roundIndex + 1} / {roundTasks.length}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] shadow-2xl border border-indigo-100 w-full max-w-5xl overflow-hidden animate-pop-in">
+                  <div className="p-6 md:p-8">
+                    <p className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-4">{currentTask?.emoji} {currentTask ? `Male ${currentTask.prompt}` : ''}</p>
+
+                    <div className="bg-slate-100 rounded-2xl p-3 border-2 border-slate-200 mb-4">
+                      <canvas
+                        ref={canvasRef}
+                        onPointerDown={onPointerDown}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={onPointerUp}
+                        onPointerLeave={onPointerUp}
+                        className="w-full h-[500px] md:h-[560px] bg-white rounded-xl border-2 border-slate-200"
+                      />
+                    </div>
+
+                    <div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200 mb-4">
+                      <div className="grid md:grid-cols-3 gap-4 items-end">
+                        <div>
+                          <p className="font-black text-slate-800 mb-2">🎨</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {BRUSH_COLORS.map((color) => (
+                              <button
+                                key={color}
+                                onClick={() => setBrushColor(color)}
+                                className={`w-10 h-10 rounded-full border-4 ${brushColor === color ? 'border-slate-800 scale-110' : 'border-white'}`}
+                                style={{ backgroundColor: color }}
+                                title={color}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="font-black text-slate-800 mb-1">🖌️ {brushSize}px</p>
+                          <input
+                            type="range"
+                            min="2"
+                            max="30"
+                            value={brushSize}
+                            onChange={(event) => setBrushSize(Number(event.target.value))}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                          <button
+                            onClick={clearCanvas}
+                            className="w-full bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold py-2 rounded-xl"
+                          >
+                            🧽 Neu
+                          </button>
+
+                          <button
+                            onClick={saveOwnDrawing}
+                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-xl"
+                          >
+                            💾 Speichern
+                          </button>
+
+                          <button
+                            onClick={evaluateDrawing}
+                            disabled={isBusy || hasRoundScored}
+                            className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 text-white font-black py-2 rounded-xl"
+                          >
+                            {isBusy && !isGeneratingImage ? '⏳' : hasRoundScored ? '✅' : '🤖 Bewerten'}
+                          </button>
+
+                          <button
+                            onClick={createAiImageVariant}
+                            disabled={isBusy}
+                            className="w-full bg-fuchsia-500 hover:bg-fuchsia-600 disabled:bg-slate-300 text-white font-black py-2 rounded-xl"
+                          >
+                            {isGeneratingImage ? '⏳ Zauber...' : `🪄 KI (-${AI_EDIT_COST} 🪙)`}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(feedback || hasRoundScored || lastRoundComment) && (
+                      <div key={`${roundIndex}-${lastRoundScore}-${feedback}`} className="bg-indigo-100 text-indigo-900 p-5 rounded-3xl mb-3 border-2 border-indigo-200 animate-score-reveal">
+                        {feedback && !hasRoundScored && <p className="font-black text-xl md:text-2xl leading-tight">{feedback}</p>}
+                        {hasRoundScored && <p className="font-black text-2xl md:text-3xl mt-2">+{lastRoundScore} Punkte</p>}
+                        {lastRoundComment && <p className="text-base mt-2">{lastRoundComment}</p>}
+                      </div>
+                    )}
+
+                    {generatedImageUrl && (
+                      <div className="bg-fuchsia-50 border border-fuchsia-200 p-4 rounded-2xl mb-3">
+                        <p className="font-black text-fuchsia-900 mb-2">Dein KI-Zauberbild</p>
+                        <img src={generatedImageUrl} alt="KI-Zauberbild" className="w-full h-auto rounded-xl border-2 border-fuchsia-200" />
+                        <button
+                          onClick={saveGeneratedImage}
+                          className="mt-3 w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-2 rounded-xl"
+                        >
+                          KI-Bild speichern
+                        </button>
+                      </div>
+                    )}
+
+                    {errorText && <p className="text-red-500 font-semibold text-sm mt-2">{errorText}</p>}
+
+                    <div className="flex justify-end mt-4">
+                      <button
+                        onClick={nextRound}
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-full shadow"
+                      >
+                        {roundIndex >= roundTasks.length - 1 ? 'Runde abschließen' : 'Nächste Aufgabe'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'result') {
+            return (
+              <div className="min-h-screen bg-yellow-50 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border-4 border-yellow-300 text-center animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🖼️</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-3">Runde fertig!</h1>
+                  <p className="text-slate-600 font-semibold mb-6">{resultText}</p>
+
+                  <div className="bg-yellow-100 rounded-2xl p-5 mb-6 border border-yellow-200">
+                    <p className="text-slate-700 font-bold">Deine Punkte</p>
+                    <p className="text-5xl font-black text-yellow-600 mt-1">{score}</p>
+                  </div>
+
+                  <div className="bg-indigo-50 rounded-2xl p-4 mb-6 border border-indigo-100">
+                    <p className="text-slate-700 font-bold">Münzen aus dieser Runde</p>
+                    <p className="text-3xl font-black text-indigo-600 mt-1">+{earnedCoins} 🪙</p>
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('start')}
+                    className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-black py-4 rounded-2xl mb-3"
+                  >
+                    Noch eine Runde
+                  </button>
+
+                  <a href="../index.html" className="text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
