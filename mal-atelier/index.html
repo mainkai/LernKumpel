@@ -63,6 +63,48 @@
           </svg>
         );
 
+        const ScoreRing = ({ score = 0, max = 100 }) => {
+          const safeMax = Math.max(1, max);
+          const safeScore = clamp(Math.round(score), 0, safeMax);
+          const size = 80;
+          const strokeWidth = 10;
+          const normalizedRadius = (size - strokeWidth) / 2;
+          const circumference = 2 * Math.PI * normalizedRadius;
+          const strokeDashoffset = circumference * (1 - safeScore / safeMax);
+
+          return (
+            <div className="mt-3 flex justify-center">
+              <div className="w-20 h-20 relative shrink-0">
+                <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={normalizedRadius}
+                    fill="none"
+                    stroke="#c7d2fe"
+                    strokeWidth={strokeWidth}
+                  />
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={normalizedRadius}
+                    fill="none"
+                    stroke="#4f46e5"
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    style={{ transition: 'stroke-dashoffset 420ms ease-out' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center leading-none">
+                  <span className="text-indigo-900 font-black text-lg">+{safeScore}</span>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
         const BRUSH_COLORS = ['#111827', '#ef4444', '#f97316', '#eab308', '#22c55e', '#0ea5e9', '#6366f1', '#ec4899', '#8b5a2b', '#a16207', '#6b7280', '#9ca3af'];
         const MAX_ROUNDS = 5;
@@ -193,6 +235,13 @@
         };
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const scoreToEmoji = (score) => {
+          if (score >= 90) return '🤩';
+          if (score >= 75) return '😄';
+          if (score >= 55) return '🙂';
+          if (score >= 35) return '😅';
+          return '🫶';
+        };
         const hexToRgb = (hexColor) => {
           const normalized = (hexColor || '').replace('#', '').trim();
           if (normalized.length !== 6) return { r: 0, g: 0, b: 0 };
@@ -262,6 +311,7 @@
           const [score, setScore] = useState(0);
           const [feedback, setFeedback] = useState('');
           const [lastRoundScore, setLastRoundScore] = useState(0);
+          const [lastRoundEmoji, setLastRoundEmoji] = useState('');
           const [lastRoundComment, setLastRoundComment] = useState('');
           const [hasRoundScored, setHasRoundScored] = useState(false);
           const [resultText, setResultText] = useState('');
@@ -460,6 +510,7 @@
             setScore(0);
             setFeedback('');
             setLastRoundScore(0);
+            setLastRoundEmoji('');
             setLastRoundComment('');
             setHasRoundScored(false);
             setGeneratedImageUrl('');
@@ -771,9 +822,11 @@
                     Bewerte, wie gut die Zeichnung zur Aufgabe passt.
                     Außerdem soll die Qualität (Farben, Details) der Zeichnung berücksichtigt werden.
                     Je mehr Details, Kreativität und Farbauswahl, desto höher die Bewertung.
+                    Wenn das Bild schlecht ist, kannst du es mit einem lustigen / sarkastischen Spruch kommentieren (aber in Worten, die kleine Kinder noch verstehen).
                     Antworte nur als JSON mit den Feldern:
                     - score: ganze Zahl 0 bis 100
-                    - feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen).`;
+                    - feedback: kurzer freundlicher Satz auf Deutsch (max 120 Zeichen)
+                    - emoji: genau ein passendes Bewertungs-Emoji (z.B. 🤩, 🙂, 😅).`;
 
               const result = await callOpenRouter({
                 model: evaluationModel,
@@ -793,8 +846,10 @@
               const parsed = parseJsonFromText(text) || {};
               const aiScore = clamp(Number(parsed.score) || 0, 0, 100);
               const aiFeedback = (parsed.feedback || 'Danke fürs Malen!').toString().slice(0, 120);
+              const aiEmoji = (parsed.emoji || '').toString().trim().slice(0, 4);
 
               setLastRoundScore(aiScore);
+              setLastRoundEmoji(aiEmoji || scoreToEmoji(aiScore));
               setLastRoundComment(aiFeedback);
               setHasRoundScored(true);
               setScore((prev) => prev + aiScore);
@@ -913,6 +968,7 @@
             setRoundIndex((prev) => prev + 1);
             setFeedback('');
             setLastRoundScore(0);
+            setLastRoundEmoji('');
             setLastRoundComment('');
             setHasRoundScored(false);
             setErrorText('');
@@ -1234,7 +1290,14 @@
                     {(feedback || hasRoundScored || lastRoundComment) && (
                       <div key={`${roundIndex}-${lastRoundScore}-${feedback}`} className="bg-indigo-100 text-indigo-900 p-5 rounded-3xl mb-3 border-2 border-indigo-200 animate-score-reveal">
                         {feedback && !hasRoundScored && <p className="font-black text-xl md:text-2xl leading-tight">{feedback}</p>}
-                        {hasRoundScored && <p className="font-black text-2xl md:text-3xl mt-2">+{lastRoundScore} Punkte</p>}
+                        {hasRoundScored && (
+                          <div className="mt-2 flex items-center justify-center gap-3">
+                            <ScoreRing score={lastRoundScore} max={100} />
+                            <div className="w-16 h-16 rounded-full bg-white/70 border-2 border-indigo-200 flex items-center justify-center text-3xl" aria-label="Bewertungs-Emoji">
+                              {lastRoundEmoji || scoreToEmoji(lastRoundScore)}
+                            </div>
+                          </div>
+                        )}
                         {lastRoundComment && <p className="text-base mt-2">{lastRoundComment}</p>}
                       </div>
                     )}
