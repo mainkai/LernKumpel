@@ -81,6 +81,13 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        const APP_ID = 'zahlen-safari';
+        const DB_COLLECTIONS = {
+          devices: 'devices',
+          profiles: 'global_profiles',
+          appHighscores: 'app_highscores'
+        };
+
         const MAX_PROBLEMS = 10;
         const MAX_ATTEMPTS = 3;
         const MAX_OWNED_THEMES = 3;
@@ -210,7 +217,7 @@
           useEffect(() => {
             if (!user) return;
 
-            const userRef = doc(db, 'devices', user.uid);
+            const userRef = doc(db, DB_COLLECTIONS.devices, user.uid);
             const unsubUser = onSnapshot(userRef, (docSnap) => {
               if (docSnap.exists()) {
                 setLinkedProfileIds(docSnap.data().linkedProfiles || []);
@@ -221,15 +228,17 @@
               }
             }, (err) => console.error("User Profile error:", err));
 
-            // Lade Highscores
-            const scoresRef = collection(db, 'highscores');
-            const unsubScores = onSnapshot(scoresRef, (snapshot) => {
-              const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-              data.sort((a, b) => b.score - a.score);
-              setHighscores(data);
-            }, (err) => console.error("Firestore error:", err));
+            // Lade Highscores (app-scoped)
+            const appScoresRef = query(collection(db, DB_COLLECTIONS.appHighscores), where('appId', '==', APP_ID));
 
-            return () => { unsubUser(); unsubScores(); };
+            const unsubAppScores = onSnapshot(appScoresRef, (snapshot) => {
+              const scores = snapshot.docs
+                .map(scoreDoc => ({ id: scoreDoc.id, ...scoreDoc.data() }))
+                .sort((a, b) => b.score - a.score);
+              setHighscores(scores);
+            }, (err) => console.error("App Highscore error:", err));
+
+            return () => { unsubUser(); unsubAppScores(); };
           }, [user]); 
 
           // 2. Eigentliche Profildaten aus der globalen Liste laden
@@ -240,7 +249,7 @@
             }
 
             const idsToFetch = linkedProfileIds.slice(0, 10);
-            const profilesQuery = query(collection(db, 'global_profiles'), where(documentId(), 'in', idsToFetch));
+            const profilesQuery = query(collection(db, DB_COLLECTIONS.profiles), where(documentId(), 'in', idsToFetch));
             
             const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
               const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -262,7 +271,7 @@
             initAudio();
             
             const profileId = setupName.trim().toLowerCase();
-            const profileRef = doc(db, 'global_profiles', profileId);
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, profileId);
             
             const docSnap = await getDoc(profileRef);
             let themeToSet = 'classic';
@@ -286,7 +295,7 @@
               }
             }
 
-            const userRef = doc(db, 'devices', user.uid);
+            const userRef = doc(db, DB_COLLECTIONS.devices, user.uid);
             await setDoc(userRef, {
               linkedProfiles: arrayUnion(profileId)
             }, { merge: true });
@@ -306,7 +315,7 @@
               profile.unlockedThemes.length >= MAX_OWNED_THEMES
             ) return;
             playCoin();
-            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
             await updateDoc(profileRef, {
               coins: profile.coins - themeToBuy.price,
               unlockedThemes: [...profile.unlockedThemes, themeToBuy.id],
@@ -322,7 +331,7 @@
             const updatedThemes = profile.unlockedThemes.filter(id => id !== themeToSell.id);
             const nextActiveTheme = currentThemeId === themeToSell.id ? 'classic' : currentThemeId;
 
-            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
             await updateDoc(profileRef, {
               coins: (profile.coins || 0) + refund,
               unlockedThemes: updatedThemes,
@@ -339,7 +348,7 @@
             setCurrentThemeId(newThemeId);
             playClick();
             if (activeProfileId) {
-              const profileRef = doc(db, 'global_profiles', activeProfileId);
+              const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
               await updateDoc(profileRef, { activeTheme: newThemeId });
             }
           };
@@ -454,7 +463,9 @@
               setRoundRank(rank);
 
               try {
-                await addDoc(collection(db, 'highscores'), {
+                await addDoc(collection(db, DB_COLLECTIONS.appHighscores), {
+                  appId: APP_ID,
+                  profileId: activeProfileId,
                   name: profile.name,
                   avatar: profile.avatar,
                   score: finalScore,
@@ -466,7 +477,7 @@
               } catch (e) { console.error(e); }
             }
 
-            const profileRef = doc(db, 'global_profiles', activeProfileId);
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
             await updateDoc(profileRef, {
               coins: (profile.coins || 0) + earnedCoins,
               stickers: updatedStickers

@@ -59,8 +59,36 @@ Dieses Projekt ist extrem leichtgewichtig und auf minimalen Wartungsaufwand ausg
 
 - **Frontend:** React 18 & ReactDOM (via CDN eingebunden), Babel Standalone (für JSX im Browser).
 - **Styling:** Tailwind CSS (via CDN).
-- **Backend & Datenbank:** Firebase (Firestore für Highscores und Profile, Anonymous Auth für unsichtbaren Login).
+- **Backend & Datenbank:** Firebase (Firestore mit geteilten Profilen/Münzen und app-spezifischen Highscores, Anonymous Auth für unsichtbaren Login).
 - **Icons:** Inline-SVGs (Lucide React inspiriert) für absolute Unabhängigkeit von externen Font-Bibliotheken.
+
+## 🗄️ Firestore-Datenmodell (App-übergreifend)
+
+Damit alle Apps im LernKumpel-Universum dieselbe Datenbasis nutzen können, ist das Modell in **globale** und **app-spezifische** Daten getrennt:
+
+- **Global (von allen Apps geteilt):**
+  - `devices/{deviceUid}`
+    - `linkedProfiles: string[]`
+  - `global_profiles/{profileId}`
+    - `name`, `avatar`
+    - `coins` (bewusst app-übergreifend)
+    - `unlockedThemes`, `activeTheme`, `stickers`
+
+- **App-spezifisch (pro Spiel getrennt):**
+  - `app_highscores/{scoreId}`
+    - `appId` (z.B. `zahlen-safari`, `lese-fuchs`, `mal-atelier`)
+    - `profileId`, `name`, `avatar`
+    - `score`, `level`, `mode`, `theme`, `timestamp`
+
+### Warum diese Trennung?
+
+- Münzen, Profile und Freischaltungen bleiben in allen Apps konsistent.
+- Highscores bleiben sauber pro App isoliert (keine Vermischung verschiedener Spielmechaniken).
+- Neue Apps können sofort dieselbe Infrastruktur nutzen, indem sie nur eine neue `appId` verwenden.
+
+### Hinweis zum Betrieb
+
+Alle neuen oder zurückgesetzten Umgebungen sollten nur `app_highscores` für Bestenlisten verwenden.
 
 ## 📂 Ordnerstruktur
 

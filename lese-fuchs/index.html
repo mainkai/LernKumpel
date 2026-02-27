@@ -173,6 +173,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const APP_ID = 'lese-fuchs';
+        const DB_COLLECTIONS = {
+          devices: 'devices',
+          profiles: 'global_profiles',
+          appHighscores: 'app_highscores'
+        };
 
         const normalize = (text) =>
           text
@@ -299,7 +305,7 @@
           useEffect(() => {
             if (!user) return;
 
-            const deviceRef = doc(db, 'devices', user.uid);
+            const deviceRef = doc(db, DB_COLLECTIONS.devices, user.uid);
             const unsubDevice = onSnapshot(deviceRef, (docSnap) => {
               if (docSnap.exists()) {
                 setLinkedProfileIds(docSnap.data().linkedProfiles || []);
@@ -323,7 +329,7 @@
             }
 
             const ids = linkedProfileIds.slice(0, 10);
-            const profilesQuery = query(collection(db, 'global_profiles'), where(documentId(), 'in', ids));
+            const profilesQuery = query(collection(db, DB_COLLECTIONS.profiles), where(documentId(), 'in', ids));
 
             const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
               const loadedProfiles = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
@@ -414,7 +420,7 @@
             if (!user || !name) return;
 
             const profileId = name.toLowerCase();
-            const profileRef = doc(db, 'global_profiles', profileId);
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, profileId);
             const profileSnap = await getDoc(profileRef);
 
             if (!profileSnap.exists()) {
@@ -430,7 +436,7 @@
               await updateDoc(profileRef, { avatar: setupAvatar });
             }
 
-            await setDoc(doc(db, 'devices', user.uid), {
+            await setDoc(doc(db, DB_COLLECTIONS.devices, user.uid), {
               linkedProfiles: arrayUnion(profileId)
             }, { merge: true });
 
@@ -579,7 +585,7 @@
             setEarnedCoins(coins);
 
             if (profile && activeProfileId) {
-              const profileRef = doc(db, 'global_profiles', activeProfileId);
+              const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
               await updateDoc(profileRef, {
                 coins: (profile.coins || 0) + coins
               });
