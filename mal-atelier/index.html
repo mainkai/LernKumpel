@@ -213,6 +213,19 @@
           if (mimeType.includes('gif')) return 'gif';
           return 'png';
         };
+        const sanitizeFilenamePart = (value, fallback = 'datei') => {
+          const normalized = (value || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 60);
+
+          return normalized || fallback;
+        };
 
         const getCanvasMetrics = (canvas) => {
           const rect = canvas.getBoundingClientRect();
@@ -673,7 +686,8 @@
             try {
               setErrorText('');
               const imageDataUrl = getCanvasDataUrlForDownload();
-              await downloadUrl(imageDataUrl, `${fileTimestamp()}-malatelier-zeichnung`);
+              const promptSlug = sanitizeFilenamePart(currentTask?.prompt, 'motiv');
+              await downloadUrl(imageDataUrl, `${fileTimestamp()}-malatelier-${promptSlug}-zeichnung`);
             } catch (error) {
               setErrorText(error.message || 'Zeichnung konnte nicht gespeichert werden.');
             }
@@ -682,7 +696,9 @@
           const saveGeneratedImage = async () => {
             try {
               setErrorText('');
-              await downloadUrl(generatedImageUrl, `${fileTimestamp()}-malatelier-zauberbild`);
+              const promptSlug = sanitizeFilenamePart(currentTask?.prompt, 'motiv');
+              const modelSlug = sanitizeFilenamePart(imageEditModel, 'ki-modell');
+              await downloadUrl(generatedImageUrl, `${fileTimestamp()}-malatelier-${promptSlug}-${modelSlug}-zauberbild`);
             } catch (error) {
               setErrorText(error.message || 'KI-Bild konnte nicht gespeichert werden.');
             }
