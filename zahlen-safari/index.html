@@ -568,18 +568,21 @@
             }
 
             const MAX_CALCULATOR_SCALE = 1.25;
+            const FIT_PADDING = 16;
+            const SHRINK_BIAS = 0.9;
             const updateCalculatorScale = () => {
               const viewportEl = calculatorViewportRef.current;
               const calculatorEl = calculatorRef.current;
               if (!viewportEl || !calculatorEl) return;
 
-              const availableWidth = viewportEl.clientWidth;
-              const availableHeight = viewportEl.clientHeight;
+              const availableWidth = Math.max(0, viewportEl.clientWidth - FIT_PADDING);
+              const availableHeight = Math.max(0, viewportEl.clientHeight - FIT_PADDING);
               if (!availableWidth || !availableHeight) return;
 
               const widthScale = availableWidth / calculatorEl.offsetWidth;
               const heightScale = availableHeight / calculatorEl.offsetHeight;
-              const nextScale = Math.min(widthScale, heightScale, MAX_CALCULATOR_SCALE);
+              const fitScale = Math.min(widthScale, heightScale, MAX_CALCULATOR_SCALE);
+              const nextScale = fitScale < 1 ? fitScale * SHRINK_BIAS : fitScale;
               setCalculatorScale(nextScale);
             };
 
@@ -1068,7 +1071,7 @@
           return (
             <div className={`min-h-screen relative ${theme.pageBg} flex flex-col items-center justify-center p-2 sm:p-4 pt-20 font-sans transition-colors duration-500`}>
               <TopBar />
-              <div ref={calculatorViewportRef} className="w-full flex-1 flex items-start justify-center overflow-hidden">
+              <div ref={calculatorViewportRef} className="w-full flex-1 min-h-0 flex items-start justify-center overflow-hidden">
                 <div
                   ref={calculatorRef}
                   className="max-w-none"
