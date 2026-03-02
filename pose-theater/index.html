@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pose-Theater</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 2.4s ease-in-out infinite; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in { animation: popIn 0.28s ease-out; }
+
+        body { overscroll-behavior-y: none; }
+    </style>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+        }
+      }
+    </script>
+</head>
+<body class="bg-violet-100">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, arrayUnion, collection, query, where, documentId } from 'firebase/firestore';
+
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        const Users = ({size=20, className=""}) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        );
+
+        const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
+        const MAX_ROUNDS = 10;
+        const MAX_BASE_POINTS_PER_POSE = 100;
+        const MAX_SPEED_BONUS = 40;
+        const SPEED_BONUS_BASE_SECONDS = 5;
+        const OVERLAY_MIN_VISIBILITY = 0.4;
+        const OVERLAY_FLIP_X = false;
+        const POSE_CONNECTIONS = [
+          [11, 12],
+          [11, 13], [13, 15],
+          [12, 14], [14, 16],
+          [11, 23], [12, 24], [23, 24],
+          [23, 25], [25, 27],
+          [24, 26], [26, 28]
+        ];
+        const KEYPOINT_INDICES = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
+          authDomain: "zahlensafari.firebaseapp.com",
+          projectId: "zahlensafari",
+          storageBucket: "zahlensafari.firebasestorage.app",
+          messagingSenderId: "569809723706",
+          appId: "1:569809723706:web:7a1befeff13b36422c7003"
+        };
+
+        const APP_ID = 'pose-theater';
+        const DB_COLLECTIONS = {
+          devices: 'devices',
+          profiles: 'global_profiles',
+          appHighscores: 'app_highscores'
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const clamp01 = (value) => Math.max(0, Math.min(1, value));
+        const metricScoreToSignal = (score) => {
+          if (score >= 0.75) return 'green';
+          if (score >= 0.5) return 'yellow';
+          return 'red';
+        };
+        const signalToColor = (signal) => {
+          if (signal === 'green') return 'rgba(74, 222, 128, 0.98)';
+          if (signal === 'yellow') return 'rgba(253, 224, 71, 0.98)';
+          if (signal === 'red') return 'rgba(248, 113, 113, 0.98)';
+          return 'rgba(236, 72, 153, 0.98)';
+        };
+        const signalToLevel = (signal) => {
+          if (signal === 'green') return 2;
+          if (signal === 'yellow') return 1;
+          if (signal === 'red') return 0;
+          return -1;
+        };
+        const levelToSignal = (level) => {
+          if (level >= 2) return 'green';
+          if (level >= 1) return 'yellow';
+          if (level >= 0) return 'red';
+          return 'neutral';
+        };
+
+        const getSpeedBonus = (durationSeconds) => {
+          if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return 0;
+          return Math.floor(MAX_SPEED_BONUS / Math.log2((Math.max(0, durationSeconds) / SPEED_BONUS_BASE_SECONDS) + 2));
+        };
+
+        const getDistance = (a, b) => {
+          if (!a || !b) return null;
+          return Math.hypot(a.x - b.x, a.y - b.y);
+        };
+
+        const getAngle = (a, b, c) => {
+          if (!a || !b || !c) return null;
+          const abx = a.x - b.x;
+          const aby = a.y - b.y;
+          const cbx = c.x - b.x;
+          const cby = c.y - b.y;
+          const dot = abx * cbx + aby * cby;
+          const magAB = Math.hypot(abx, aby);
+          const magCB = Math.hypot(cbx, cby);
+          if (!magAB || !magCB) return null;
+          const cosValue = Math.min(1, Math.max(-1, dot / (magAB * magCB)));
+          return (Math.acos(cosValue) * 180) / Math.PI;
+        };
+
+        const buildPoseFeatures = (landmarks) => {
+          const p = (idx) => landmarks[idx];
+
+          const shoulderWidth = getDistance(p(11), p(12)) || 0.0001;
+          const ankleWidth = getDistance(p(27), p(28)) || 0;
+          const wristWidth = getDistance(p(15), p(16)) || 0;
+          const hipCenterY = (p(23).y + p(24).y) / 2;
+          const kneeCenterY = (p(25).y + p(26).y) / 2;
+
+          return {
+            leftElbow: getAngle(p(11), p(13), p(15)),
+            rightElbow: getAngle(p(12), p(14), p(16)),
+            leftShoulderArm: getAngle(p(13), p(11), p(23)),
+            rightShoulderArm: getAngle(p(14), p(12), p(24)),
+            leftKnee: getAngle(p(23), p(25), p(27)),
+            rightKnee: getAngle(p(24), p(26), p(28)),
+            wristsAboveShoulders: p(15).y < p(11).y && p(16).y < p(12).y,
+            wristsWide: wristWidth / shoulderWidth,
+            anklesWide: ankleWidth / shoulderWidth,
+            hipToKneeDrop: kneeCenterY - hipCenterY
+          };
+        };
+
+        const angleMetric = ({ id, label, value, target, tolerance, weight = 1, joints = [] }) => ({
+          id,
+          label,
+          joints,
+          score: value == null ? 0 : clamp01(1 - (Math.abs(value - target) / tolerance)),
+          weight
+        });
+
+        const ratioMetric = ({ id, label, value, min, max, weight = 1, joints = [] }) => {
+          if (!Number.isFinite(value)) return { id, label, joints, score: 0, weight };
+          if (value >= min && value <= max) return { id, label, joints, score: 1, weight };
+          const distance = value < min ? min - value : value - max;
+          const tolerance = Math.max((max - min) * 0.8, 0.25);
+          return { id, label, joints, score: clamp01(1 - distance / tolerance), weight };
+        };
+
+        const boolMetric = ({ id, label, value, weight = 1, joints = [] }) => ({ id, label, joints, score: value ? 1 : 0, weight });
+
+        const POSE_LIBRARY = [
+          {
+            id: 'airplane',
+            name: 'Flugzeug',
+            emoji: '✈️',
+            description: 'Strecke beide Arme seitlich aus.',
+            evaluate: (f) => [
+              angleMetric({ id: 'left_shoulder_arm', label: 'Rechter Arm seitlich', value: f.leftShoulderArm, target: 90, tolerance: 35, weight: 2, joints: [11, 13] }),
+              angleMetric({ id: 'right_shoulder_arm', label: 'Linker Arm seitlich', value: f.rightShoulderArm, target: 90, tolerance: 35, weight: 2, joints: [12, 14] }),
+              angleMetric({ id: 'left_elbow', label: 'Rechter Ellbogen gestreckt', value: f.leftElbow, target: 170, tolerance: 35, weight: 1.5, joints: [13] }),
+              angleMetric({ id: 'right_elbow', label: 'Linker Ellbogen gestreckt', value: f.rightElbow, target: 170, tolerance: 35, weight: 1.5, joints: [14] })
+            ]
+          },
+          {
+            id: 'touchdown',
+            name: 'Torjubel',
+            emoji: '🙌',
+            description: 'Hebe beide Arme hoch über die Schultern.',
+            evaluate: (f) => [
+              boolMetric({ id: 'wrists_up', label: 'Hände über Schultern', value: f.wristsAboveShoulders, weight: 2, joints: [15, 16] }),
+              angleMetric({ id: 'left_elbow_high', label: 'Rechter Ellbogen', value: f.leftElbow, target: 165, tolerance: 40, weight: 1.5, joints: [13] }),
+              angleMetric({ id: 'right_elbow_high', label: 'Linker Ellbogen', value: f.rightElbow, target: 165, tolerance: 40, weight: 1.5, joints: [14] }),
+              angleMetric({ id: 'left_shoulder_high', label: 'Rechter Arm hoch', value: f.leftShoulderArm, target: 155, tolerance: 40, weight: 1, joints: [11, 13] }),
+              angleMetric({ id: 'right_shoulder_high', label: 'Linker Arm hoch', value: f.rightShoulderArm, target: 155, tolerance: 40, weight: 1, joints: [12, 14] })
+            ]
+          },
+          {
+            id: 'star',
+            name: 'Stern',
+            emoji: '⭐',
+            description: 'Arme und Beine weit auseinander.',
+            evaluate: (f) => [
+              boolMetric({ id: 'star_wrists_up', label: 'Hände hoch', value: f.wristsAboveShoulders, weight: 1.5, joints: [15, 16] }),
+              ratioMetric({ id: 'star_wrists_wide', label: 'Arme weit', value: f.wristsWide, min: 1.4, max: 3.5, weight: 1.5, joints: [15, 16] }),
+              ratioMetric({ id: 'star_ankles_wide', label: 'Beine weit', value: f.anklesWide, min: 1.25, max: 3.5, weight: 2, joints: [27, 28] }),
+              angleMetric({ id: 'star_left_elbow', label: 'Rechter Ellbogen', value: f.leftElbow, target: 170, tolerance: 35, weight: 1, joints: [13] }),
+              angleMetric({ id: 'star_right_elbow', label: 'Linker Ellbogen', value: f.rightElbow, target: 170, tolerance: 35, weight: 1, joints: [14] })
+            ]
+          },
+          {
+            id: 'squat',
+            name: 'Frosch',
+            emoji: '🐸',
+            description: 'Geh in die Hocke mit gebeugten Knien.',
+            evaluate: (f) => [
+              angleMetric({ id: 'squat_left_knee', label: 'Rechtes Knie gebeugt', value: f.leftKnee, target: 95, tolerance: 35, weight: 2, joints: [25] }),
+              angleMetric({ id: 'squat_right_knee', label: 'Linkes Knie gebeugt', value: f.rightKnee, target: 95, tolerance: 35, weight: 2, joints: [26] }),
+              ratioMetric({ id: 'squat_height', label: 'Tief genug', value: f.hipToKneeDrop, min: 0.03, max: 0.25, weight: 1.5, joints: [23, 24, 25, 26] }),
+              ratioMetric({ id: 'squat_ankles_wide', label: 'Füße stabil', value: f.anklesWide, min: 0.8, max: 2.8, weight: 1, joints: [27, 28] })
+            ]
+          },
+          {
+            id: 'goalkeeper',
+            name: 'Torwart',
+            emoji: '🥅',
+            description: 'Arme seitlich mit gebeugten Ellbogen halten.',
+            evaluate: (f) => [
+              angleMetric({ id: 'goalkeeper_left_shoulder', label: 'Rechter Arm seitlich', value: f.leftShoulderArm, target: 90, tolerance: 35, weight: 1.5, joints: [11, 13] }),
+              angleMetric({ id: 'goalkeeper_right_shoulder', label: 'Linker Arm seitlich', value: f.rightShoulderArm, target: 90, tolerance: 35, weight: 1.5, joints: [12, 14] }),
+              angleMetric({ id: 'goalkeeper_left_elbow', label: 'Rechter Ellbogen gebeugt', value: f.leftElbow, target: 95, tolerance: 35, weight: 2, joints: [13] }),
+              angleMetric({ id: 'goalkeeper_right_elbow', label: 'Linker Ellbogen gebeugt', value: f.rightElbow, target: 95, tolerance: 35, weight: 2, joints: [14] })
+            ]
+          }
+        ];
+
+        const scorePoseDetailed = (poseDefinition, landmarks) => {
+          if (!poseDefinition || !landmarks || landmarks.length < 29) {
+            return { ratio: 0, basePoints: 0, metrics: [] };
+          }
+
+          const visibilityOk = landmarks[11].visibility > 0.4 && landmarks[12].visibility > 0.4;
+          if (!visibilityOk) return { ratio: 0, basePoints: 0, metrics: [] };
+
+          const features = buildPoseFeatures(landmarks);
+          const metrics = poseDefinition.evaluate(features).map((metric, index) => ({
+            ...metric,
+            id: metric.id || `metric_${index + 1}`,
+            label: metric.label || `Metrik ${index + 1}`,
+            joints: Array.isArray(metric.joints) ? metric.joints : [],
+            score: clamp01(metric.score)
+          }));
+
+          const weightedSum = metrics.reduce((sum, m) => sum + (m.score * m.weight), 0);
+          const totalWeight = metrics.reduce((sum, m) => sum + m.weight, 0) || 1;
+          const ratio = Math.max(0, Math.min(1, weightedSum / totalWeight));
+
+          if (ratio >= 0.92) return { ratio, basePoints: MAX_BASE_POINTS_PER_POSE, metrics };
+          if (ratio >= 0.82) return { ratio, basePoints: 80, metrics };
+          if (ratio >= 0.72) return { ratio, basePoints: 60, metrics };
+          if (ratio >= 0.62) return { ratio, basePoints: 40, metrics };
+          return { ratio, basePoints: 0, metrics };
+        };
+
+        const scorePose = (poseDefinition, landmarks) => {
+          const result = scorePoseDetailed(poseDefinition, landmarks);
+          return { ratio: result.ratio, basePoints: result.basePoints };
+        };
+
+        const buildJointSignals = (metrics) => {
+          const jointBuckets = {};
+          for (const metric of metrics || []) {
+            for (const jointIndex of metric.joints || []) {
+              if (!jointBuckets[jointIndex]) {
+                jointBuckets[jointIndex] = [];
+              }
+              jointBuckets[jointIndex].push(metric.score);
+            }
+          }
+
+          const signals = {};
+          for (const [jointIndex, scores] of Object.entries(jointBuckets)) {
+            if (!scores.length) continue;
+            const avg = scores.reduce((sum, value) => sum + value, 0) / scores.length;
+            signals[jointIndex] = metricScoreToSignal(avg);
+          }
+
+          return signals;
+        };
+
+        const samplePoses = () => {
+          const result = [];
+          while (result.length < MAX_ROUNDS) {
+            const shuffled = [...POSE_LIBRARY].sort(() => Math.random() - 0.5);
+            result.push(...shuffled);
+          }
+          return result.slice(0, MAX_ROUNDS);
+        };
+
+        function App() {
+          const [user, setUser] = useState(null);
+          const [linkedProfileIds, setLinkedProfileIds] = useState([]);
+          const [profiles, setProfiles] = useState([]);
+          const [activeProfileId, setActiveProfileId] = useState(null);
+          const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+          const [screen, setScreen] = useState('loading');
+
+          const [setupName, setSetupName] = useState('');
+          const [setupAvatar, setSetupAvatar] = useState('🦊');
+
+          const [roundPoses, setRoundPoses] = useState([]);
+          const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
+          const [score, setScore] = useState(0);
+          const [feedback, setFeedback] = useState(null);
+          const [lastAwardedPoints, setLastAwardedPoints] = useState(0);
+          const [lastSpeedBonus, setLastSpeedBonus] = useState(0);
+          const [lastMatchPercent, setLastMatchPercent] = useState(0);
+          const [poseAttempts, setPoseAttempts] = useState(0);
+          const [resultText, setResultText] = useState('');
+          const [earnedCoins, setEarnedCoins] = useState(0);
+          const [errorText, setErrorText] = useState('');
+          const [isCameraSupported, setIsCameraSupported] = useState(true);
+          const [cameraReady, setCameraReady] = useState(false);
+          const [isCheckingPose, setIsCheckingPose] = useState(false);
+          const [checkCountdown, setCheckCountdown] = useState(0);
+          const [liveMatchPercent, setLiveMatchPercent] = useState(0);
+          const [liveMetrics, setLiveMetrics] = useState([]);
+          const [jointSignals, setJointSignals] = useState({});
+
+          const profile = profiles.find((p) => p.id === activeProfileId);
+          const currentPose = roundPoses[currentPoseIndex];
+
+          const videoRef = useRef(null);
+          const overlayCanvasRef = useRef(null);
+          const streamRef = useRef(null);
+          const poseEngineRef = useRef(null);
+          const rafRef = useRef(0);
+          const latestLandmarksRef = useRef(null);
+          const isGameScreenRef = useRef(false);
+          const poseStartedAtRef = useRef(0);
+          const countdownTimeoutRef = useRef(0);
+          const lastLiveMatchUpdateAtRef = useRef(0);
+          const jointSignalsRef = useRef({});
+
+          const drawPoseOverlay = useCallback((landmarks, perJointSignals = {}) => {
+            const canvas = overlayCanvasRef.current;
+            const video = videoRef.current;
+            if (!canvas || !video) return;
+
+            const width = video.videoWidth || video.clientWidth || 640;
+            const height = video.videoHeight || video.clientHeight || 480;
+
+            if (canvas.width !== width || canvas.height !== height) {
+              canvas.width = width;
+              canvas.height = height;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            ctx.clearRect(0, 0, width, height);
+            if (!landmarks || !Array.isArray(landmarks)) return;
+
+            const projectX = (value) => (OVERLAY_FLIP_X ? (1 - value) * width : value * width);
+            const projectY = (value) => value * height;
+
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            for (const [startIndex, endIndex] of POSE_CONNECTIONS) {
+              const start = landmarks[startIndex];
+              const end = landmarks[endIndex];
+              if (!start || !end) continue;
+              if ((start.visibility ?? 1) < OVERLAY_MIN_VISIBILITY || (end.visibility ?? 1) < OVERLAY_MIN_VISIBILITY) continue;
+
+              const startSignal = perJointSignals[startIndex] || 'neutral';
+              const endSignal = perJointSignals[endIndex] || 'neutral';
+              const startLevel = signalToLevel(startSignal);
+              const endLevel = signalToLevel(endSignal);
+              const lineLevel = Math.max(startLevel, endLevel);
+              const lineSignal = levelToSignal(lineLevel);
+              ctx.strokeStyle = signalToColor(lineSignal);
+
+              ctx.beginPath();
+              ctx.moveTo(projectX(start.x), projectY(start.y));
+              ctx.lineTo(projectX(end.x), projectY(end.y));
+              ctx.stroke();
+            }
+
+            for (const index of KEYPOINT_INDICES) {
+              const point = landmarks[index];
+              if (!point) continue;
+              if ((point.visibility ?? 1) < OVERLAY_MIN_VISIBILITY) continue;
+
+              const x = projectX(point.x);
+              const y = projectY(point.y);
+              const signal = perJointSignals[index] || 'neutral';
+              ctx.beginPath();
+              ctx.fillStyle = signalToColor(signal);
+              ctx.arc(x, y, 5, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.beginPath();
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+              ctx.lineWidth = 2;
+              ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }, []);
+
+          useEffect(() => {
+            const initAuth = async () => {
+              try {
+                await signInAnonymously(auth);
+              } catch (err) {
+                console.error('Auth error:', err);
+              }
+            };
+
+            initAuth();
+            return onAuthStateChanged(auth, setUser);
+          }, []);
+
+          useEffect(() => {
+            if (!user) return;
+
+            const deviceRef = doc(db, DB_COLLECTIONS.devices, user.uid);
+            const unsubDevice = onSnapshot(deviceRef, (docSnap) => {
+              if (docSnap.exists()) {
+                setLinkedProfileIds(docSnap.data().linkedProfiles || []);
+              } else {
+                setLinkedProfileIds([]);
+                setIsLoadingProfile(false);
+                setScreen((prev) => (prev === 'loading' ? 'setup' : prev));
+              }
+            }, (err) => {
+              console.error('Device error:', err);
+              setErrorText('Das Profil konnte nicht geladen werden.');
+            });
+
+            return () => unsubDevice();
+          }, [user]);
+
+          useEffect(() => {
+            if (!linkedProfileIds.length) {
+              setProfiles([]);
+              return;
+            }
+
+            const ids = linkedProfileIds.slice(0, 10);
+            const profilesQuery = query(collection(db, DB_COLLECTIONS.profiles), where(documentId(), 'in', ids));
+
+            const unsubProfiles = onSnapshot(profilesQuery, (snapshot) => {
+              const loadedProfiles = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+              loadedProfiles.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+              setProfiles(loadedProfiles);
+              setIsLoadingProfile(false);
+              setScreen((prev) => (prev === 'loading' ? 'profile_select' : prev));
+            }, (err) => {
+              console.error('Profiles error:', err);
+              setIsLoadingProfile(false);
+              setErrorText('Profile konnten nicht geladen werden.');
+            });
+
+            return () => unsubProfiles();
+          }, [linkedProfileIds]);
+
+          useEffect(() => {
+            const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            const hasPose = typeof window.Pose !== 'undefined';
+            setIsCameraSupported(hasCamera && hasPose);
+          }, []);
+
+          useEffect(() => {
+            isGameScreenRef.current = screen === 'game';
+            if (screen !== 'game') {
+              setIsCheckingPose(false);
+              setCheckCountdown(0);
+              setLiveMatchPercent(0);
+              setLiveMetrics([]);
+              setJointSignals({});
+              jointSignalsRef.current = {};
+            }
+          }, [screen]);
+
+          useEffect(() => {
+            if (screen !== 'game') return;
+
+            let cancelled = false;
+
+            const initGameCamera = async () => {
+              const ready = await ensureCameraAndPose();
+              if (!ready || cancelled) return;
+            };
+
+            initGameCamera();
+
+            return () => {
+              cancelled = true;
+            };
+          }, [screen, ensureCameraAndPose]);
+
+          const stopCamera = useCallback(() => {
+            if (countdownTimeoutRef.current) {
+              clearTimeout(countdownTimeoutRef.current);
+              countdownTimeoutRef.current = 0;
+            }
+            if (rafRef.current) {
+              cancelAnimationFrame(rafRef.current);
+              rafRef.current = 0;
+            }
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach((track) => track.stop());
+              streamRef.current = null;
+            }
+            drawPoseOverlay(null, {});
+            setLiveMatchPercent(0);
+            setLiveMetrics([]);
+            setJointSignals({});
+            jointSignalsRef.current = {};
+            setCameraReady(false);
+          }, [drawPoseOverlay]);
+
+          useEffect(() => stopCamera, [stopCamera]);
+
+          const ensureCameraAndPose = useCallback(async () => {
+            if (!isCameraSupported || !videoRef.current) return false;
+            if (streamRef.current && poseEngineRef.current) return true;
+
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: 'user' },
+                audio: false
+              });
+
+              streamRef.current = stream;
+              videoRef.current.srcObject = stream;
+              await videoRef.current.play();
+
+              if (!poseEngineRef.current) {
+                const pose = new window.Pose({
+                  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+                });
+
+                pose.setOptions({
+                  modelComplexity: 1,
+                  smoothLandmarks: true,
+                  enableSegmentation: false,
+                  minDetectionConfidence: 0.5,
+                  minTrackingConfidence: 0.5,
+                  selfieMode: true
+                });
+
+                pose.onResults((results) => {
+                  latestLandmarksRef.current = results.poseLandmarks || null;
+                  drawPoseOverlay(latestLandmarksRef.current, jointSignalsRef.current);
+
+                  if (!isGameScreenRef.current || !currentPose) {
+                    setLiveMatchPercent(0);
+                    setLiveMetrics([]);
+                    setJointSignals({});
+                    jointSignalsRef.current = {};
+                    return;
+                  }
+
+                  const now = Date.now();
+                  if (now - lastLiveMatchUpdateAtRef.current < 120) return;
+                  lastLiveMatchUpdateAtRef.current = now;
+
+                  const liveResult = scorePoseDetailed(currentPose, latestLandmarksRef.current);
+                  const nextJointSignals = buildJointSignals(liveResult.metrics);
+                  jointSignalsRef.current = nextJointSignals;
+
+                  setLiveMatchPercent(Math.round(liveResult.ratio * 100));
+                  setLiveMetrics(liveResult.metrics);
+                  setJointSignals(nextJointSignals);
+                });
+
+                poseEngineRef.current = pose;
+              }
+
+              const processFrame = async () => {
+                if (!isGameScreenRef.current || !videoRef.current || !poseEngineRef.current) return;
+                if (videoRef.current.readyState >= 2) {
+                  try {
+                    await poseEngineRef.current.send({ image: videoRef.current });
+                  } catch (err) {
+                    console.error('Pose frame error:', err);
+                  }
+                }
+                rafRef.current = requestAnimationFrame(processFrame);
+              };
+
+              if (!rafRef.current) {
+                rafRef.current = requestAnimationFrame(processFrame);
+              }
+
+              setCameraReady(true);
+              return true;
+            } catch (err) {
+              console.error('Camera init error:', err);
+              setErrorText('Bitte erlaube den Kamerazugriff, damit das Spiel starten kann.');
+              setCameraReady(false);
+              return false;
+            }
+          }, [isCameraSupported, drawPoseOverlay, currentPose]);
+
+          const saveProfile = async () => {
+            const name = setupName.trim();
+            if (!user || !name) return;
+
+            const profileId = name.toLowerCase();
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, profileId);
+            const profileSnap = await getDoc(profileRef);
+
+            if (!profileSnap.exists()) {
+              await setDoc(profileRef, {
+                name,
+                avatar: setupAvatar,
+                coins: 0,
+                unlockedThemes: ['classic'],
+                activeTheme: 'classic',
+                stickers: []
+              });
+            } else if (profileSnap.data().avatar !== setupAvatar) {
+              await updateDoc(profileRef, { avatar: setupAvatar });
+            }
+
+            await setDoc(doc(db, DB_COLLECTIONS.devices, user.uid), {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
+
+            setActiveProfileId(profileId);
+            setScreen('start');
+            setSetupName('');
+            setSetupAvatar('🦊');
+          };
+
+          const startGame = () => {
+            if (!isCameraSupported) {
+              setErrorText('Kamera oder Pose-Erkennung wird im Browser nicht unterstützt.');
+              return;
+            }
+
+            setErrorText('');
+            setRoundPoses(samplePoses());
+            setCurrentPoseIndex(0);
+            setScore(0);
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastSpeedBonus(0);
+            setLastMatchPercent(0);
+            setPoseAttempts(0);
+            setResultText('');
+            setIsCheckingPose(false);
+            setCheckCountdown(0);
+            setLiveMatchPercent(0);
+            setLiveMetrics([]);
+            setJointSignals({});
+            jointSignalsRef.current = {};
+            setScreen('game');
+            poseStartedAtRef.current = Date.now();
+          };
+
+          const evaluateCurrentPose = () => {
+            if (!currentPose) return;
+
+            const landmarks = latestLandmarksRef.current;
+            if (!landmarks) {
+              setErrorText('Ich sehe dich noch nicht gut genug. Stell dich ganz ins Bild.');
+              setFeedback(null);
+              setIsCheckingPose(false);
+              setCheckCountdown(0);
+              return;
+            }
+
+            const result = scorePose(currentPose, landmarks);
+            setLastMatchPercent(Math.round(result.ratio * 100));
+
+            const attemptNumber = poseAttempts + 1;
+            setPoseAttempts(attemptNumber);
+
+            const attemptMultiplier = attemptNumber === 1 ? 1 : attemptNumber === 2 ? 0.5 : 0.2;
+            const awardedBasePoints = Math.round(result.basePoints * attemptMultiplier);
+            const durationSeconds = poseStartedAtRef.current ? (Date.now() - poseStartedAtRef.current) / 1000 : 0;
+            const speedBonus = awardedBasePoints > 0 && attemptNumber === 1 ? getSpeedBonus(durationSeconds) : 0;
+            const totalPoints = awardedBasePoints + speedBonus;
+
+            if (awardedBasePoints > 0) {
+              setFeedback('success');
+              setLastAwardedPoints(totalPoints);
+              setLastSpeedBonus(speedBonus);
+              setScore((prev) => prev + totalPoints);
+            } else {
+              setFeedback('try_again');
+              setLastAwardedPoints(0);
+              setLastSpeedBonus(0);
+            }
+
+            setIsCheckingPose(false);
+            setCheckCountdown(0);
+          };
+
+          const startPoseCheck = () => {
+            if (isCheckingPose || feedback || !cameraReady) return;
+            setErrorText('');
+            setIsCheckingPose(true);
+            setCheckCountdown(3);
+
+            const tick = (count) => {
+              if (!isGameScreenRef.current) return;
+              if (count <= 1) {
+                setCheckCountdown(0);
+                evaluateCurrentPose();
+                return;
+              }
+              countdownTimeoutRef.current = setTimeout(() => {
+                setCheckCountdown(count - 1);
+                tick(count - 1);
+              }, 900);
+            };
+
+            tick(3);
+          };
+
+          const endGame = async (finalScore) => {
+            stopCamera();
+
+            const coins = Math.floor(finalScore / 10);
+            setEarnedCoins(coins);
+
+            if (profile && activeProfileId) {
+              const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
+              await updateDoc(profileRef, {
+                coins: (profile.coins || 0) + coins
+              });
+            }
+
+            setResultText(finalScore >= 900 ? 'Wahnsinn! Du bist ein Pose-Profi! 🎭' : 'Stark gemacht! Deine Posen werden immer besser. 🌟');
+            setScreen('result');
+          };
+
+          const nextPose = async () => {
+            const isLast = currentPoseIndex >= roundPoses.length - 1;
+
+            if (isLast) {
+              await endGame(score);
+              return;
+            }
+
+            setCurrentPoseIndex((prev) => prev + 1);
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastSpeedBonus(0);
+            setLastMatchPercent(0);
+            setPoseAttempts(0);
+            setErrorText('');
+            setIsCheckingPose(false);
+            setCheckCountdown(0);
+            poseStartedAtRef.current = Date.now();
+            setLiveMatchPercent(0);
+            setLiveMetrics([]);
+            setJointSignals({});
+            jointSignalsRef.current = {};
+          };
+
+          const retryPose = () => {
+            setFeedback(null);
+            setLastAwardedPoints(0);
+            setLastMatchPercent(0);
+            setErrorText('');
+            setIsCheckingPose(false);
+            setCheckCountdown(0);
+            setLiveMatchPercent(0);
+            setLiveMetrics([]);
+            setJointSignals({});
+            jointSignalsRef.current = {};
+          };
+
+          const liveSignal = liveMatchPercent >= 75 ? 'green' : liveMatchPercent >= 55 ? 'yellow' : 'red';
+          const liveSignalLabel = liveSignal === 'green' ? 'Gut' : liveSignal === 'yellow' ? 'Fast' : 'Noch üben';
+
+          const selectProfile = (profileId) => {
+            stopCamera();
+            setActiveProfileId(profileId);
+            setScreen('start');
+          };
+
+          const TopBar = () => {
+            if (!profile || screen === 'setup' || screen === 'profile_select' || screen === 'loading') return null;
+
+            return (
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30 pointer-events-none">
+                <button
+                  onClick={() => {
+                    stopCamera();
+                    setActiveProfileId(null);
+                    setScreen('profile_select');
+                  }}
+                  className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-white/70"
+                >
+                  <span className="text-2xl">{profile.avatar}</span>
+                  <span className="font-bold text-slate-800 hidden sm:inline">{profile.name}</span>
+                  <Users size={16} className="text-violet-500 ml-1" />
+                </button>
+
+                <div className="bg-yellow-300 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200">
+                  <span className="font-black text-yellow-900 text-lg">{profile.coins || 0}</span>
+                  <span className="text-xl">🪙</span>
+                </div>
+              </div>
+            );
+          };
+
+          if (isLoadingProfile) {
+            return (
+              <div className="min-h-screen bg-violet-100 flex items-center justify-center font-bold text-xl text-violet-700">
+                Lade...
+              </div>
+            );
+          }
+
+          if (screen === 'profile_select') {
+            return (
+              <div className="min-h-screen bg-violet-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-violet-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-violet-700 mb-6">Wer spielt heute?</h1>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-h-[50vh] overflow-y-auto p-1">
+                    {profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => selectProfile(p.id)}
+                        className="bg-slate-50 hover:bg-violet-50 border-2 border-slate-200 hover:border-violet-300 rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+                      >
+                        <div className="text-5xl">{p.avatar}</div>
+                        <div className="font-bold text-slate-700 text-lg truncate w-full">{p.name}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('setup')}
+                    className="w-full bg-violet-100 hover:bg-violet-200 text-violet-800 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-violet-200 border-dashed"
+                  >
+                    <Users size={20} /> Neuen Spieler hinzufügen
+                  </button>
+
+                  {errorText && <p className="mt-4 text-sm text-red-500 font-semibold">{errorText}</p>}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'setup') {
+            return (
+              <div className="min-h-screen bg-violet-100 flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 text-center border-4 border-violet-200 animate-pop-in">
+                  <h1 className="text-3xl font-black text-violet-700 mb-2">Neues Profil</h1>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">Nutze denselben Namen wie in Zahlen-Safari, Lese-Fuchs oder Mal-Atelier für dieselben Münzen.</p>
+
+                  <div className="mb-6">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Dein Name:</label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={setupName}
+                      onChange={(event) => setSetupName(event.target.value)}
+                      placeholder="z.B. Mia"
+                      className="w-full bg-slate-50 border-2 border-violet-200 rounded-xl px-4 py-3 font-bold text-slate-800 text-xl focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div className="mb-8">
+                    <label className="block text-left font-bold text-slate-700 mb-2">Wähle dein Tier:</label>
+                    <div className="grid grid-cols-5 gap-2 bg-slate-50 p-3 rounded-xl border-2 border-slate-100">
+                      {AVATAR_POOL.map((avatar) => (
+                        <button
+                          key={avatar}
+                          onClick={() => setSetupAvatar(avatar)}
+                          className={`aspect-square text-3xl flex items-center justify-center rounded-lg transition-all ${setupAvatar === avatar ? 'bg-violet-200 scale-110 shadow-sm' : 'hover:bg-slate-200 opacity-70 hover:opacity-100'}`}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={saveProfile}
+                    disabled={!setupName.trim()}
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white font-black text-xl py-4 rounded-2xl"
+                  >
+                    Start!
+                  </button>
+
+                  {profiles.length > 0 && (
+                    <button onClick={() => { stopCamera(); setScreen('profile_select'); }} className="mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                      Abbrechen
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'start') {
+            return (
+              <div className="min-h-screen bg-violet-100 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl p-8 text-center border-4 border-violet-200 animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🎭</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-2">Pose-<span className="text-violet-600">Theater</span></h1>
+                  <p className="text-slate-600 font-medium mb-2">Mache Posen nach und sammle Punkte.</p>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">10 Runden pro Spiel · bis zu +140 Punkte pro Pose</p>
+
+                  <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4 mb-6 text-left">
+                    <p className="font-bold text-violet-800 mb-1">So funktioniert's:</p>
+                    <ul className="text-slate-600 text-sm space-y-1">
+                      <li>• Die App zeigt dir eine Ziel-Pose.</li>
+                      <li>• Stell dich vor die Kamera und mach die Pose nach.</li>
+                      <li>• Erster Versuch + schnelles Nachmachen bringt Extra-Punkte.</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={startGame}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-black text-2xl py-4 rounded-2xl"
+                  >
+                    Losposen!
+                  </button>
+
+                  {!isCameraSupported && (
+                    <p className="text-red-500 text-sm font-semibold mt-4">
+                      Kamera oder Pose-Erkennung wird im Browser nicht unterstützt.
+                    </p>
+                  )}
+
+                  {errorText && <p className="text-red-500 font-semibold text-sm mt-4">{errorText}</p>}
+
+                  <a href="../index.html" className="inline-block mt-4 text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'game') {
+            return (
+              <div className="min-h-screen bg-violet-50 relative flex flex-col items-center justify-center p-4 pt-24 font-sans">
+                <TopBar />
+
+                <div className="w-full max-w-5xl flex justify-between items-center mb-4 px-1">
+                  <div className="bg-white px-4 py-2 rounded-full shadow border-2 border-yellow-100">
+                    <span className="text-yellow-500 text-xl mr-1">⭐</span>
+                    <span className="text-xl font-black text-slate-800">{score}</span>
+                  </div>
+                  <div className="text-violet-600 font-bold bg-white px-4 py-2 rounded-full shadow">
+                    {currentPoseIndex + 1} / {roundPoses.length}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full max-w-5xl">
+                  <div className="bg-white rounded-[2rem] shadow-2xl border border-violet-100 w-full overflow-hidden animate-pop-in p-6">
+                    <h2 className="text-xs sm:text-sm font-bold text-violet-500 uppercase tracking-widest mb-3">Mache diese Pose nach:</h2>
+                    <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4 text-center mb-4">
+                      <div className="text-6xl mb-2">{currentPose?.emoji}</div>
+                      <p className="text-2xl font-black text-slate-800">{currentPose?.name}</p>
+                      <p className="text-slate-600 font-semibold mt-2">{currentPose?.description}</p>
+                    </div>
+
+                    {!feedback && (
+                      <div className="text-center">
+                        <button
+                          onClick={startPoseCheck}
+                          disabled={isCheckingPose || !cameraReady}
+                          className={`w-full py-4 rounded-2xl text-white font-black text-xl ${isCheckingPose ? 'bg-orange-500' : 'bg-green-500 hover:bg-green-600'} disabled:bg-slate-300`}
+                        >
+                          {isCheckingPose ? `Halten... ${checkCountdown || '✓'}` : 'Pose prüfen'}
+                        </button>
+                        <p className="text-slate-500 text-sm mt-3">Tipp: Der ganze Körper sollte im Bild sein.</p>
+
+                        {cameraReady && liveMetrics.length > 0 && (
+                          <div className="mt-4 bg-slate-50 border-2 border-slate-100 rounded-2xl p-3 text-left">
+                            <p className="text-xs font-black uppercase tracking-wide text-slate-500 mb-2">Metriken live ({liveSignalLabel})</p>
+                            <div className="space-y-2 max-h-36 overflow-y-auto">
+                              {liveMetrics.map((metric) => {
+                                const metricSignal = metricScoreToSignal(metric.score);
+                                return (
+                                  <div key={metric.id} className="flex items-center gap-2 text-sm">
+                                    <span className={`w-2.5 h-2.5 rounded-full ${metricSignal === 'green' ? 'bg-emerald-400' : metricSignal === 'yellow' ? 'bg-yellow-400' : 'bg-red-400'}`}></span>
+                                    <span className="text-slate-700 font-semibold flex-1 truncate">{metric.label}</span>
+                                    <span className="text-slate-500 font-bold">{Math.round(metric.score * 100)}%</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {feedback && (
+                      <div className="mt-4">
+                        {feedback === 'success' ? (
+                          <div className="bg-green-100 text-green-800 p-4 rounded-2xl mb-4">
+                            <p className="text-xl font-black">Perfekt nachgemacht! 🎉</p>
+                            <p className="font-semibold">+{lastAwardedPoints} Punkte</p>
+                            {lastSpeedBonus > 0 && <p className="text-sm font-semibold mt-1">inkl. +{lastSpeedBonus} Tempo-Bonus</p>}
+                            <p className="text-sm font-semibold mt-1">Match: {lastMatchPercent}%</p>
+                            {poseAttempts > 1 && (
+                              <p className="text-sm font-medium mt-1">Wiederholungsversuch: reduzierte Punkte.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-orange-100 text-orange-800 p-4 rounded-2xl mb-4">
+                            <p className="text-xl font-black">Fast geschafft 😊</p>
+                            <p className="text-sm font-semibold mt-1">Match: {lastMatchPercent}%</p>
+                            <p className="text-sm font-semibold mt-1">Nächster Versuch bringt weniger Punkte.</p>
+                          </div>
+                        )}
+
+                        <div className="flex gap-3 justify-center flex-wrap">
+                          <button
+                            onClick={() => { stopCamera(); setScreen('start'); }}
+                            className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-full shadow"
+                            aria-label="Zurück zur Startseite"
+                            title="Zurück"
+                          >
+                            🏠
+                          </button>
+
+                          {feedback === 'try_again' && (
+                            <button
+                              onClick={retryPose}
+                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-full"
+                            >
+                              Nochmal
+                            </button>
+                          )}
+
+                          <button
+                            onClick={nextPose}
+                            className="bg-violet-500 hover:bg-violet-600 text-white font-bold py-3 px-6 rounded-full shadow"
+                            aria-label="Weiter"
+                            title="Weiter"
+                          >
+                            ➡️
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {errorText && <p className="text-red-500 font-semibold text-sm mt-4 text-center">{errorText}</p>}
+                  </div>
+
+                  <div className="bg-white rounded-[2rem] shadow-2xl border border-violet-100 w-full overflow-hidden animate-pop-in p-4">
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-900 min-h-[360px] flex items-center justify-center">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover scale-x-[-1]"
+                      />
+
+                      <canvas
+                        ref={overlayCanvasRef}
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                      />
+
+                      <div className="absolute top-3 left-3 bg-black/45 backdrop-blur-sm rounded-xl px-3 py-2 text-white border border-white/20">
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-white/90">Live-Ampel</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`w-3 h-3 rounded-full ${liveSignal === 'red' ? 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.9)]' : 'bg-red-900/70'}`}></span>
+                          <span className={`w-3 h-3 rounded-full ${liveSignal === 'yellow' ? 'bg-yellow-300 shadow-[0_0_8px_rgba(253,224,71,0.9)]' : 'bg-yellow-900/70'}`}></span>
+                          <span className={`w-3 h-3 rounded-full ${liveSignal === 'green' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]' : 'bg-emerald-900/70'}`}></span>
+                          <span className="text-sm font-black ml-1">{cameraReady ? `${liveMatchPercent}%` : '---'}</span>
+                        </div>
+                        {cameraReady && (
+                          <div className="text-[11px] text-white/85 font-bold mt-1">{liveSignalLabel} · {Object.keys(jointSignals).length} Gelenke</div>
+                        )}
+                      </div>
+
+                      {!cameraReady && (
+                        <div className="absolute inset-0 bg-slate-900/75 text-white flex items-center justify-center text-center p-6">
+                          <div>
+                            <p className="font-bold text-lg">Kamera wird vorbereitet…</p>
+                            <p className="text-sm text-slate-200 mt-1">Erlaube den Kamerazugriff, wenn dein Browser fragt.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {isCheckingPose && checkCountdown > 0 && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="w-24 h-24 rounded-full bg-white text-violet-700 font-black text-5xl flex items-center justify-center shadow-2xl">
+                            {checkCountdown}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'result') {
+            return (
+              <div className="min-h-screen bg-yellow-50 relative flex flex-col items-center justify-center p-4 pt-20 font-sans">
+                <TopBar />
+
+                <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border-4 border-yellow-300 text-center animate-pop-in">
+                  <div className="text-7xl mb-4 animate-float">🏆</div>
+                  <h1 className="text-4xl font-black text-slate-800 mb-3">Runde fertig!</h1>
+                  <p className="text-slate-600 font-semibold mb-6">{resultText}</p>
+
+                  <div className="bg-yellow-100 rounded-2xl p-5 mb-6 border border-yellow-200">
+                    <p className="text-slate-700 font-bold">Deine Punkte</p>
+                    <p className="text-5xl font-black text-yellow-600 mt-1">{score}</p>
+                  </div>
+
+                  <div className="bg-violet-50 rounded-2xl p-4 mb-6 border border-violet-100">
+                    <p className="text-slate-700 font-bold">Münzen aus dieser Runde</p>
+                    <p className="text-3xl font-black text-violet-600 mt-1">+{earnedCoins} 🪙</p>
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('start')}
+                    className="w-full bg-violet-500 hover:bg-violet-600 text-white font-black py-4 rounded-2xl mb-3"
+                  >
+                    Noch eine Runde
+                  </button>
+
+                  <a href="../index.html" className="text-slate-500 font-bold hover:text-slate-700 underline">
+                    Zurück zum LernKumpel-Menü
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

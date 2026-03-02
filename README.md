@@ -47,6 +47,19 @@ Das Mal-Atelier verbindet freies Zeichnen mit kindgerechter KI-Unterstützung.
 - 🪙 **Gemeinsames Profilsystem:** Dieselben Profile und Münzen wie in Zahlen-Safari und Lese-Fuchs.
 - ✨ **KI-Zauberbild:** Gegen Münz-Einsatz wird aus der Kinderzeichnung ein KI-Bild (Image-Edit) erzeugt.
 
+### 4. Pose-Theater (Bewegung + Kamera)
+
+👉 **[Pose-Theater spielen](https://mainkai.github.io/LernKumpel/pose-theater/)**
+
+Im Pose-Theater machen Kinder pantomimische Bewegungs-Posen nach, die über die Kamera erkannt und bewertet werden.
+
+**Features:**
+
+- 🎭 **Pose nachmachen:** Jede Runde zeigt eine Ziel-Pose (z.B. Arme hoch, Stern, Hocke).
+- 📷 **Kamera + Bilderkennung:** Die Körperhaltung wird in Echtzeit über Pose-Erkennung ausgewertet.
+- ⭐ **Punktesystem:** Die Übereinstimmung zur Ziel-Pose bestimmt die Punkte.
+- 🪙 **Gemeinsames Münzsystem:** Dieselben Profile und Münzen wie in den anderen LernKumpel-Apps.
+
 ## 🚀 Geplante Apps (Roadmap)
 
 - Weitere Lern-Abenteuer folgen.
@@ -59,36 +72,8 @@ Dieses Projekt ist extrem leichtgewichtig und auf minimalen Wartungsaufwand ausg
 
 - **Frontend:** React 18 & ReactDOM (via CDN eingebunden), Babel Standalone (für JSX im Browser).
 - **Styling:** Tailwind CSS (via CDN).
-- **Backend & Datenbank:** Firebase (Firestore mit geteilten Profilen/Münzen und app-spezifischen Highscores, Anonymous Auth für unsichtbaren Login).
+- **Backend & Datenbank:** Firebase (Firestore für Highscores und Profile, Anonymous Auth für unsichtbaren Login).
 - **Icons:** Inline-SVGs (Lucide React inspiriert) für absolute Unabhängigkeit von externen Font-Bibliotheken.
-
-## 🗄️ Firestore-Datenmodell (App-übergreifend)
-
-Damit alle Apps im LernKumpel-Universum dieselbe Datenbasis nutzen können, ist das Modell in **globale** und **app-spezifische** Daten getrennt:
-
-- **Global (von allen Apps geteilt):**
-  - `devices/{deviceUid}`
-    - `linkedProfiles: string[]`
-  - `global_profiles/{profileId}`
-    - `name`, `avatar`
-    - `coins` (bewusst app-übergreifend)
-    - `unlockedThemes`, `activeTheme`, `stickers`
-
-- **App-spezifisch (pro Spiel getrennt):**
-  - `app_highscores/{scoreId}`
-    - `appId` (z.B. `zahlen-safari`, `lese-fuchs`, `mal-atelier`)
-    - `profileId`, `name`, `avatar`
-    - `score`, `level`, `mode`, `theme`, `timestamp`
-
-### Warum diese Trennung?
-
-- Münzen, Profile und Freischaltungen bleiben in allen Apps konsistent.
-- Highscores bleiben sauber pro App isoliert (keine Vermischung verschiedener Spielmechaniken).
-- Neue Apps können sofort dieselbe Infrastruktur nutzen, indem sie nur eine neue `appId` verwenden.
-
-### Hinweis zum Betrieb
-
-Alle neuen oder zurückgesetzten Umgebungen sollten nur `app_highscores` für Bestenlisten verwenden.
 
 ## 📂 Ordnerstruktur
 
@@ -96,17 +81,15 @@ Um das "Geteilte Universum" auf GitHub Pages optimal abzubilden, ist das Repo wi
 
 ```text
 LernKumpel/
- │
- ├── index.html              # Das zukünftige Hauptmenü (Hub)
- │
- ├── zahlen-safari/          # Die fertige Mathe-App
- │   └── index.html          # Single-File React App
- │
- └── lese-fuchs/             # Vorlesen-App
- │   └── index.html
- │
- └── mal-atelier/            # Malen + KI-Bewertung + KI-Image-Edit
-   └── index.html
+├── index.html               # Hauptmenü (Hub)
+├── zahlen-safari/
+│   └── index.html           # Mathe-App
+├── lese-fuchs/
+│   └── index.html           # Vorlesen-App
+├── mal-atelier/
+│   └── index.html           # Malen + KI
+└── pose-theater/
+    └── index.html           # Posen + Kamera-Pose-Erkennung
 ```
 
 ## 🛠️ Lokale Entwicklung / Setup

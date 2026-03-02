@@ -867,6 +867,15 @@
                         )}
 
                         <div className="flex gap-3 justify-center flex-wrap">
+                          <button
+                            onClick={() => { stopListeningSession(); setScreen('start'); }}
+                            className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-full shadow"
+                            aria-label="Zurück zur Startseite"
+                            title="Zurück"
+                          >
+                            🏠
+                          </button>
+
                           {feedback === 'try_again' && (
                             <button
                               onClick={retrySentence}
@@ -879,8 +888,10 @@
                           <button
                             onClick={nextSentence}
                             className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-full shadow"
+                            aria-label="Weiter"
+                            title="Weiter"
                           >
-                            Weiter
+                            ➡️
                           </button>
                         </div>
                       </div>

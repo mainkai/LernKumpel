@@ -745,7 +745,7 @@
                     </button>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Ränge</span></button>
+                      <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Bestenliste</span></button>
                       <button onClick={() => { playClick(); setScreen('shop'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><ShoppingCart size={20} className="text-blue-500"/> <span className="text-xs">Shop</span></button>
                       <button onClick={() => { playClick(); setScreen('stickers'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><BookOpen size={20} className="text-pink-500"/> <span className="text-xs">Sticker</span></button>
                     </div>
@@ -816,8 +816,13 @@
                     })}
                   </div>
 
-                  <button onClick={() => { playClick(); setScreen('start'); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
-                    <ArrowLeft size={20} /> Zurück
+                  <button
+                    onClick={() => { playClick(); setScreen('start'); }}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+                    aria-label="Zurück zur Startseite"
+                    title="Zurück"
+                  >
+                    <ArrowLeft size={20} />
                   </button>
                 </div>
               );
@@ -849,8 +854,13 @@
                     </div>
                   </div>
 
-                  <button onClick={() => { playClick(); setScreen('start'); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
-                    <ArrowLeft size={20} /> Zurück
+                  <button
+                    onClick={() => { playClick(); setScreen('start'); }}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+                    aria-label="Zurück zur Startseite"
+                    title="Zurück"
+                  >
+                    <ArrowLeft size={20} />
                   </button>
                 </div>
               );

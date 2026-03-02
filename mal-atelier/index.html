@@ -137,62 +137,93 @@
           { value: 'sourceful/riverflow-v2-pro', label: 'Riverflow V2 Pro - 0.15 $/img' }
         ];
         const DEFAULT_IMAGE_EDIT_MODEL = IMAGE_EDIT_MODEL_OPTIONS[0].value;
-        const DRAW_TASKS = [
-            { prompt: 'eine Katze', emoji: '🐱' },
-            { prompt: 'ein Haus mit Baum', emoji: '🏠' },
-            { prompt: 'eine Rakete', emoji: '🚀' },
-            { prompt: 'einen Regenbogen', emoji: '🌈' },
-            { prompt: 'einen Fisch im Meer', emoji: '🐟' },
-            { prompt: 'ein Auto', emoji: '🚗' },
-            { prompt: 'eine Blume', emoji: '🌸' },
-            { prompt: 'einen Dinosaurier', emoji: '🦖' },
-            { prompt: 'einen Hund', emoji: '🐶' },
-            { prompt: 'eine Burg', emoji: '🏰' },
-            { prompt: 'einen Schmetterling', emoji: '🦋' },
-            { prompt: 'einen Drachen', emoji: '🐉' },
-            { prompt: 'einen Vogel', emoji: '🐦' },
-            { prompt: 'eine Prinzessin oder einen Prinzen', emoji: '👑' },
-            { prompt: 'einen Roboter', emoji: '🤖' },
-            { prompt: 'einen Baum', emoji: '🌳' },
-            { prompt: 'einen Elefanten', emoji: '🐘' },
-            { prompt: 'einen Superhelden', emoji: '🦸' },
-            { prompt: 'eine Meerjungfrau oder einen Meermann', emoji: '🧜' },
-            { prompt: 'einen Clown', emoji: '🤡' },
-            { prompt: 'einen Apfelbaum', emoji: '🍎🌳' },
-            { prompt: 'einen Schneemann', emoji: '⛄' },
-            { prompt: 'eine Eule', emoji: '🦉' },
-            { prompt: 'einen Marienkäfer', emoji: '🐞' },
-            { prompt: 'eine Giraffe', emoji: '🦒' },
-            { prompt: 'einen Affen', emoji: '🐵' },
-            { prompt: 'eine Biene auf einer Blume', emoji: '🐝🌸' },
-            { prompt: 'einen Frosch', emoji: '🐸' },
-            { prompt: 'einen Schmetterling auf einer Blume', emoji: '🦋🌼' },
-            { prompt: 'einen Löwen', emoji: '🦁' },
-            { prompt: 'eine Eisdiele', emoji: '🍦' },
-            { prompt: 'einen Wal im Meer', emoji: '🐋' },
-            { prompt: 'einen Panda', emoji: '🐼' },
-            { prompt: 'eine Rakete zum Mond', emoji: '🚀🌕' },
-            { prompt: 'einen Bären', emoji: '🐻' },
-            { prompt: 'eine Hexe oder einen Zauberer', emoji: '🧙' },
-            { prompt: 'einen Regenbogen mit Wolken', emoji: '🌈☁️' },
-            { prompt: 'einen Hund, der einen Ball fängt', emoji: '🐶⚽' },
-            { prompt: 'eine Katze auf einem Baum', emoji: '🐱🌳' },
-            { prompt: 'einen Vogel auf einem Ast', emoji: '🐦🌿' },
-            { prompt: 'einen Dinosaurier in der Stadt', emoji: '🦖🏙️' },
-            { prompt: 'einen Roboter, der tanzt', emoji: '🤖💃' },
-            { prompt: 'eine Meerjungfrau unter Wasser', emoji: '🧜🌊' },
-            { prompt: 'einen Superhelden, der fliegt', emoji: '🦸‍♂️✈️' },
-            { prompt: 'einen Clown mit Luftballons', emoji: '🤡🎈' },
-            { prompt: 'einen Apfelbaum mit Äpfeln', emoji: '🍎🌳' },
-            { prompt: 'einen Schneemann mit Hut', emoji: '⛄🎩' },
-            { prompt: 'eine Eule auf einem Ast', emoji: '🦉🌿' },
-            { prompt: 'einen Marienkäfer auf einem Blatt', emoji: '🐞🍃' },
-            { prompt: 'eine Giraffe, die Blätter frisst', emoji: '🦒🍂' },
-            { prompt: 'einen Affen, der eine Banane isst', emoji: '🐵🍌' },
-            { prompt: 'eine Biene, die Honig macht', emoji: '🐝🍯' },
-            { prompt: 'einen Frosch auf einem Seerosenblatt', emoji: '🐸🌺' },
-            { prompt: 'einen Schmetterling, der aus einem Kokon schlüpft', emoji: '🦋🪱' }
+        const DIFFICULTY_OPTIONS = [
+          { key: 'leicht', label: 'Leicht', symbol: '🟢', minPoints: 0, maxPoints: 150 },
+          { key: 'mittel', label: 'Mittel', symbol: '🟡', minPoints: 151, maxPoints: 250 },
+          { key: 'schwer', label: 'Schwer', symbol: '🔴', minPoints: 251, maxPoints: 499 },
+          { key: 'ultra_schwer', label: 'Extrem', symbol: '🟣', minPoints: 500, maxPoints: Number.POSITIVE_INFINITY }
         ];
+        const DRAW_TASKS = [
+            // Leicht (0-150 Punkte)
+            { prompt: 'eine Katze', emoji: '🐱', maxPoints: 100 },
+            { prompt: 'eine Rakete', emoji: '🚀', maxPoints: 100 },
+            { prompt: 'einen Regenbogen', emoji: '🌈', maxPoints: 100 },
+            { prompt: 'eine Blume', emoji: '🌸', maxPoints: 100 },
+            { prompt: 'einen Hund', emoji: '🐶', maxPoints: 100 },
+            { prompt: 'einen Schmetterling', emoji: '🦋', maxPoints: 100 },
+            { prompt: 'einen Vogel', emoji: '🐦', maxPoints: 100 },
+            { prompt: 'einen Baum', emoji: '🌳', maxPoints: 100 },
+            { prompt: 'einen Schneemann', emoji: '⛄', maxPoints: 100 },
+            { prompt: 'einen Marienkäfer', emoji: '🐞', maxPoints: 100 },
+            { prompt: 'einen Frosch', emoji: '🐸', maxPoints: 100 },
+            
+            { prompt: 'einen Fisch im Meer', emoji: '🐟', maxPoints: 150 },
+            { prompt: 'ein Auto', emoji: '🚗', maxPoints: 150 },
+            { prompt: 'einen Elefanten', emoji: '🐘', maxPoints: 150 },
+            { prompt: 'einen Apfelbaum', emoji: '🍎🌳', maxPoints: 150 },
+            { prompt: 'eine Eule', emoji: '🦉', maxPoints: 150 },
+            { prompt: 'eine Giraffe', emoji: '🦒', maxPoints: 150 },
+            { prompt: 'einen Affen', emoji: '🐵', maxPoints: 150 },
+            { prompt: 'einen Löwen', emoji: '🦁', maxPoints: 150 },
+            { prompt: 'einen Wal im Meer', emoji: '🐋', maxPoints: 150 },
+            { prompt: 'einen Panda', emoji: '🐼', maxPoints: 150 },
+            { prompt: 'einen Bären', emoji: '🐻', maxPoints: 150 },
+            { prompt: 'einen Regenbogen mit Wolken', emoji: '🌈☁️', maxPoints: 150 },
+            { prompt: 'einen Schneemann mit Hut', emoji: '⛄🎩', maxPoints: 150 },
+            { prompt: 'einen Marienkäfer auf einem Blatt', emoji: '🐞🍃', maxPoints: 150 },
+
+            // Mittel (151-250 Punkte)
+            { prompt: 'ein Haus mit Baum', emoji: '🏠', maxPoints: 200 },
+            { prompt: 'einen Dinosaurier', emoji: '🦖', maxPoints: 200 },
+            { prompt: 'eine Prinzessin oder einen Prinzen', emoji: '👑', maxPoints: 200 },
+            { prompt: 'einen Roboter', emoji: '🤖', maxPoints: 200 },
+            { prompt: 'einen Superhelden', emoji: '🦸', maxPoints: 200 },
+            { prompt: 'einen Clown', emoji: '🤡', maxPoints: 200 },
+            { prompt: 'eine Biene auf einer Blume', emoji: '🐝🌸', maxPoints: 200 },
+            { prompt: 'einen Schmetterling auf einer Blume', emoji: '🦋🌼', maxPoints: 200 },
+            { prompt: 'eine Eisdiele', emoji: '🍦', maxPoints: 200 },
+            { prompt: 'einen Vogel auf einem Ast', emoji: '🐦🌿', maxPoints: 200 },
+            { prompt: 'einen Apfelbaum mit Äpfeln', emoji: '🍎🌳', maxPoints: 200 },
+            { prompt: 'eine Eule auf einem Ast', emoji: '🦉🌿', maxPoints: 200 },
+            { prompt: 'einen Frosch auf einem Seerosenblatt', emoji: '🐸🌺', maxPoints: 200 },
+
+            { prompt: 'eine Burg', emoji: '🏰', maxPoints: 250 },
+            { prompt: 'einen Drachen', emoji: '🐉', maxPoints: 250 },
+            { prompt: 'eine Meerjungfrau oder einen Meermann', emoji: '🧜', maxPoints: 250 },
+            { prompt: 'eine Rakete zum Mond', emoji: '🚀🌕', maxPoints: 250 },
+            { prompt: 'eine Hexe oder einen Zauberer', emoji: '🧙', maxPoints: 250 },
+            { prompt: 'eine Katze auf einem Baum', emoji: '🐱🌳', maxPoints: 250 },
+            { prompt: 'einen Clown mit Luftballons', emoji: '🤡🎈', maxPoints: 250 },
+            { prompt: 'eine Giraffe, die Blätter frisst', emoji: '🦒🍂', maxPoints: 250 },
+            { prompt: 'einen Affen, der eine Banane isst', emoji: '🐵🍌', maxPoints: 250 },
+
+            // Schwer (251-499 Punkte)
+            { prompt: 'einen Hund, der einen Ball fängt', emoji: '🐶⚽', maxPoints: 300 },
+            { prompt: 'einen Roboter, der tanzt', emoji: '🤖💃', maxPoints: 300 },
+            { prompt: 'einen Superhelden, der fliegt', emoji: '🦸‍♂️✈️', maxPoints: 300 },
+            { prompt: 'eine Biene, die Honig macht', emoji: '🐝🍯', maxPoints: 300 },
+            { prompt: 'ein Piratenschiff im Sturm', emoji: '🏴‍☠️🌊', maxPoints: 300 },
+            { prompt: 'eine Zauberschule mit Sternenhimmel', emoji: '🏰✨', maxPoints: 300 },
+
+            { prompt: 'eine Meerjungfrau unter Wasser', emoji: '🧜🌊', maxPoints: 350 },
+            { prompt: 'einen Drachen, der über eine Burg fliegt', emoji: '🐉🏰', maxPoints: 350 },
+            { prompt: 'eine Unterwasserstadt mit Fischen', emoji: '🏙️🐠', maxPoints: 350 },
+            { prompt: 'einen Vulkan mit Lava und Dinosauriern', emoji: '🌋🦖', maxPoints: 350 },
+
+            { prompt: 'einen Dinosaurier in der Stadt', emoji: '🦖🏙️', maxPoints: 400 },
+            { prompt: 'einen Weltraumbahnhof auf dem Mond', emoji: '🌕🚀', maxPoints: 400 },
+            { prompt: 'ein Schloss auf den Wolken', emoji: '🏰☁️', maxPoints: 400 },
+            { prompt: 'einen Schmetterling, der aus einem Kokon schlüpft', emoji: '🦋🐛', maxPoints: 400 },
+
+            // Extrem (500+ Punkte)
+            { prompt: 'eine Drachenfamilie über einer leuchtenden Stadt bei Nacht', emoji: '🐉🌃', maxPoints: 550 },
+            { prompt: 'ein Unterwasserkönigreich mit Schloss, Korallen und Schatztruhe', emoji: '👑🏰🐠', maxPoints: 550 },
+            { prompt: 'eine Zeitreise mit Dinosauriern und Robotern in einer Szene', emoji: '🦖🤖⏳', maxPoints: 600 },
+            { prompt: 'eine Zauberschule im Gewitter mit fliegenden Besen', emoji: '🏰⚡🧹', maxPoints: 600 },
+            { prompt: 'eine Weltraumstadt auf mehreren Planeten mit Raumschiffen', emoji: '🪐🏙️🚀', maxPoints: 650 },
+            { prompt: 'ein großes Fantasieabenteuer mit Burg, Drachen, Rittern und Wald', emoji: '🏰🐉🛡️🌲', maxPoints: 700 },
+            { prompt: 'eine riesige Traumwelt aus Wolkenschloss, Regenbogenbrücke und Sternenmeer', emoji: '☁️🏰🌈✨', maxPoints: 750 }
+          ];
 
         const firebaseConfig = {
           apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
@@ -329,6 +360,7 @@
           const [openRouterApiKey, setOpenRouterApiKey] = useState(localStorage.getItem('malAtelierOpenRouterKey') || '');
           const [evaluationModel, setEvaluationModel] = useState(DEFAULT_EVALUATION_MODEL);
           const [imageEditModel, setImageEditModel] = useState(DEFAULT_IMAGE_EDIT_MODEL);
+          const [selectedDifficulty, setSelectedDifficulty] = useState(DIFFICULTY_OPTIONS[0].key);
 
           const canvasRef = useRef(null);
           const canvasCssSizeRef = useRef({ width: 0, height: 0 });
@@ -338,6 +370,7 @@
 
           const profile = useMemo(() => profiles.find((p) => p.id === activeProfileId), [profiles, activeProfileId]);
           const currentTask = roundTasks[roundIndex] || null;
+          const isApiKeyMissing = !openRouterApiKey.trim();
 
           useEffect(() => {
             localStorage.setItem('malAtelierOpenRouterKey', openRouterApiKey);
@@ -505,7 +538,11 @@
           };
 
           const startGame = () => {
-            setRoundTasks(shuffle(DRAW_TASKS).slice(0, MAX_ROUNDS));
+            const difficulty = DIFFICULTY_OPTIONS.find((option) => option.key === selectedDifficulty) || DIFFICULTY_OPTIONS[0];
+            const filteredTasks = DRAW_TASKS.filter((task) => task.maxPoints >= difficulty.minPoints && task.maxPoints <= difficulty.maxPoints);
+            const taskPool = filteredTasks.length ? filteredTasks : DRAW_TASKS;
+
+            setRoundTasks(shuffle(taskPool).slice(0, Math.min(MAX_ROUNDS, taskPool.length)));
             setRoundIndex(0);
             setScore(0);
             setFeedback('');
@@ -845,14 +882,15 @@
               const text = result?.choices?.[0]?.message?.content || '';
               const parsed = parseJsonFromText(text) || {};
               const aiScore = clamp(Number(parsed.score) || 0, 0, 100);
+              const finalScore = Math.round((aiScore / 100) * (currentTask.maxPoints || 100));
               const aiFeedback = (parsed.feedback || 'Danke fürs Malen!').toString().slice(0, 120);
               const aiEmoji = (parsed.emoji || '').toString().trim().slice(0, 4);
 
-              setLastRoundScore(aiScore);
+              setLastRoundScore(finalScore);
               setLastRoundEmoji(aiEmoji || scoreToEmoji(aiScore));
               setLastRoundComment(aiFeedback);
               setHasRoundScored(true);
-              setScore((prev) => prev + aiScore);
+              setScore((prev) => prev + finalScore);
               setFeedback('');
             } catch (err) {
               console.error(err);
@@ -1107,47 +1145,80 @@
                 <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl p-8 text-center border-4 border-indigo-200 animate-pop-in">
                   <div className="text-7xl mb-4 animate-float">🎨</div>
                   <h1 className="text-4xl font-black text-slate-800 mb-2">Mal-<span className="text-indigo-600">Atelier</span></h1>
-                  <p className="text-slate-600 font-medium mb-2">Male die vorgegebene Aufgabe und lass KI dein Bild bewerten.</p>
-                  <p className="text-slate-500 font-medium mb-6 text-sm">8 Aufgaben pro Runde · bis zu 100 Punkte pro Bild</p>
+                  <p className="text-slate-600 font-medium mb-2">Male die vorgegebene Aufgabe und lass die KI dein Bild bewerten.</p>
+                  <p className="text-slate-500 font-medium mb-6 text-sm">{MAX_ROUNDS} Aufgaben pro Runde · Punkte je nach Motiv</p>
 
                   <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 mb-4 text-left">
                     <p className="font-bold text-indigo-800 mb-1">So funktioniert's:</p>
                     <ul className="text-slate-600 text-sm space-y-1">
                       <li>• Male das Motiv mit Farbe und Strichdicke deiner Wahl.</li>
-                      <li>• KI vergibt pro Bild einen Score von 0–100%.</li>
+                      <li>• KI bewertet dein Bild und du erhältst Punkte je nach Schwierigkeit.</li>
                       <li>• Für die Gesamtpunkte bekommst du Münzen.</li>
-                      <li>• Optional: KI-Zauberbild aus deiner Zeichnung für {AI_EDIT_COST} Münzen.</li>
+                      <li>• Optional: Erstelle ein KI-Zauberbild aus deiner Zeichnung für {AI_EDIT_COST} Münzen.</li>
                     </ul>
                   </div>
 
-                  <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 mb-6 text-left space-y-3">
-                    <p className="font-bold text-slate-800">KI-Einstellungen (OpenRouter)</p>
-                    <input
-                      type="password"
-                      value={openRouterApiKey}
-                      onChange={(event) => setOpenRouterApiKey(event.target.value)}
-                      placeholder="OpenRouter API-Key"
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
-                    />
-                    <select
-                      value={evaluationModel}
-                      onChange={(event) => setEvaluationModel(event.target.value)}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
-                    >
-                      {EVALUATION_MODEL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                  <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 mb-6 text-left">
+                    <p className="font-bold text-indigo-800 mb-3">Schwierigkeit</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      {DIFFICULTY_OPTIONS.map((option) => (
+                        <button
+                          key={option.key}
+                          onClick={() => setSelectedDifficulty(option.key)}
+                          className={`rounded-xl border-2 px-3 py-3 font-black transition ${selectedDifficulty === option.key ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-slate-700 border-indigo-100 hover:bg-indigo-100'}`}
+                        >
+                          <span className="mr-2" aria-hidden="true">{option.symbol}</span>
+                          {option.label}
+                        </button>
                       ))}
-                    </select>
-                    <select
-                      value={imageEditModel}
-                      onChange={(event) => setImageEditModel(event.target.value)}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
-                    >
-                      {IMAGE_EDIT_MODEL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
+                    </div>
                   </div>
+
+                  <details
+                    open={isApiKeyMissing}
+                    className={`border-2 rounded-2xl p-4 mb-6 text-left ${isApiKeyMissing ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}
+                  >
+                    <summary className={`font-bold cursor-pointer ${isApiKeyMissing ? 'text-red-700' : 'text-slate-800'}`}>
+                      KI-Einstellungen (OpenRouter) {isApiKeyMissing ? '• API-Key fehlt' : ''}
+                    </summary>
+
+                    <div className="mt-3 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <p className={`text-sm font-bold shrink-0 w-32 ${isApiKeyMissing ? 'text-red-700' : 'text-slate-700'}`}>API-Key:</p>
+                        <input
+                          type="password"
+                          value={openRouterApiKey}
+                          onChange={(event) => setOpenRouterApiKey(event.target.value)}
+                          placeholder="OpenRouter API-Key"
+                          className={`flex-1 min-w-0 bg-white border-2 rounded-xl px-3 py-2 text-sm font-semibold ${isApiKeyMissing ? 'border-red-300' : 'border-slate-200'}`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <p className="text-sm font-bold text-slate-700 shrink-0 w-32">Bewertungsmodell:</p>
+                        <select
+                          value={evaluationModel}
+                          onChange={(event) => setEvaluationModel(event.target.value)}
+                          className="flex-1 min-w-0 bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
+                        >
+                          {EVALUATION_MODEL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <p className="text-sm font-bold text-slate-700 shrink-0 w-32">Bildmodell:</p>
+                        <select
+                          value={imageEditModel}
+                          onChange={(event) => setImageEditModel(event.target.value)}
+                          className="flex-1 min-w-0 bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold"
+                        >
+                          {IMAGE_EDIT_MODEL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </details>
 
                   <button
                     onClick={startGame}
@@ -1181,7 +1252,14 @@
 
                 <div className="bg-white rounded-[2rem] shadow-2xl border border-indigo-100 w-full max-w-5xl overflow-hidden animate-pop-in">
                   <div className="p-6 md:p-8">
-                    <p className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-4">{currentTask?.emoji} {currentTask ? `Male ${currentTask.prompt}` : ''}</p>
+                    <p className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-4">
+                      {currentTask?.emoji} {currentTask ? `Male ${currentTask.prompt}` : ''}
+                      <span className="text-xl md:text-2xl text-yellow-500 font-bold ml-3 block md:inline mt-2 md:mt-0">
+                        <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 inline-flex items-center gap-1">
+                          ⭐ max. {currentTask?.maxPoints || 100}
+                        </span>
+                      </span>
+                    </p>
 
                     <div className="bg-slate-100 rounded-2xl p-3 border-2 border-slate-200 mb-4">
                       <canvas
@@ -1292,7 +1370,7 @@
                         {feedback && !hasRoundScored && <p className="font-black text-xl md:text-2xl leading-tight">{feedback}</p>}
                         {hasRoundScored && (
                           <div className="mt-2 flex items-center justify-center gap-3">
-                            <ScoreRing score={lastRoundScore} max={100} />
+                            <ScoreRing score={lastRoundScore} max={currentTask?.maxPoints || 100} />
                             <div className="w-16 h-16 rounded-full bg-white/70 border-2 border-indigo-200 flex items-center justify-center text-3xl" aria-label="Bewertungs-Emoji">
                               {lastRoundEmoji || scoreToEmoji(lastRoundScore)}
                             </div>
@@ -1317,12 +1395,22 @@
 
                     {errorText && <p className="text-red-500 font-semibold text-sm mt-2">{errorText}</p>}
 
-                    <div className="flex justify-end mt-4">
+                    <div className="flex items-center justify-between mt-4">
+                      <button
+                        onClick={() => setScreen('start')}
+                        className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-full shadow"
+                        aria-label="Zurück zur Startseite"
+                        title="Zurück"
+                      >
+                        🏠
+                      </button>
                       <button
                         onClick={nextRound}
                         className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-full shadow"
+                        aria-label={roundIndex >= roundTasks.length - 1 ? 'Runde abschließen' : 'Nächste Aufgabe'}
+                        title={roundIndex >= roundTasks.length - 1 ? 'Runde abschließen' : 'Nächste Aufgabe'}
                       >
-                        {roundIndex >= roundTasks.length - 1 ? 'Runde abschließen' : 'Nächste Aufgabe'}
+                        {roundIndex >= roundTasks.length - 1 ? '🏁' : '➡️'}
                       </button>
                     </div>
                   </div>
