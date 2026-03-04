@@ -111,17 +111,17 @@
         const UNDO_LIMIT = 25;
         const AI_EDIT_COST = 50;
         const EVALUATION_MODEL_OPTIONS = [
-          { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash Preview - ? $/request, very fast, good' },
-          { value: 'bytedance-seed/seed-1.6-flash', label: 'Seed 1.6 Flash - ? $/request, fast, good' },
-          { value: 'qwen/qwen3.5-flash-02-23', label: 'Qwen3.5-Flash - ? $/request, very fast, good' },
-          { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini - 0.0041 $/request, fast, cheap and good' },
-          { value: 'bytedance-seed/seed-2.0-mini', label: 'Seed-2.0-Mini - ? $/request, very fast, good' },
-          { value: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast - ? $/request, fast, good' },
+          { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash Preview - 0.000737 $/request, very fast, good' },
+          { value: 'qwen/qwen3.5-flash-02-23', label: 'Qwen3.5-Flash - 0.0000746 $/request, very fast, good' },
+          { value: 'bytedance-seed/seed-1.6-flash', label: 'Seed 1.6 Flash - 0.0000981 $/request, fast, good' },
+          { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini - 0.0041 $/request, fast and good' },
+          { value: 'bytedance-seed/seed-2.0-mini', label: 'Seed-2.0-Mini - 0.00033 $/request, very fast, good' },
+          { value: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast - 0.000316 $/request, fast, good' },
           { value: 'google/gemini-2.5-flash-lite-preview-09-2025', label: 'Gemini 2.5 Flash Lite Preview 09-2025 - ? $/request, very fast, ok' },
           { value: 'nvidia/nemotron-nano-12b-v2-vl:free', label: 'Nemotron Nano 12B 2 VL (free) - 0 $/request, slow, ok' },
-          { value: 'openai/gpt-5-nano', label: 'GPT-5 Nano - ? $/request, slow, ok' },
+          { value: 'openai/gpt-5-nano', label: 'GPT-5 Nano - 0.000425 $/request, slow, ok' },
           { value: 'openrouter/free', label: 'Free Models Router - 0 $/request, fast enough, good output. Fails often' },
-          { value: 'moonshotai/kimi-k2.5', label: 'Kimi K2.5 - ? $/request, very slow, not so good' }
+          { value: 'moonshotai/kimi-k2.5', label: 'Kimi K2.5 - 0.00319 $/request, very slow, not so good' }
         ];
         const DEFAULT_EVALUATION_MODEL = EVALUATION_MODEL_OPTIONS[0].value;
         const IMAGE_EDIT_MODEL_OPTIONS = [
