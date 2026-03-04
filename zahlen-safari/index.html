@@ -393,6 +393,11 @@
                   num1 = Math.floor(Math.random() * (answer + 1)); 
                   num2 = answer - num1; 
                   break;
+                case 0.5:
+                  ops = ['+', '-']; op = ops[Math.floor(Math.random() * ops.length)];
+                  if (op === '+') { answer = Math.floor(Math.random() * 21); num1 = Math.floor(Math.random() * (answer + 1)); num2 = answer - num1; } 
+                  else { num1 = Math.floor(Math.random() * 11); num2 = Math.floor(Math.random() * (num1 + 1)); answer = num1 - num2; }
+                  break;
                 case 1:
                   ops = ['+', '-']; op = ops[Math.floor(Math.random() * ops.length)];
                   if (op === '+') { answer = Math.floor(Math.random() * 21); num1 = Math.floor(Math.random() * (answer + 1)); num2 = answer - num1; } 
@@ -728,6 +733,7 @@
                     <div className="mb-6 grid grid-cols-1 gap-2">
                       {[
                         { lvl: 0, label: 'K', desc: 'Kindergarten (nur +, bis 10)' },
+                        { lvl: 0.5, label: 'S', desc: 'Schulanfänger (+ bis 20, - bis 10)' },
                         { lvl: 1, label: '1', desc: '1. Klasse (bis 20)' },
                         { lvl: 2, label: '2', desc: '2. Klasse (bis 100, erstes 1x1)' },
                         { lvl: 3, label: '3', desc: '3. Klasse (bis 1.000, 1x1)' },
@@ -879,6 +885,7 @@
                       <div className="flex justify-center gap-1 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
                         {[
                           { id: 0, label: 'K' },
+                          { id: 0.5, label: 'S' },
                           { id: 1, label: '1' },
                           { id: 2, label: '2' },
                           { id: 3, label: '3' },

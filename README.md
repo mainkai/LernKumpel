@@ -14,7 +14,7 @@ Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 
 **Features:**
 
-- 🎓 **Altersgerechte Level:** Von Kindergarten (nur Plus bis 10) bis zur 4. Klasse (große Zahlen, Division).
+- 🎓 **Altersgerechte Level:** Von Kindergarten (nur Plus bis 10) über Schulanfänger und 1. bis zur 4. Klasse (große Zahlen, Division).
 - 🧩 **Lücken-Modus:** Fördert das algebraische Denken (z.B. 5 + _ = 12).
 - 🪙 **Shop-System:** Richtige Antworten bringen Münzen. Damit können Kinder neue, liebevoll gestaltete Themes (Baustelle 🚧, Weltraum 🚀, Einhorn 🦄 etc.) freischalten.
 - 🎁 **Stickerheft:** Besonders gute Runden werden mit zufälligen Sammel-Stickern belohnt.
