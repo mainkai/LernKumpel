@@ -1403,64 +1403,6 @@
                           </div>
                         </div>
 
-                        {/* Actions UI */}
-                        <div className="flex flex-col gap-2 pointer-events-auto items-end">
-                          <button
-                            onClick={saveOwnDrawing}
-                            className="bg-white/95 backdrop-blur-md hover:bg-emerald-50 text-emerald-600 border-2 border-emerald-200/50 font-bold py-2 px-4 rounded-2xl shadow-lg flex items-center gap-2 transition-colors"
-                          >
-                            <span>💾</span> <span className="hidden sm:inline">Speichern</span>
-                          </button>
-
-                          <button
-                            onClick={evaluateDrawing}
-                            disabled={isBusy || hasRoundScored}
-                            className="bg-indigo-500/95 backdrop-blur-md hover:bg-indigo-600 disabled:bg-slate-400 text-white font-black py-3 px-5 rounded-2xl shadow-lg border border-indigo-400 disabled:border-slate-400 shadow-indigo-500/30 transition-all"
-                          >
-                            {isBusy && !isGeneratingImage ? '⏳ Bewertet...' : hasRoundScored ? '✅ Bewertet' : '🤖 Bewerten'}
-                          </button>
-
-                          <div className="relative mt-2">
-                            <button
-                              onClick={createAiImageVariant}
-                              disabled={isBusy}
-                              className="bg-fuchsia-500/95 backdrop-blur-md hover:bg-fuchsia-600 disabled:bg-slate-400 text-white font-black py-2 px-3 text-sm rounded-xl shadow-lg border border-fuchsia-400 disabled:border-slate-400 transition-all flex items-center gap-1"
-                            >
-                              {isGeneratingImage ? '⏳ Zaubern...' : <>🪄 KI-Zauber <span className="opacity-80 font-semibold px-1 bg-white/20 rounded">-{AI_EDIT_COST}🪙</span></>}
-                            </button>
-                            <button
-                              onClick={() => setIsAiAdvancedOpen((prev) => !prev)}
-                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white text-fuchsia-700 border-2 border-fuchsia-300 shadow flex items-center justify-center text-xs font-black hover:bg-fuchsia-50"
-                              title="Erweiterte KI-Einstellungen"
-                              aria-label="Erweiterte KI-Einstellungen"
-                            >
-                              ⚙️
-                            </button>
-                          </div>
-
-                          {isAiAdvancedOpen && (
-                            <div className="mt-2 w-72 max-w-[80vw] bg-white/95 backdrop-blur-md border border-fuchsia-200 rounded-xl p-2 shadow-lg">
-                              <label className="block text-[11px] font-bold text-fuchsia-700 mb-1">Freies KI-Malen Prompt</label>
-                              <textarea
-                                value={aiImagePrompt}
-                                onChange={(event) => setAiImagePrompt(event.target.value)}
-                                rows={4}
-                                className="w-full resize-y rounded-lg border border-fuchsia-200 px-2 py-1 text-xs text-slate-700"
-                                placeholder="Beschreibe hier selbst, wie die KI dein Bild umwandeln soll."
-                              />
-
-                              <label className="mt-2 flex items-center gap-2 text-xs text-slate-700 font-semibold">
-                                <input
-                                  type="checkbox"
-                                  checked={includeSourceImageForAi}
-                                  onChange={(event) => setIncludeSourceImageForAi(event.target.checked)}
-                                  className="accent-fuchsia-500"
-                                />
-                                Eigenes Bild mitsenden
-                              </label>
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </div>
 
@@ -1494,7 +1436,7 @@
 
                     {errorText && <p className="text-red-500 font-semibold text-sm mt-2">{errorText}</p>}
 
-                    <div className="flex items-center justify-between mt-4">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-end gap-3 mt-4">
                       <button
                         onClick={() => { playClick(); setScreen('start'); }}
                         className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-full shadow"
@@ -1503,6 +1445,67 @@
                       >
                         🏠
                       </button>
+
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <button
+                            onClick={saveOwnDrawing}
+                            className="bg-white hover:bg-emerald-50 text-emerald-600 border-2 border-emerald-200 font-bold py-2 px-4 rounded-xl shadow flex items-center gap-2 transition-colors"
+                          >
+                            <span>💾</span> Speichern
+                          </button>
+
+                          <button
+                            onClick={evaluateDrawing}
+                            disabled={isBusy || hasRoundScored}
+                            className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-400 text-white font-black py-2 px-4 rounded-xl shadow border border-indigo-400 disabled:border-slate-400 transition-all"
+                          >
+                            {isBusy && !isGeneratingImage ? '⏳ Bewertet...' : hasRoundScored ? '✅ Bewertet' : '🤖 Bewerten'}
+                          </button>
+
+                          <div className="relative">
+                            <button
+                              onClick={createAiImageVariant}
+                              disabled={isBusy}
+                              className="bg-fuchsia-500 hover:bg-fuchsia-600 disabled:bg-slate-400 text-white font-black py-2 px-3 text-sm rounded-xl shadow border border-fuchsia-400 disabled:border-slate-400 transition-all flex items-center gap-1"
+                            >
+                              {isGeneratingImage ? '⏳ Zaubern...' : <>🪄 KI-Zauber <span className="opacity-80 font-semibold px-1 bg-white/20 rounded">-{AI_EDIT_COST}🪙</span></>}
+                            </button>
+                            <button
+                              onClick={() => setIsAiAdvancedOpen((prev) => !prev)}
+                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white text-fuchsia-700 border-2 border-fuchsia-300 shadow flex items-center justify-center text-xs font-black hover:bg-fuchsia-50"
+                              title="Erweiterte KI-Einstellungen"
+                              aria-label="Erweiterte KI-Einstellungen"
+                            >
+                              ⚙️
+                            </button>
+                          </div>
+                        </div>
+
+                        {isAiAdvancedOpen && (
+                          <div className="w-72 max-w-[80vw] bg-white border border-fuchsia-200 rounded-xl p-2 shadow-lg">
+                            <label className="block text-[11px] font-bold text-fuchsia-700 mb-1">Freies KI-Malen Prompt</label>
+                            <textarea
+                              value={aiImagePrompt}
+                              onChange={(event) => setAiImagePrompt(event.target.value)}
+                              rows={4}
+                              className="w-full resize-y rounded-lg border border-fuchsia-200 px-2 py-1 text-xs text-slate-700"
+                              placeholder="Beschreibe hier selbst, wie die KI dein Bild umwandeln soll."
+                            />
+
+                            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700 font-semibold">
+                              <input
+                                type="checkbox"
+                                checked={includeSourceImageForAi}
+                                onChange={(event) => setIncludeSourceImageForAi(event.target.checked)}
+                                className="accent-fuchsia-500"
+                              />
+                              Eigenes Bild mitsenden
+                            </label>
+                          </div>
+                        )}
+                      </div>
+
                       <button
                         onClick={nextRound}
                         className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-full shadow"
