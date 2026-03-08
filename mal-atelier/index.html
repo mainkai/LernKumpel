@@ -851,6 +851,19 @@
             }
           };
 
+          const autoSaveForEvaluation = async () => {
+            const promptSlug = sanitizeFilenamePart(currentTask?.prompt, 'motiv');
+            const userSlug = sanitizeFilenamePart(profile?.name, 'spieler');
+
+            const imageDataUrl = getCanvasDataUrlForDownload();
+            await downloadUrl(imageDataUrl, `${fileTimestamp()}-malatelier-${userSlug}-${promptSlug}-zeichnung`);
+
+            if (generatedImageUrl) {
+              const modelSlug = sanitizeFilenamePart(imageEditModel, 'ki-modell');
+              await downloadUrl(generatedImageUrl, `${fileTimestamp()}-malatelier-${userSlug}-${promptSlug}-${modelSlug}-zauberbild`);
+            }
+          };
+
           const callOpenRouter = async ({ model, messages, responseFormat }) => {
             if (!openRouterApiKey.trim()) {
               throw new Error('Bitte trage einen OpenRouter API-Key ein.');
@@ -911,6 +924,10 @@
             try {
               setIsBusy(true);
               setErrorText('');
+
+              // Save files first while this action is still tied to the button click.
+              await autoSaveForEvaluation();
+
               setFeedback('KI bewertet dein Bild...');
 
               const imageDataUrl = getCanvasDataUrl();
@@ -1028,6 +1045,15 @@
               });
 
               setGeneratedImageUrl(generatedUrl);
+
+              try {
+                const promptSlug = sanitizeFilenamePart(currentTask?.prompt, 'motiv');
+                const modelSlug = sanitizeFilenamePart(imageEditModel, 'ki-modell');
+                const userSlug = sanitizeFilenamePart(profile?.name, 'spieler');
+                await downloadUrl(generatedUrl, `${fileTimestamp()}-malatelier-${userSlug}-${promptSlug}-${modelSlug}-zauberbild`);
+              } catch (downloadError) {
+                setErrorText(downloadError.message || 'KI-Bild erstellt, aber automatisches Speichern ist fehlgeschlagen.');
+              }
             } catch (err) {
               console.error(err);
               setErrorText(err.message || 'KI-Bild konnte nicht erstellt werden.');
