@@ -106,7 +106,24 @@
         };
 
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
-        const BRUSH_COLORS = ['#111827', '#ef4444', '#f97316', '#eab308', '#22c55e', '#0ea5e9', '#6366f1', '#ec4899', '#8b5a2b', '#a16207', '#6b7280', '#9ca3af', '#ffffff'];
+        // Ordered for easier scanning on e-ink: neutrals first, then warm-to-cool hues.
+        const BRUSH_COLORS = [
+          '#111827', // black
+          '#4b5563', // dark gray
+          '#808080', // medium gray
+          '#9ca3af', // light gray
+          '#ffffff', // white
+          '#ef4444', // red
+          '#f97316', // orange
+          '#eab308', // yellow
+          '#a16207', // ochre
+          '#22c55e', // green
+          '#0ea5e9', // cyan
+          '#3b82f6', // blue
+          '#6366f1', // indigo
+          '#ec4899', // pink
+          '#8b5a2b'  // brown
+        ];
         const MAX_ROUNDS = 1;
         const UNDO_LIMIT = 25;
         const AI_EDIT_COST = 50;
