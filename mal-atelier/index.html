@@ -109,20 +109,17 @@
         // Ordered for easier scanning on e-ink: neutrals first, then warm-to-cool hues.
         const BRUSH_COLORS = [
           '#111827', // black
-          '#4b5563', // dark gray
-          '#808080', // medium gray
-          '#9ca3af', // light gray
+          '#808080', // gray
           '#ffffff', // white
           '#ef4444', // red
           '#f97316', // orange
           '#eab308', // yellow
-          '#a16207', // ochre
+          '#8b5a2b',  // brown
           '#22c55e', // green
           '#0ea5e9', // cyan
           '#3b82f6', // blue
           '#6366f1', // indigo
-          '#ec4899', // pink
-          '#8b5a2b'  // brown
+          '#ec4899' // pink
         ];
         const MAX_ROUNDS = 1;
         const UNDO_LIMIT = 25;
@@ -1375,52 +1372,46 @@
                         style={{ cursor: tool === 'fill' ? 'crosshair' : 'default' }}
                       />
 
-                      {/* Top Overlay Bar */}
-                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none z-10">
-                        {/* Tools UI */}
-                        <div className="flex flex-col gap-2 pointer-events-auto">
-                          
-                          {/* Top Row: Brush, Fill, Undo, Clear */}
-                          <div className="flex items-center bg-white/95 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
+                      {/* Bottom Overlay Bar */}
+                      <div className="absolute bottom-4 left-4 right-4 pointer-events-none z-10">
+                        <div className="pointer-events-auto mx-auto w-full flex justify-center overflow-visible">
+                          <div className="flex flex-nowrap items-center gap-2 bg-white/70 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
                             <button onClick={() => setTool('brush')} title="Stift" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'brush' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🖌️</button>
                             <button onClick={() => setTool('fill')} title="Fill" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'fill' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🪣</button>
                             <div className="w-px h-8 bg-slate-200 mx-1"></div>
                             <button onClick={undoLastAction} disabled={!canUndo} title="Undo" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-amber-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">↩️</button>
                             <button onClick={clearCanvas} title="Neu" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-red-100 transition-colors">🧽</button>
-                          </div>
 
-                          {/* Brush Settings: Color & Thickness */}
-                          <div className="flex gap-2">
-                            {/* Color Selector */}
                             <div className="relative">
-                              <button 
-                                onClick={() => { setIsPaletteOpen(!isPaletteOpen); setIsThicknessOpen(false); setTool('brush'); }} 
-                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex items-center justify-center shadow-lg rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
+                              <button
+                                onClick={() => { setIsPaletteOpen(!isPaletteOpen); setIsThicknessOpen(false); }}
+                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
                                 title="Farbe wählen"
                               >
                                 <div className="w-8 h-8 rounded-full border-2 border-slate-300 shadow-sm" style={{ backgroundColor: brushColor }}></div>
                               </button>
 
                               {isPaletteOpen && (
-                                <div className="absolute top-16 left-0 bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl flex flex-wrap gap-2 w-[200px] border border-slate-200 animate-pop-in">
-                                  {BRUSH_COLORS.map((color) => (
-                                    <button
-                                      key={color}
-                                      onClick={() => { setBrushColor(color); setIsPaletteOpen(false); setTool('brush'); }}
-                                      className={`w-10 h-10 rounded-full border-4 transition-transform ${brushColor === color ? 'border-indigo-500 scale-110 shadow-md' : 'border-slate-300 hover:scale-110 shadow-sm'}`}
-                                      style={{ backgroundColor: color }}
-                                      title={color}
-                                    />
-                                  ))}
+                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
+                                  <div className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl flex flex-wrap gap-2 w-[200px] border border-slate-200 animate-pop-in">
+                                    {BRUSH_COLORS.map((color) => (
+                                      <button
+                                        key={color}
+                                        onClick={() => { setBrushColor(color); setIsPaletteOpen(false); }}
+                                        className={`w-10 h-10 rounded-full border-4 transition-transform ${brushColor === color ? 'border-indigo-500 scale-110 shadow-md' : 'border-slate-300 hover:scale-110 shadow-sm'}`}
+                                        style={{ backgroundColor: color }}
+                                        title={color}
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
 
-                            {/* Thickness Selector */}
                             <div className="relative">
-                              <button 
-                                onClick={() => { setIsThicknessOpen(!isThicknessOpen); setIsPaletteOpen(false); setTool('brush'); }} 
-                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center shadow-lg rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
+                              <button
+                                onClick={() => { setIsThicknessOpen(!isThicknessOpen); setIsPaletteOpen(false); setTool('brush'); }}
+                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
                                 title="Pinselgröße"
                               >
                                 <div className="w-2 rounded-full bg-slate-700 mx-auto" style={{ height: '14px', width: Math.max(2, Math.min(10, brushSize / 3)) + 'px' }}></div>
@@ -1428,24 +1419,25 @@
                               </button>
 
                               {isThicknessOpen && (
-                                <div className="absolute top-16 left-0 bg-white/95 backdrop-blur-md py-4 px-5 rounded-2xl shadow-xl border border-slate-200 animate-pop-in flex flex-col items-center gap-3">
-                                  <div className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full border border-slate-100 shadow-inner">
-                                    <div className="rounded-full bg-slate-700" style={{ width: Math.min(brushSize, 30), height: Math.min(brushSize, 30) }}></div>
+                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
+                                  <div className="bg-white/95 backdrop-blur-md py-4 px-5 rounded-2xl shadow-xl border border-slate-200 animate-pop-in flex flex-col items-center gap-3">
+                                    <div className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full border border-slate-100 shadow-inner">
+                                      <div className="rounded-full bg-slate-700" style={{ width: Math.min(brushSize, 30), height: Math.min(brushSize, 30) }}></div>
+                                    </div>
+                                    <input
+                                      type="range"
+                                      min="2"
+                                      max="40"
+                                      value={brushSize}
+                                      onChange={(event) => setBrushSize(Number(event.target.value))}
+                                      className="w-32 accent-indigo-500"
+                                    />
                                   </div>
-                                  <input
-                                    type="range"
-                                    min="2"
-                                    max="40"
-                                    value={brushSize}
-                                    onChange={(event) => setBrushSize(Number(event.target.value))}
-                                    className="w-32 accent-indigo-500"
-                                  />
                                 </div>
                               )}
                             </div>
                           </div>
                         </div>
-
                       </div>
                     </div>
 
