@@ -18,6 +18,7 @@ Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 - 🧩 **Lücken-Modus:** Fördert das algebraische Denken (z.B. 5 + _ = 12).
 - 🪙 **Shop-System:** Richtige Antworten bringen Münzen. Damit können Kinder neue, liebevoll gestaltete Themes (Baustelle 🚧, Weltraum 🚀, Einhorn 🦄 etc.) freischalten.
 - 🎁 **Stickerheft:** Besonders gute Runden werden mit zufälligen Sammel-Stickern belohnt.
+- ⭐ **Abenteuerbuch & Bonus-Stern:** Ist das Stickerheft voll, wird ein neues Abenteuerbuch mit Sternen-Welten freigeschaltet. Außerdem gibt es pro Runde einen Joker-Stern, der eine schwere Aufgabe überspringen kann oder am Ende Bonuspunkte bringt.
 - 👥 **Multi-User fähig:** Geschwister können sich ein Tablet teilen. Die App merkt sich alle Profile und Spielstände auf dem Gerät.
 - 🏆 **Globale Bestenliste:** Echtzeit-Highscores pro Level und Spielmodus.
 

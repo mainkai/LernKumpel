@@ -8,12 +8,51 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+      * { scrollbar-width: none; }
+      *::-webkit-scrollbar { width: 0; height: 0; display: none; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .animate-float { animation: float 2s ease-in-out infinite; }
+        @keyframes petRoamLeft {
+          0%, 100% { transform: translateX(12px) scaleX(1); }
+          49% { transform: translateX(280px) scaleX(1); }
+          50% { transform: translateX(280px) scaleX(-1); }
+          99% { transform: translateX(12px) scaleX(-1); }
+        }
+        .animate-pet-roam-left { animation: petRoamLeft 9s ease-in-out infinite; }
+        @keyframes petRoamRight {
+          0%, 100% { transform: translateX(280px) scaleX(-1); }
+          49% { transform: translateX(24px) scaleX(-1); }
+          50% { transform: translateX(24px) scaleX(1); }
+          99% { transform: translateX(280px) scaleX(1); }
+        }
+        .animate-pet-roam-right { animation: petRoamRight 10s ease-in-out infinite; }
+        @keyframes petWobble {
+          0%, 100% { transform: translateX(110px) rotate(0deg) scale(1); }
+          15% { transform: translateX(104px) rotate(-10deg) scale(1.02); }
+          30% { transform: translateX(116px) rotate(9deg) scale(0.98); }
+          45% { transform: translateX(108px) rotate(-7deg) scale(1.03); }
+          60% { transform: translateX(118px) rotate(8deg) scale(0.99); }
+          75% { transform: translateX(112px) rotate(-5deg) scale(1.01); }
+        }
+        .animate-pet-wobble { animation: petWobble 2.4s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petWaddle {
+          0% { transform: translateX(18px) translateY(0px) rotate(0deg) scaleX(1); }
+          12% { transform: translateX(48px) translateY(-2px) rotate(-10deg) scaleX(1); }
+          24% { transform: translateX(78px) translateY(0px) rotate(9deg) scaleX(1); }
+          36% { transform: translateX(108px) translateY(-2px) rotate(-8deg) scaleX(1); }
+          48% { transform: translateX(140px) translateY(0px) rotate(7deg) scaleX(1); }
+          50% { transform: translateX(140px) translateY(0px) rotate(7deg) scaleX(-1); }
+          62% { transform: translateX(108px) translateY(-2px) rotate(-8deg) scaleX(-1); }
+          74% { transform: translateX(78px) translateY(0px) rotate(9deg) scaleX(-1); }
+          86% { transform: translateX(48px) translateY(-2px) rotate(-10deg) scaleX(-1); }
+          100% { transform: translateX(18px) translateY(0px) rotate(0deg) scaleX(-1); }
+        }
+        .animate-pet-waddle { animation: petWaddle 5.2s ease-in-out infinite; transform-origin: center bottom; }
         @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-slide-up { animation: slideUpFade 0.4s ease-out forwards; }
         @keyframes spinSlow { 100% { transform: rotate(360deg); } }
@@ -91,9 +130,46 @@
         const MAX_PROBLEMS = 10;
         const MAX_ATTEMPTS = 3;
         const MAX_OWNED_THEMES = 3;
+        const BONUS_STAR_ENDGAME_POINTS = 120;
+        const SURPRISE_BOX_PRICE = 1000;
 
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
         const STICKER_POOL = ['🍎', '🦋', '🦖', '🐙', '🦄', '🐉', '🪐', '🚀', '🏰', '💎', '🧸', '🍕', '🍦', '🎈', '🎁', '👑', '⚽', '🎨', '🎸', '🌈'];
+        const ADVENTURE_WORLDS = [
+          { id: 'meadow', name: 'Sternenwiese', icon: '🌼', accent: 'from-yellow-300 via-amber-200 to-orange-200', text: 'text-amber-800', starsRequired: 4, reward: 'Blumenwiese wird lebendig', coinReward: 500, themeSlotReward: 1 },
+          { id: 'reef', name: 'Korallenriff', icon: '🐠', accent: 'from-cyan-300 via-sky-200 to-blue-200', text: 'text-cyan-800', starsRequired: 5, reward: 'Riff mit Fischen und Muscheln', coinReward: 900, themeSlotReward: 1 },
+          { id: 'galaxy', name: 'Mondstation', icon: '🚀', accent: 'from-indigo-400 via-slate-800 to-indigo-950', text: 'text-indigo-100', starsRequired: 6, reward: 'Rakete startet ins All', coinReward: 1600, themeSlotReward: 1 }
+        ];
+        const SURPRISE_REWARDS = [
+          { id: 'toy-whoopee', type: 'button', name: 'Pups-Knopf', icon: '💨', sound: 'whoopee', position: 'left-[4%] top-[18%]' },
+          { id: 'toy-squeak', type: 'button', name: 'Quietsch-Knopf', icon: '🐭', sound: 'squeak', position: 'right-[4%] top-[26%]' },
+          { id: 'toy-honk', type: 'button', name: 'Hup-Knopf', icon: '📯', sound: 'honk', position: 'left-[8%] bottom-[18%]' },
+          { id: 'pet-panda', type: 'pet', name: 'Wackel-Panda', icon: '🐼', motionClass: 'animate-pet-wobble', laneClass: 'bottom-28' },
+          { id: 'pet-octopus', type: 'pet', name: 'Tanz-Oktopus', icon: '🐙', motionClass: 'animate-pet-roam-right', laneClass: 'bottom-24' },
+          { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', laneClass: 'bottom-32' }
+        ];
+
+        const hasCompletedStickerAlbum = (stickers = []) => stickers.length >= STICKER_POOL.length;
+        const getAdventureWorldProgress = (starCount = 0) => {
+          let spentStars = 0;
+
+          return ADVENTURE_WORLDS.map((world, index) => {
+            const filledStars = Math.max(0, Math.min(world.starsRequired, starCount - spentStars));
+            const unlocked = index === 0 || starCount >= spentStars;
+
+            spentStars += world.starsRequired;
+
+            return {
+              ...world,
+              filledStars,
+              completed: filledStars >= world.starsRequired,
+              unlocked,
+              remainingStars: Math.max(world.starsRequired - filledStars, 0)
+            };
+          });
+        };
+        const getCompletedWorldCount = (starCount = 0) => getAdventureWorldProgress(starCount).filter((world) => world.completed).length;
+        const getRewardById = (rewardId) => SURPRISE_REWARDS.find((reward) => reward.id === rewardId);
 
         // --- HILFSFUNKTION FÜR ABZEICHEN (BADGES) ---
         const getBadge = (score, mode) => {
@@ -133,6 +209,147 @@
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(); osc.stop(ctx.currentTime + duration);
           }, []);
+          const playWhoopeeSound = useCallback(() => {
+            if (!ctxRef.current) return;
+
+            const ctx = ctxRef.current;
+            const now = ctx.currentTime;
+
+            const lowOsc = ctx.createOscillator();
+            const buzzOsc = ctx.createOscillator();
+            const lowGain = ctx.createGain();
+            const buzzGain = ctx.createGain();
+            const lowpass = ctx.createBiquadFilter();
+
+            lowpass.type = 'lowpass';
+            lowpass.frequency.setValueAtTime(650, now);
+            lowpass.frequency.exponentialRampToValueAtTime(220, now + 0.42);
+
+            lowOsc.type = 'sawtooth';
+            lowOsc.frequency.setValueAtTime(220, now);
+            lowOsc.frequency.exponentialRampToValueAtTime(72, now + 0.42);
+
+            buzzOsc.type = 'triangle';
+            buzzOsc.frequency.setValueAtTime(110, now);
+            buzzOsc.frequency.exponentialRampToValueAtTime(48, now + 0.42);
+            buzzOsc.detune.setValueAtTime(8, now);
+
+            lowGain.gain.setValueAtTime(0.0001, now);
+            lowGain.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
+            lowGain.gain.exponentialRampToValueAtTime(0.015, now + 0.42);
+
+            buzzGain.gain.setValueAtTime(0.0001, now);
+            buzzGain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+            buzzGain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+
+            lowOsc.connect(lowGain);
+            buzzOsc.connect(buzzGain);
+            lowGain.connect(lowpass);
+            buzzGain.connect(lowpass);
+            lowpass.connect(ctx.destination);
+
+            lowOsc.start(now);
+            buzzOsc.start(now);
+            lowOsc.stop(now + 0.45);
+            buzzOsc.stop(now + 0.35);
+
+            const noiseBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.08), ctx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseData.length; i++) {
+              noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length);
+            }
+
+            const noiseSource = ctx.createBufferSource();
+            const noiseFilter = ctx.createBiquadFilter();
+            const noiseGain = ctx.createGain();
+
+            noiseSource.buffer = noiseBuffer;
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(320, now);
+            noiseFilter.Q.setValueAtTime(1.4, now);
+            noiseGain.gain.setValueAtTime(0.0001, now + 0.015);
+            noiseGain.gain.exponentialRampToValueAtTime(0.025, now + 0.03);
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+
+            noiseSource.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            noiseSource.start(now + 0.015);
+            noiseSource.stop(now + 0.1);
+          }, []);
+          const playHonkSound = useCallback(() => {
+            if (!ctxRef.current) return;
+
+            const ctx = ctxRef.current;
+            const now = ctx.currentTime;
+
+            const buildHornBlast = (startTime, baseFreq, duration, gainAmount) => {
+              const mainOsc = ctx.createOscillator();
+              const supportOsc = ctx.createOscillator();
+              const lfo = ctx.createOscillator();
+              const lfoGain = ctx.createGain();
+              const gain = ctx.createGain();
+              const filter = ctx.createBiquadFilter();
+
+              mainOsc.type = 'square';
+              supportOsc.type = 'sawtooth';
+              lfo.type = 'sine';
+
+              mainOsc.frequency.setValueAtTime(baseFreq, startTime);
+              supportOsc.frequency.setValueAtTime(baseFreq * 1.015, startTime);
+              lfo.frequency.setValueAtTime(13, startTime);
+              lfoGain.gain.setValueAtTime(18, startTime);
+
+              gain.gain.setValueAtTime(0.0001, startTime);
+              gain.gain.exponentialRampToValueAtTime(gainAmount, startTime + 0.015);
+              gain.gain.exponentialRampToValueAtTime(gainAmount * 0.72, startTime + duration * 0.45);
+              gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(980, startTime);
+              filter.frequency.exponentialRampToValueAtTime(720, startTime + duration);
+
+              lfo.connect(lfoGain);
+              lfoGain.connect(mainOsc.frequency);
+              lfoGain.connect(supportOsc.frequency);
+
+              mainOsc.connect(gain);
+              supportOsc.connect(gain);
+              gain.connect(filter);
+              filter.connect(ctx.destination);
+
+              mainOsc.start(startTime);
+              supportOsc.start(startTime);
+              lfo.start(startTime);
+
+              mainOsc.stop(startTime + duration);
+              supportOsc.stop(startTime + duration);
+              lfo.stop(startTime + duration);
+            };
+
+            buildHornBlast(now, 430, 0.16, 0.08);
+            buildHornBlast(now + 0.12, 360, 0.22, 0.1);
+          }, []);
+          const playSillySound = useCallback((soundId) => {
+            if (!ctxRef.current) return;
+
+            if (soundId === 'whoopee') {
+              playWhoopeeSound();
+              return;
+            }
+
+            if (soundId === 'squeak') {
+              playTone(1500, 'triangle', 0.035, 0.045);
+              setTimeout(() => playTone(1950, 'triangle', 0.05, 0.055), 40);
+              setTimeout(() => playTone(1720, 'triangle', 0.045, 0.045), 88);
+              setTimeout(() => playTone(2100, 'sine', 0.03, 0.025), 125);
+              return;
+            }
+
+            if (soundId === 'honk') {
+              playHonkSound();
+            }
+          }, [playTone, playWhoopeeSound, playHonkSound]);
           return {
             initAudio: init,
             playClick: useCallback(() => playTone(800, 'sine', 0.05, 0.05), [playTone]),
@@ -147,7 +364,8 @@
             playTada: useCallback(() => {
               playTone(440, 'sine', 0.1, 0.1); setTimeout(() => playTone(554.37, 'sine', 0.1, 0.1), 100);
               setTimeout(() => playTone(659.25, 'sine', 0.4, 0.15), 200);
-            }, [playTone])
+            }, [playTone]),
+            playSillySound
           };
         }
 
@@ -188,7 +406,7 @@
           const [activeProfileId, setActiveProfileId] = useState(null);
           const [isLoadingProfile, setIsLoadingProfile] = useState(true);
           const [highscores, setHighscores] = useState([]);
-          const { initAudio, playClick, playSuccess, playError, playCoin, playTada } = useAudio();
+          const { initAudio, playClick, playSuccess, playError, playCoin, playTada, playSillySound } = useAudio();
           
           // App Navigation
           const [screen, setScreen] = useState('loading'); 
@@ -208,8 +426,10 @@
           const [feedback, setFeedback] = useState(null);
           
           // Reward State (End of Game)
-          const [roundRewards, setRoundRewards] = useState({ coins: 0, sticker: null });
+          const [roundRewards, setRoundRewards] = useState({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null });
           const [roundRank, setRoundRank] = useState(null);
+          const [roundBonusAvailable, setRoundBonusAvailable] = useState(false);
+          const [roundBonusUsed, setRoundBonusUsed] = useState(false);
 
           // Setup Form State
           const [setupName, setSetupName] = useState('');
@@ -217,6 +437,20 @@
 
           const profile = profiles.find(p => p.id === activeProfileId);
           const theme = THEMES[currentThemeId] || THEMES.classic;
+          const stickerCount = profile?.stickers?.length || 0;
+          const fullStickerAlbum = hasCompletedStickerAlbum(profile?.stickers || []);
+          const albumBonusUnlocked = Boolean(profile?.albumBonusUnlocked || fullStickerAlbum);
+          const adventureStars = profile?.adventureStars || 0;
+          const adventureWorlds = getAdventureWorldProgress(adventureStars);
+          const completedAdventureWorlds = adventureWorlds.filter(world => world.completed).length;
+          const activeAdventureWorld = adventureWorlds.find(world => !world.completed) || adventureWorlds[adventureWorlds.length - 1];
+          const extraThemeSlots = adventureWorlds.filter((world) => world.completed).reduce((sum, world) => sum + (world.themeSlotReward || 0), 0);
+          const maxOwnedThemesAllowed = MAX_OWNED_THEMES + extraThemeSlots;
+          const surpriseRewardIds = profile?.surpriseRewards || [];
+          const unlockedSurpriseRewards = surpriseRewardIds.map(getRewardById).filter(Boolean);
+          const ownedToyButtons = unlockedSurpriseRewards.filter((reward) => reward.type === 'button');
+          const ownedPets = unlockedSurpriseRewards.filter((reward) => reward.type === 'pet');
+          const activePet = ownedPets.find((reward) => reward.id === profile?.activePetId) || ownedPets[ownedPets.length - 1] || null;
           const sessionProblemsRef = useRef(new Set());
 
           // --- THEME SYNC ---
@@ -225,6 +459,21 @@
               setCurrentThemeId(profile.activeTheme);
             }
           }, [profile?.activeTheme]);
+
+          useEffect(() => {
+            if (!profile || !activeProfileId || !fullStickerAlbum || profile.albumBonusUnlocked) return;
+
+            updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), {
+              albumBonusUnlocked: true,
+              adventureStars: profile.adventureStars || 0
+            }).catch((err) => console.error('Album bonus migration error:', err));
+          }, [profile, activeProfileId, fullStickerAlbum]);
+
+          useEffect(() => {
+            if (screen === 'adventure' && !fullStickerAlbum) {
+              setScreen('start');
+            }
+          }, [screen, fullStickerAlbum]);
 
           // --- FIREBASE INIT ---
           useEffect(() => {
@@ -308,7 +557,11 @@
                 coins: 0,
                 unlockedThemes: ['classic'],
                 activeTheme: 'classic', 
-                stickers: []
+                stickers: [],
+                albumBonusUnlocked: false,
+                adventureStars: 0,
+                surpriseRewards: [],
+                activePetId: null
               });
             } else {
               themeToSet = docSnap.data().activeTheme || 'classic';
@@ -337,7 +590,7 @@
               !profile ||
               profile.coins < themeToBuy.price ||
               profile.unlockedThemes.includes(themeToBuy.id) ||
-              profile.unlockedThemes.length >= MAX_OWNED_THEMES
+              profile.unlockedThemes.length >= maxOwnedThemesAllowed
             ) return;
             playCoin();
             const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
@@ -377,6 +630,64 @@
               await updateDoc(profileRef, { activeTheme: newThemeId });
             }
           };
+
+          const buySurpriseBox = async () => {
+            if (!profile || profile.coins < SURPRISE_BOX_PRICE) return;
+
+            const availableRewards = SURPRISE_REWARDS.filter((reward) => !surpriseRewardIds.includes(reward.id));
+            if (availableRewards.length === 0) return;
+
+            initAudio();
+            const reward = availableRewards[Math.floor(Math.random() * availableRewards.length)];
+            const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
+            const updatePayload = {
+              coins: profile.coins - SURPRISE_BOX_PRICE,
+              surpriseRewards: [...surpriseRewardIds, reward.id]
+            };
+
+            if (reward.type === 'pet') {
+              updatePayload.activePetId = reward.id;
+            }
+
+            await updateDoc(profileRef, updatePayload);
+            playTada();
+            setScore(0);
+            setRoundRank(null);
+            setRoundRewards({
+              coins: 0,
+              sticker: null,
+              adventureStar: 0,
+              unlockedWorlds: [],
+              worldRewardCoins: 0,
+              unusedBonusPoints: 0,
+              bonusUsed: false,
+              boxReward: reward
+            });
+            setScreen('result');
+          };
+
+          const activatePet = async (petId) => {
+            if (!activeProfileId || !ownedPets.find((pet) => pet.id === petId)) return;
+            playClick();
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), { activePetId: petId });
+          };
+
+          const playToyButtonReward = useCallback((reward) => {
+            initAudio();
+            playSillySound(reward.sound);
+          }, [initAudio, playSillySound]);
+
+          const calculatePerfectSolveBonus = useCallback(() => {
+            let pointsEarned = 100;
+            if (gameMode === 'gap') pointsEarned += 20;
+
+            const currentStreak = streak + 1;
+            const comboBonus = currentStreak >= 3 ? 30 : 0;
+            const secondsTaken = (Date.now() - problemStartTime) / 1000;
+            const speedBonus = Math.floor(50 / Math.log2((Math.max(0, secondsTaken) / 4) + 2));
+
+            return { pointsEarned, currentStreak, comboBonus, speedBonus };
+          }, [gameMode, streak, problemStartTime]);
 
           // --- SPIEL LOGIK ---
           const generateProblem = useCallback((currentLevel, mode, themeId) => {
@@ -453,6 +764,9 @@
             setProblemsDone(0);
             setStreak(0);
             setRoundRank(null);
+            setRoundRewards({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null });
+            setRoundBonusAvailable(albumBonusUnlocked);
+            setRoundBonusUsed(false);
             generateProblem(level, gameMode, currentThemeId);
             setScreen('game');
           };
@@ -463,10 +777,15 @@
             return problem.answer;
           }, [problem]);
 
-          const handleGameEnd = async (finalScore, finalStreak) => {
+          const handleGameEnd = async (baseScore, finalStreak, bonusUnusedAtEnd = false) => {
+            const unusedBonusPoints = bonusUnusedAtEnd ? BONUS_STAR_ENDGAME_POINTS : 0;
+            const finalScore = baseScore + unusedBonusPoints;
             let earnedCoins = Math.floor(finalScore / 10); 
             let newSticker = null;
             let updatedStickers = [...(profile.stickers || [])];
+            let earnedAdventureStar = 0;
+            let unlockedWorlds = [];
+            let worldRewardCoins = 0;
 
             if (finalStreak === MAX_PROBLEMS) {
               const missingStickers = STICKER_POOL.filter(s => !updatedStickers.includes(s));
@@ -479,7 +798,34 @@
               }
             }
 
-            setRoundRewards({ coins: earnedCoins, sticker: newSticker });
+            const completedAlbumThisRound = hasCompletedStickerAlbum(updatedStickers) && !fullStickerAlbum;
+
+            if (finalStreak === MAX_PROBLEMS && hasCompletedStickerAlbum(updatedStickers)) {
+              earnedAdventureStar = 1;
+            }
+
+            const previousAdventureStars = profile.adventureStars || 0;
+            const nextAdventureStars = previousAdventureStars + earnedAdventureStar;
+            const previousCompletedWorlds = getCompletedWorldCount(previousAdventureStars);
+            const nextProgress = getAdventureWorldProgress(nextAdventureStars);
+            const nextCompletedWorlds = nextProgress.filter((world) => world.completed).length;
+
+            if (nextCompletedWorlds > previousCompletedWorlds) {
+              unlockedWorlds = nextProgress.slice(previousCompletedWorlds, nextCompletedWorlds);
+              worldRewardCoins = unlockedWorlds.reduce((sum, world) => sum + world.coinReward, 0);
+              earnedCoins += worldRewardCoins;
+            }
+
+            setRoundRewards({
+              coins: earnedCoins,
+              sticker: newSticker,
+              adventureStar: earnedAdventureStar,
+              unlockedWorlds: unlockedWorlds.map((world) => ({ name: world.name, coinReward: world.coinReward, themeSlotReward: world.themeSlotReward })),
+              worldRewardCoins,
+              unusedBonusPoints,
+              bonusUsed: roundBonusUsed,
+              boxReward: null
+            });
             
             let rank = null;
             if (finalScore > 0) {
@@ -510,10 +856,24 @@
             const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
             await updateDoc(profileRef, {
               coins: (profile.coins || 0) + earnedCoins,
-              stickers: updatedStickers
+              stickers: updatedStickers,
+              albumBonusUnlocked: albumBonusUnlocked || completedAlbumThisRound,
+              adventureStars: (profile.adventureStars || 0) + earnedAdventureStar
             });
 
             setScreen('result');
+          };
+
+          const advanceRound = (nextScore, nextStreak, delay, bonusUnusedAtEnd = false) => {
+            setTimeout(() => {
+              if (problemsDone + 1 >= MAX_PROBLEMS) {
+                setProblemsDone(prev => prev + 1);
+                handleGameEnd(nextScore, nextStreak, bonusUnusedAtEnd);
+              } else {
+                setProblemsDone(prev => prev + 1);
+                generateProblem(level, gameMode, currentThemeId);
+              }
+            }, delay);
           };
 
           const checkAnswer = useCallback(() => {
@@ -525,33 +885,21 @@
             if (isCorrect) {
               playSuccess();
               setFeedback('success');
-              
-              let pointsEarned = attemptsLeft === 3 ? 100 : attemptsLeft === 2 ? 50 : 20;
-              if (gameMode === 'gap') pointsEarned += 20;
+              const perfectSolve = attemptsLeft === 3 ? calculatePerfectSolveBonus() : null;
+              let pointsEarned = perfectSolve ? perfectSolve.pointsEarned : attemptsLeft === 2 ? 50 + (gameMode === 'gap' ? 20 : 0) : 20 + (gameMode === 'gap' ? 20 : 0);
 
-              let currentStreak = attemptsLeft === 3 ? streak + 1 : 0;
+              let currentStreak = perfectSolve ? perfectSolve.currentStreak : 0;
               setStreak(currentStreak);
-              let comboBonus = currentStreak >= 3 ? 30 : 0; 
+              let comboBonus = perfectSolve ? perfectSolve.comboBonus : currentStreak >= 3 ? 30 : 0; 
 
               let speedBonus = 0;
-              if (attemptsLeft === 3) {
-                const secondsTaken = (Date.now() - problemStartTime) / 1000;
-                speedBonus = Math.floor(50 / Math.log2((Math.max(0, secondsTaken) / 4) + 2));
-              }
+              if (perfectSolve) speedBonus = perfectSolve.speedBonus;
               
               setLastBonusEarned(speedBonus + comboBonus);
               const newScore = score + pointsEarned + speedBonus + comboBonus;
               setScore(newScore);
-              
-              setTimeout(() => {
-                if (problemsDone + 1 >= MAX_PROBLEMS) {
-                  setProblemsDone(prev => prev + 1);
-                  handleGameEnd(newScore, currentStreak);
-                } else {
-                  setProblemsDone(prev => prev + 1);
-                  generateProblem(level, gameMode, currentThemeId);
-                }
-              }, 2000);
+
+              advanceRound(newScore, currentStreak, 2000, roundBonusAvailable);
             } else {
               playError();
               setStreak(0);
@@ -562,41 +910,53 @@
                 setTimeout(() => setFeedback(null), 1200);
               } else {
                 setFeedback('fatal');
-                setTimeout(() => {
-                  if (problemsDone + 1 >= MAX_PROBLEMS) {
-                    setProblemsDone(prev => prev + 1);
-                    handleGameEnd(score, 0);
-                  } else {
-                    setProblemsDone(prev => prev + 1);
-                    generateProblem(level, gameMode, currentThemeId);
-                  }
-                }, 3500); 
+
+                advanceRound(score, 0, 3500, roundBonusAvailable);
               }
             }
-          }, [userAnswer, feedback, getExpectedAnswer, playSuccess, attemptsLeft, gameMode, problemStartTime, problemsDone, level, generateProblem, playError, currentThemeId, score, streak]);
+          }, [userAnswer, feedback, getExpectedAnswer, playSuccess, attemptsLeft, gameMode, playError, score, roundBonusAvailable, calculatePerfectSolveBonus]);
+
+          const useRoundBonusStar = useCallback(() => {
+            if (!roundBonusAvailable || feedback) return;
+
+            const { pointsEarned, currentStreak, comboBonus, speedBonus } = calculatePerfectSolveBonus();
+            const totalBonusPoints = pointsEarned + comboBonus + speedBonus;
+
+            playSuccess();
+            setRoundBonusAvailable(false);
+            setRoundBonusUsed(true);
+            setStreak(currentStreak);
+            setLastBonusEarned(speedBonus + comboBonus);
+            setUserAnswer(String(getExpectedAnswer()));
+            setFeedback('bonus');
+            setScore(prev => prev + totalBonusPoints);
+
+            advanceRound(score + totalBonusPoints, currentStreak, 1800, false);
+          }, [roundBonusAvailable, feedback, calculatePerfectSolveBonus, playSuccess, getExpectedAnswer, score]);
 
           const handleInput = useCallback((val) => {
-            if (feedback === 'success' || feedback === 'fatal') return;
+            if (feedback === 'success' || feedback === 'fatal' || feedback === 'bonus') return;
             playClick();
             setUserAnswer(prev => prev.length >= 5 ? prev : prev + val);
           }, [feedback, playClick]);
 
           const handleDelete = useCallback(() => {
-            if (feedback === 'success' || feedback === 'fatal') return;
+            if (feedback === 'success' || feedback === 'fatal' || feedback === 'bonus') return;
             playClick();
             setUserAnswer('');
           }, [feedback, playClick]);
 
           // Tastatursteuerung
-          const stateRef = useRef({ screen, checkAnswer, handleInput, handleDelete });
-          useEffect(() => { stateRef.current = { screen, checkAnswer, handleInput, handleDelete }; }, [screen, checkAnswer, handleInput, handleDelete]);
+          const stateRef = useRef({ screen, checkAnswer, handleInput, handleDelete, useRoundBonusStar });
+          useEffect(() => { stateRef.current = { screen, checkAnswer, handleInput, handleDelete, useRoundBonusStar }; }, [screen, checkAnswer, handleInput, handleDelete, useRoundBonusStar]);
           useEffect(() => {
             const handleKeyDown = (e) => {
-              const { screen, checkAnswer, handleInput, handleDelete } = stateRef.current;
+              const { screen, checkAnswer, handleInput, handleDelete, useRoundBonusStar } = stateRef.current;
               if (screen !== 'game') return;
               if (e.key >= '0' && e.key <= '9') handleInput(e.key);
               else if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
               else if (e.key === 'Backspace' || e.key === 'Delete' || e.key.toLowerCase() === 'c') handleDelete();
+              else if (e.key === '*') useRoundBonusStar();
             };
             window.addEventListener('keydown', handleKeyDown);
             return () => window.removeEventListener('keydown', handleKeyDown);
@@ -712,6 +1072,15 @@
               return (
                 <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 text-center relative overflow-hidden transition-colors duration-500 flex flex-col max-h-full">
                   <div className={`absolute top-0 left-0 w-full h-32 ${theme.deviceBg} rounded-b-[50%] -translate-y-10 transition-colors duration-500`}></div>
+                  {activePet && (
+                    <button
+                      onClick={() => activatePet(activePet.id)}
+                      className={`absolute left-0 ${activePet.laneClass || 'bottom-28'} text-5xl z-20 ${activePet.motionClass}`}
+                      title={activePet.name}
+                    >
+                      {activePet.icon}
+                    </button>
+                  )}
 
                   <div className="relative z-10 flex-1 overflow-y-auto pb-2">
                     <div className="w-28 h-28 mx-auto bg-white rounded-full border-4 border-white shadow-lg mb-4 flex items-center justify-center text-6xl animate-float">{theme.emojis.title}</div>
@@ -750,10 +1119,11 @@
                       <Play fill="currentColor" size={28} /> LOS!
                     </button>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className={`grid gap-2 ${fullStickerAlbum ? 'grid-cols-2' : 'grid-cols-3'}`}>
                       <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Bestenliste</span></button>
                       <button onClick={() => { playClick(); setScreen('shop'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><ShoppingCart size={20} className="text-blue-500"/> <span className="text-xs">Shop</span></button>
                       <button onClick={() => { playClick(); setScreen('stickers'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><BookOpen size={20} className="text-pink-500"/> <span className="text-xs">Sticker</span></button>
+                      {fullStickerAlbum && <button onClick={() => { playClick(); setScreen('adventure'); }} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-amber-100 hover:bg-amber-200 text-amber-900"><span className="text-xl">🗺️</span> <span className="text-xs">Abenteuerbuch</span></button>}
                     </div>
                   </div>
                 </div>
@@ -762,7 +1132,8 @@
 
             if (screen === 'shop') {
               const ownedThemeCount = profile.unlockedThemes.length;
-              const atThemeLimit = ownedThemeCount >= MAX_OWNED_THEMES;
+              const atThemeLimit = ownedThemeCount >= maxOwnedThemesAllowed;
+              const allBoxesOpened = surpriseRewardIds.length >= SURPRISE_REWARDS.length;
 
               return (
                 <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
@@ -770,7 +1141,34 @@
                     <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-blue-500"><ShoppingCart size={40} /></div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
                     <p className="text-gray-500 font-medium">Schalte neue Welten frei!</p>
-                    <p className="text-sm font-bold text-blue-600 mt-2">Themes im Besitz: {ownedThemeCount} / {MAX_OWNED_THEMES}</p>
+                    <p className="text-sm font-bold text-blue-600 mt-2">Themes im Besitz: {ownedThemeCount} / {maxOwnedThemesAllowed}</p>
+                    {extraThemeSlots > 0 && <p className="text-xs font-bold text-emerald-600 mt-1">+{extraThemeSlots} Extra-Theme-Slots aus dem Abenteuerbuch</p>}
+                  </div>
+
+                  <div className="mb-4 bg-fuchsia-50 rounded-2xl border-2 border-fuchsia-200 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-left">
+                        <div className="font-black text-fuchsia-900 text-lg">Überraschungskiste</div>
+                        <div className="text-xs font-bold text-fuchsia-700 mt-1">Schon gesammelt: {surpriseRewardIds.length} / {SURPRISE_REWARDS.length}</div>
+                      </div>
+                      <button
+                        onClick={buySurpriseBox}
+                        disabled={profile.coins < SURPRISE_BOX_PRICE || allBoxesOpened}
+                        className={`shrink-0 rounded-2xl px-4 py-3 font-black transition-all ${profile.coins >= SURPRISE_BOX_PRICE && !allBoxesOpened ? 'bg-fuchsia-500 hover:bg-fuchsia-600 text-white shadow-[0_6px_0_0_rgb(192,38,211)] active:shadow-none active:translate-y-2' : 'bg-gray-200 text-gray-400'}`}
+                      >
+                        🎁 {SURPRISE_BOX_PRICE} 🪙
+                      </button>
+                    </div>
+                    {allBoxesOpened && <div className="text-xs font-bold text-emerald-700 mt-3">Alle Kisteninhalte wurden bereits gefunden.</div>}
+                    {ownedPets.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {ownedPets.map((pet) => (
+                          <button key={pet.id} onClick={() => activatePet(pet.id)} className={`px-3 py-2 rounded-xl font-bold text-sm transition-colors ${activePet?.id === pet.id ? 'bg-emerald-200 text-emerald-900' : 'bg-white text-gray-700 hover:bg-emerald-50'}`}>
+                            {pet.icon} {pet.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 mb-6 space-y-3">
@@ -795,7 +1193,7 @@
                               onClick={() => buyTheme(t)}
                               disabled={!canBuy}
                               aria-label="Theme kaufen"
-                              title={canBuy ? 'Kaufen' : atThemeLimit ? `Maximal ${MAX_OWNED_THEMES} Themes gleichzeitig` : 'Nicht genug Münzen'}
+                              title={canBuy ? 'Kaufen' : atThemeLimit ? `Maximal ${maxOwnedThemesAllowed} Themes gleichzeitig` : 'Nicht genug Münzen'}
                               className={`w-10 h-10 rounded-lg font-bold shadow-sm flex items-center justify-center transition-all ${canBuy ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
                             >
                               {canBuy ? <ShoppingCart size={16}/> : <Lock size={16}/>}
@@ -844,8 +1242,12 @@
                   </div>
 
                   <div className="bg-gray-100 rounded-2xl p-1 mb-4">
-                    <div className="bg-white rounded-xl py-2 text-center font-bold text-gray-700">Gesammelt: <span className="text-pink-500">{profile.stickers?.length || 0}</span> / {STICKER_POOL.length}</div>
+                    <div className="bg-white rounded-xl py-2 text-center font-bold text-gray-700">Gesammelt: <span className="text-pink-500">{stickerCount}</span> / {STICKER_POOL.length}</div>
                   </div>
+
+                  {fullStickerAlbum && (
+                    <button onClick={() => { playClick(); setScreen('adventure'); }} className="mb-4 w-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black py-3 rounded-xl transition-colors">Zum Abenteuerbuch</button>
+                  )}
 
                   <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 mb-6">
                     <div className="grid grid-cols-4 gap-3">
@@ -858,6 +1260,74 @@
                         );
                       })}
                     </div>
+                  </div>
+
+                  <button
+                    onClick={() => { playClick(); setScreen('start'); }}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+                    aria-label="Zurück zur Startseite"
+                    title="Zurück"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                </div>
+              );
+            }
+
+            if (screen === 'adventure') {
+              return (
+                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                  <div className="text-center mb-6">
+                    <div className="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-4xl">⭐</div>
+                    <h2 className="text-3xl font-extrabold text-gray-800">Abenteuerbuch</h2>
+                    <p className="text-gray-500 font-medium">Nach dem Stickerheft geht die Reise weiter.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4 text-center">
+                      <div className="text-sm font-bold text-amber-700">Weltteile</div>
+                      <div className="text-3xl font-black text-amber-900">{adventureStars}</div>
+                    </div>
+                    <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 text-center">
+                      <div className="text-sm font-bold text-emerald-700">Welten fertig</div>
+                      <div className="text-3xl font-black text-emerald-900">{completedAdventureWorlds}/{ADVENTURE_WORLDS.length}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl border-2 border-slate-100 p-4 mb-4">
+                    <div className="font-black text-slate-800">So geht es weiter</div>
+                    <p className="text-sm text-slate-600 mt-1">Jede perfekte 10er-Runde mit vollem Stickerheft gibt 1 Weltteil.</p>
+                    <p className="text-sm text-slate-600 mt-1">Wenn genug Weltteile gesammelt sind, wird eine neue Welt fertig. Dann bekommst du sofort viele Münzen und einen zusätzlichen Theme-Slot.</p>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-3 mb-6 pr-1">
+                    {adventureWorlds.map((world) => (
+                      <div key={world.id} className={`rounded-3xl border-2 overflow-hidden ${world.completed ? 'border-emerald-300' : 'border-gray-200'} bg-white shadow-sm`}>
+                        <div className={`p-4 bg-gradient-to-r ${world.accent}`}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-white/70 flex items-center justify-center text-2xl shadow-sm">{world.icon}</div>
+                              <div>
+                                <div className={`font-black ${world.text}`}>{world.name}</div>
+                                <div className={`text-sm ${world.text}`}>{world.reward}</div>
+                              </div>
+                            </div>
+                            <div className={`font-black text-sm px-3 py-1 rounded-full ${world.completed ? 'bg-white text-emerald-700' : 'bg-white/80 text-gray-700'}`}>
+                              {world.completed ? 'Fertig' : `${world.filledStars}/${world.starsRequired} Teile`}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex gap-2 text-2xl mb-2">
+                            {Array.from({ length: world.starsRequired }).map((_, index) => (
+                              <span key={index} className={index < world.filledStars ? '' : 'opacity-25 grayscale'}>🧩</span>
+                            ))}
+                          </div>
+                          <p className="text-sm font-bold text-emerald-700 mb-1">Belohnung bei Fertigstellung: +{world.coinReward} Münzen und +{world.themeSlotReward} Theme-Slot</p>
+                          <p className="text-sm text-gray-600">{world.completed ? 'Diese Welt ist fertig und ihre Münz-Belohnung wurde bereits eingesammelt.' : world.id === activeAdventureWorld.id ? `Noch ${world.remainingStars} Weltteile bis zur nächsten fertigen Welt.` : 'Diese Welt wird nach der vorherigen freigeschaltet.'}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <button
@@ -934,30 +1404,45 @@
             }
 
             if (screen === 'result') {
-              const earnedBadge = getBadge(score, gameMode);
+              const isBoxRewardResult = Boolean(roundRewards.boxReward);
+              const finalDisplayedScore = score + roundRewards.unusedBonusPoints;
+              const earnedBadge = getBadge(finalDisplayedScore, gameMode);
 
               return (
                 <div className="bg-white rounded-[2rem] shadow-2xl w-full p-8 text-center animate-pop-in flex flex-col max-h-full overflow-y-auto">
-                  <div className="text-7xl mb-4 animate-float">{theme.emojis.success.substring(0, 2)}</div>
-                  <h2 className="text-4xl font-extrabold text-gray-800 mb-2">Zeugnis</h2>
-                  <p className="text-xl text-blue-600 font-bold mb-4">{earnedBadge.message}</p>
+                  <div className="text-7xl mb-4 animate-float">{isBoxRewardResult ? '🎁' : theme.emojis.success.substring(0, 2)}</div>
+                  <h2 className="text-4xl font-extrabold text-gray-800 mb-2">{isBoxRewardResult ? 'Überraschungskiste' : 'Zeugnis'}</h2>
+                  <p className="text-xl text-blue-600 font-bold mb-4">{isBoxRewardResult ? 'Neue Überraschung gefunden!' : earnedBadge.message}</p>
 
-                  <div className={`flex items-center justify-center gap-2 mx-auto w-max px-5 py-2 rounded-full mb-6 ${earnedBadge.bg} border-2 border-white shadow-sm`}>
-                    <span className="text-2xl">{earnedBadge.icon}</span>
-                    <span className={`font-black ${earnedBadge.color}`}>{earnedBadge.name}</span>
-                  </div>
+                  {!isBoxRewardResult && (
+                    <div className={`flex items-center justify-center gap-2 mx-auto w-max px-5 py-2 rounded-full mb-6 ${earnedBadge.bg} border-2 border-white shadow-sm`}>
+                      <span className="text-2xl">{earnedBadge.icon}</span>
+                      <span className={`font-black ${earnedBadge.color}`}>{earnedBadge.name}</span>
+                    </div>
+                  )}
 
-                  <div className="bg-sky-50 rounded-3xl p-6 mb-4 border-2 border-sky-100 relative">
-                    <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3"><Medal size={40} className="text-yellow-500 drop-shadow-md" /></div>
-                    <div className="text-6xl font-black text-gray-800 mb-2">{score}</div>
-                    <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">Punkte (Lvl {level === 0 ? 'K' : level})</div>
-                  </div>
+                  {!isBoxRewardResult && (
+                    <div className="bg-sky-50 rounded-3xl p-6 mb-4 border-2 border-sky-100 relative">
+                      <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3"><Medal size={40} className="text-yellow-500 drop-shadow-md" /></div>
+                      <div className="text-6xl font-black text-gray-800 mb-2">{finalDisplayedScore}</div>
+                      <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">Punkte (Lvl {level === 0 ? 'K' : level})</div>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 mb-6">
-                    <div className="flex-1 bg-yellow-50 rounded-2xl p-3 border border-yellow-200 flex flex-col items-center justify-center">
-                      <div className="text-sm font-bold text-yellow-800 mb-1">Verdient</div>
-                      <div className="font-black text-xl text-yellow-600 flex items-center gap-1">+{roundRewards.coins} 🪙</div>
-                    </div>
+                    {(!isBoxRewardResult || roundRewards.coins > 0) && (
+                      <div className="flex-1 bg-yellow-50 rounded-2xl p-3 border border-yellow-200 flex flex-col items-center justify-center">
+                        <div className="text-sm font-bold text-yellow-800 mb-1">Verdient</div>
+                        <div className="font-black text-xl text-yellow-600 flex items-center gap-1">+{roundRewards.coins} 🪙</div>
+                      </div>
+                    )}
+
+                    {roundRewards.adventureStar > 0 && (
+                      <div className="flex-1 bg-amber-50 rounded-2xl p-3 border border-amber-200 flex flex-col items-center justify-center animate-pop-in">
+                        <div className="text-sm font-bold text-amber-800 mb-1">Weltteil</div>
+                        <div className="font-black text-xl text-amber-600 flex items-center gap-1">+{roundRewards.adventureStar} 🧩</div>
+                      </div>
+                    )}
 
                     {roundRewards.sticker && (
                       <div className="flex-1 bg-pink-50 rounded-2xl p-3 border border-pink-200 flex flex-col items-center justify-center animate-pop-in" style={{ animationDelay: '0.5s' }}>
@@ -966,6 +1451,15 @@
                       </div>
                     )}
                   </div>
+
+                  {(roundRewards.unusedBonusPoints > 0 || roundRewards.worldRewardCoins > 0 || roundRewards.unlockedWorlds.length > 0 || roundRewards.boxReward) && (
+                    <div className="bg-amber-50 rounded-2xl p-4 mb-6 border-2 border-amber-200 shadow-sm text-left">
+                      {roundRewards.unusedBonusPoints > 0 && <div className="font-bold text-amber-800">⭐ Bonus-Stern gespart: +{roundRewards.unusedBonusPoints} Punkte</div>}
+                      {roundRewards.unlockedWorlds.length > 0 && <div className="font-bold text-emerald-700 mt-1">Neue Welt fertig: {roundRewards.unlockedWorlds.map((world) => world.name).join(', ')}</div>}
+                      {roundRewards.worldRewardCoins > 0 && <div className="text-sm text-emerald-700 mt-1">Welt-Belohnung: +{roundRewards.worldRewardCoins} Münzen und +{roundRewards.unlockedWorlds.reduce((sum, world) => sum + (world.themeSlotReward || 0), 0)} Theme-Slot</div>}
+                      {roundRewards.boxReward && <div className="font-bold text-fuchsia-800 mt-1">Überraschungskiste geöffnet: {roundRewards.boxReward.icon} {roundRewards.boxReward.name}</div>}
+                    </div>
+                  )}
 
                   {roundRank && (
                     <div className="bg-yellow-100 rounded-2xl p-4 mb-6 border-2 border-yellow-300 animate-pop-in shadow-sm">
@@ -976,8 +1470,8 @@
                   )}
 
                   <div className="flex gap-3">
-                    <button onClick={() => { playClick(); setScreen('start'); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"><ArrowLeft size={20} /> Menü</button>
-                    <button onClick={startGame} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all"><RefreshCw size={20} /> Nochmal</button>
+                    <button onClick={() => { playClick(); setScreen('start'); }} className={`${isBoxRewardResult ? 'w-full' : 'flex-1'} bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors`}><ArrowLeft size={20} /> Menü</button>
+                    {!isBoxRewardResult && <button onClick={startGame} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all"><RefreshCw size={20} /> Nochmal</button>}
                   </div>
                 </div>
               );
@@ -987,7 +1481,7 @@
               return (
                 <div className={`${theme.deviceBg} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full border-8 ${theme.deviceBorder} overflow-hidden flex flex-col transition-colors duration-500 ${feedback === 'error' || feedback === 'fatal' ? 'animate-shake' : ''}`}>
                   <div className={`${theme.bandBg} py-2 px-6 flex justify-between items-center text-gray-300 transition-colors duration-500`}>
-                    <div className="font-black text-sm tracking-widest uppercase flex items-center gap-2"><Calculator size={16} /> ZAHLEN SAFARI</div>
+                    <div className="font-black text-sm tracking-widest uppercase flex items-center gap-2"><Calculator size={16} /> ZAHLEN SAFARI {albumBonusUnlocked && <button onClick={useRoundBonusStar} disabled={!roundBonusAvailable || Boolean(feedback)} className={`text-2xl leading-none transition-all ${roundBonusAvailable && !feedback ? 'animate-float hover:scale-110 active:scale-95' : 'opacity-30 grayscale cursor-default'}`} aria-label="Bonus-Stern einsetzen" title={roundBonusAvailable ? 'Bonus-Stern einsetzen' : 'Bonus-Stern schon verbraucht'}>⭐</button>}</div>
                     <div className="flex gap-1.5">
                       {[...Array(MAX_ATTEMPTS)].map((_, i) => (
                         <div key={i} className={`w-4 h-4 rounded-full border-2 border-black/30 ${i < attemptsLeft ? 'bg-green-500 shadow-[0_0_8px_rgb(34,197,94)]' : 'bg-white/20'}`} />
@@ -995,7 +1489,17 @@
                     </div>
                   </div>
 
-                  <div className={`p-4 sm:p-6 ${theme.deviceBg} transition-colors duration-500`}>
+                  <div className={`relative p-4 sm:p-6 ${theme.deviceBg} transition-colors duration-500`}>
+                    {ownedToyButtons.map((reward) => (
+                      <button
+                        key={reward.id}
+                        onClick={() => playToyButtonReward(reward)}
+                        className={`absolute ${reward.position} z-30 w-12 h-12 rounded-full bg-white/85 border-2 border-white shadow-lg text-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform`}
+                        title={reward.name}
+                      >
+                        {reward.icon}
+                      </button>
+                    ))}
                     <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
                       <div className="flex justify-between items-start text-gray-800 font-mono text-xs sm:text-sm font-bold opacity-70 z-10">
                         <div>Lvl{level === 0 ? 'K' : level} {gameMode === 'gap' ? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
@@ -1038,6 +1542,14 @@
                         </div>
                       )}
 
+                      {feedback === 'bonus' && (
+                        <div className={`absolute inset-0 flex flex-col items-center justify-center ${theme.displayBg} z-20 animate-pop-in`}>
+                          <div className="text-6xl mb-1">⭐</div>
+                          <div className="font-bold text-lg text-amber-900 uppercase tracking-widest">Weiter geht's</div>
+                          <div className="font-mono text-4xl text-amber-900 font-black mt-1">{getExpectedAnswer()}</div>
+                        </div>
+                      )}
+
                       <div className={`text-right font-mono text-4xl sm:text-5xl font-black text-gray-800 tracking-tight z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
                         {problem.missingPart === 'num1' ? renderPlaceholder() : problem.num1}
                         {' '}{getOpSymbol(problem.op)}{' '}
@@ -1046,6 +1558,7 @@
                         {problem.missingPart === 'answer' ? renderPlaceholder() : problem.answer}
                       </div>
                     </div>
+
                   </div>
 
                   <div className={`${theme.numpadBg} p-4 sm:p-6 rounded-b-2xl transition-colors duration-500`}>
