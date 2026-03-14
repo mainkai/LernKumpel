@@ -53,6 +53,44 @@
           100% { transform: translateX(18px) translateY(0px) rotate(0deg) scaleX(-1); }
         }
         .animate-pet-waddle { animation: petWaddle 5.2s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petMonkeyHop {
+          0% { transform: translateX(18px) translateY(0px) rotate(0deg) scaleX(1); }
+          10% { transform: translateX(42px) translateY(-24px) rotate(-12deg) scaleX(1); }
+          20% { transform: translateX(74px) translateY(0px) rotate(8deg) scaleX(1); }
+          30% { transform: translateX(112px) translateY(-44px) rotate(-16deg) scaleX(1); }
+          40% { transform: translateX(152px) translateY(0px) rotate(10deg) scaleX(1); }
+          50% { transform: translateX(194px) translateY(-28px) rotate(-10deg) scaleX(-1); }
+          60% { transform: translateX(156px) translateY(0px) rotate(11deg) scaleX(-1); }
+          70% { transform: translateX(118px) translateY(-38px) rotate(-14deg) scaleX(-1); }
+          80% { transform: translateX(78px) translateY(0px) rotate(9deg) scaleX(-1); }
+          90% { transform: translateX(44px) translateY(-20px) rotate(-10deg) scaleX(-1); }
+          100% { transform: translateX(18px) translateY(0px) rotate(0deg) scaleX(1); }
+        }
+        .animate-pet-monkey-hop { animation: petMonkeyHop 4.4s cubic-bezier(.45,.05,.55,.95) infinite; transform-origin: center bottom; }
+        @keyframes petFrogBounce {
+          0%, 100% { transform: translateX(24px) translateY(0px) scaleX(1); }
+          12% { transform: translateX(46px) translateY(-10px) scaleX(1.04); }
+          24% { transform: translateX(82px) translateY(-30px) scaleX(1); }
+          36% { transform: translateX(116px) translateY(0px) scaleX(0.96); }
+          48% { transform: translateX(150px) translateY(-18px) scaleX(1); }
+          50% { transform: translateX(150px) translateY(-18px) scaleX(-1); }
+          62% { transform: translateX(112px) translateY(0px) scaleX(-0.96); }
+          74% { transform: translateX(76px) translateY(-28px) scaleX(-1); }
+          86% { transform: translateX(44px) translateY(-12px) scaleX(-1.04); }
+        }
+        .animate-pet-frog-bounce { animation: petFrogBounce 4.8s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petRabbitZoom {
+          0%, 100% { transform: translateX(16px) translateY(0px) scaleX(1); }
+          8% { transform: translateX(30px) translateY(-8px) rotate(-6deg) scaleX(1); }
+          16% { transform: translateX(62px) translateY(0px) rotate(4deg) scaleX(1); }
+          26% { transform: translateX(114px) translateY(-14px) rotate(-8deg) scaleX(1); }
+          36% { transform: translateX(186px) translateY(0px) rotate(0deg) scaleX(1); }
+          50% { transform: translateX(244px) translateY(-10px) rotate(-4deg) scaleX(-1); }
+          64% { transform: translateX(174px) translateY(0px) rotate(3deg) scaleX(-1); }
+          78% { transform: translateX(94px) translateY(-12px) rotate(-6deg) scaleX(-1); }
+          90% { transform: translateX(40px) translateY(0px) rotate(0deg) scaleX(-1); }
+        }
+        .animate-pet-rabbit-zoom { animation: petRabbitZoom 4s ease-in-out infinite; transform-origin: center bottom; }
         @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-slide-up { animation: slideUpFade 0.4s ease-out forwards; }
         @keyframes spinSlow { 100% { transform: rotate(360deg); } }
@@ -146,7 +184,10 @@
           { id: 'toy-honk', type: 'button', name: 'Hup-Knopf', icon: '📯', sound: 'honk', position: 'left-[8%] bottom-[18%]' },
           { id: 'pet-panda', type: 'pet', name: 'Wackel-Panda', icon: '🐼', motionClass: 'animate-pet-wobble', laneClass: 'bottom-28' },
           { id: 'pet-octopus', type: 'pet', name: 'Tanz-Oktopus', icon: '🐙', motionClass: 'animate-pet-roam-right', laneClass: 'bottom-24' },
-          { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', laneClass: 'bottom-32' }
+          { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', laneClass: 'bottom-32' },
+          { id: 'pet-monkey', type: 'pet', name: 'Hoppel-Affe', icon: '🐵', motionClass: 'animate-pet-monkey-hop', laneClass: 'bottom-28' },
+          { id: 'pet-frog', type: 'pet', name: 'Sprung-Frosch', icon: '🐸', motionClass: 'animate-pet-frog-bounce', laneClass: 'bottom-24' },
+          { id: 'pet-rabbit', type: 'pet', name: 'Flitz-Hase', icon: '🐰', motionClass: 'animate-pet-rabbit-zoom', laneClass: 'bottom-32' }
         ];
 
         const hasCompletedStickerAlbum = (stickers = []) => stickers.length >= STICKER_POOL.length;
