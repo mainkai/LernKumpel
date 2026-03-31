@@ -591,6 +591,11 @@
             
             const profileId = setupName.trim().toLowerCase();
             const profileRef = doc(db, DB_COLLECTIONS.profiles, profileId);
+            const userRef = doc(db, DB_COLLECTIONS.devices, user.uid);
+
+            await setDoc(userRef, {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
             
             const docSnap = await getDoc(profileRef);
             let themeToSet = 'classic';
@@ -617,11 +622,6 @@
                 });
               }
             }
-
-            const userRef = doc(db, DB_COLLECTIONS.devices, user.uid);
-            await setDoc(userRef, {
-              linkedProfiles: arrayUnion(profileId)
-            }, { merge: true });
 
             setActiveProfileId(profileId);
             setCurrentThemeId(themeToSet); 

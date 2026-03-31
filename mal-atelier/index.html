@@ -578,6 +578,12 @@
 
             const profileId = name.toLowerCase();
             const profileRef = doc(db, DB_COLLECTIONS.profiles, profileId);
+            const deviceRef = doc(db, DB_COLLECTIONS.devices, user.uid);
+
+            await setDoc(deviceRef, {
+              linkedProfiles: arrayUnion(profileId)
+            }, { merge: true });
+
             const profileSnap = await getDoc(profileRef);
 
             if (!profileSnap.exists()) {
@@ -592,10 +598,6 @@
             } else if (profileSnap.data().avatar !== setupAvatar) {
               await updateDoc(profileRef, { avatar: setupAvatar });
             }
-
-            await setDoc(doc(db, DB_COLLECTIONS.devices, user.uid), {
-              linkedProfiles: arrayUnion(profileId)
-            }, { merge: true });
 
             setActiveProfileId(profileId);
             playClick(); setScreen('start');

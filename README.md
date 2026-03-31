@@ -124,4 +124,10 @@ const firebaseConfig = {
 
 **Wichtig:** Stelle sicher, dass in Firebase Firestore sowie Anonymous Authentication aktiviert sind!
 
+### Firestore-Regeln
+
+Im Projekt liegt eine Vorlage unter `firestore.rules`, die zu den aktuell verwendeten Collections `devices`, `global_profiles` und `app_highscores` passt.
+
+Wenn Firestore bisher im Testmodus lief, muessen diese Regeln vor Ablauf der 30 Tage in Firebase uebernommen werden. Sonst werden Client-Anfragen blockiert, obwohl die App selbst korrekt gebaut ist.
+
 Viel Spaß beim Lernen und Rechnen! 🎒✨

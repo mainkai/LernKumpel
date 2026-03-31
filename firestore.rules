@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isDeviceOwner(deviceId) {
+      return isSignedIn() && request.auth.uid == deviceId;
+    }
+
+    function currentDeviceExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/devices/$(request.auth.uid));
+    }
+
+    function currentLinkedProfiles() {
+      return currentDeviceExists()
+        ? get(/databases/$(database)/documents/devices/$(request.auth.uid)).data.linkedProfiles
+        : [];
+    }
+
+    function allowedProfileKeys(data) {
+      return data.keys().hasOnly([
+        'name',
+        'avatar',
+        'coins',
+        'unlockedThemes',
+        'activeTheme',
+        'stickers',
+        'albumBonusUnlocked',
+        'adventureStars',
+        'surpriseRewards',
+        'activePetId'
+      ]);
+    }
+
+    function validProfileData(data) {
+      return allowedProfileKeys(data)
+        && data.keys().hasAll(['name', 'avatar', 'coins', 'unlockedThemes', 'activeTheme', 'stickers'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.avatar is string
+        && data.coins is int
+        && data.unlockedThemes is list
+        && data.activeTheme is string
+        && data.stickers is list
+        && (!data.keys().hasAny(['albumBonusUnlocked']) || data.albumBonusUnlocked is bool)
+        && (!data.keys().hasAny(['adventureStars']) || data.adventureStars is int)
+        && (!data.keys().hasAny(['surpriseRewards']) || data.surpriseRewards is list)
+        && (!data.keys().hasAny(['activePetId']) || data.activePetId == null || data.activePetId is string);
+    }
+
+    function canAccessProfile(profileId) {
+      return isSignedIn() && profileId in currentLinkedProfiles();
+    }
+
+    match /devices/{deviceId} {
+      allow read: if isDeviceOwner(deviceId);
+
+      allow create, update: if isDeviceOwner(deviceId)
+        && request.resource.data.keys().hasOnly(['linkedProfiles'])
+        && request.resource.data.linkedProfiles is list
+        && request.resource.data.linkedProfiles.size() <= 10;
+
+      allow delete: if false;
+    }
+
+    match /global_profiles/{profileId} {
+      allow read: if canAccessProfile(profileId);
+
+      allow create: if isSignedIn()
+        && validProfileData(request.resource.data)
+        && profileId == request.resource.data.name.lower();
+
+      allow update: if canAccessProfile(profileId)
+        && validProfileData(request.resource.data)
+        && profileId == resource.id;
+
+      allow delete: if false;
+    }
+
+    match /app_highscores/{scoreId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['appId', 'profileId', 'name', 'avatar', 'score', 'level', 'mode', 'theme', 'timestamp'])
+        && request.resource.data.appId in ['zahlen-safari', 'lese-fuchs', 'mal-atelier', 'pose-theater']
+        && request.resource.data.profileId is string
+        && request.resource.data.profileId in currentLinkedProfiles()
+        && request.resource.data.name is string
+        && request.resource.data.avatar is string
+        && request.resource.data.score is int
+        && ((request.resource.data.level is int) || (request.resource.data.level is float))
+        && request.resource.data.mode is string
+        && request.resource.data.theme is string
+        && request.resource.data.timestamp is int;
+
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
