@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LernKumpel - Lern-Apps für Kinder</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS: fertiges Stylesheet statt CDN-Compiler.
+         Der CDN-Compiler (cdn.tailwindcss.com) ist modernes JS und scheitert auf
+         alten Android-Browsern -> Seite wäre dort unformatiert.
+         Neu bauen nach Klassen-Änderungen: node build-css.mjs -->
+    <link rel="stylesheet" href="assets/lernkumpel.css">
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }

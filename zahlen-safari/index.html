@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZahlenSafari</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS: fertiges Stylesheet statt CDN-Compiler.
+         Der CDN-Compiler (cdn.tailwindcss.com) ist modernes JS (ES2020) und scheitert
+         auf alten Android-Browsern -> Seite wäre dort unformatiert.
+         Neu bauen nach Klassen-Änderungen: node build-css.mjs -->
+    <link rel="stylesheet" href="../assets/lernkumpel.css">
     <style>
       html, body, #root { height: 100%; margin: 0; overflow: hidden; }
       * { scrollbar-width: none; }
@@ -100,31 +103,111 @@
         body { overscroll-behavior-y: none; }
     </style>
 
-    <!-- React & ReactDOM -->
+    <!-- Alte Browser: Fehler sichtbar machen (statt weißer Seite) + fehlende
+         Standard-Funktionen nachrüsten. Muss vor allen anderen Skripten laufen. -->
+    <script>
+      (function () {
+        window.__appStarted = false;
+
+        function showError(text) {
+          if (window.__appStarted) return;
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.innerHTML =
+            '<div style="font:16px/1.5 sans-serif;padding:24px;color:#0f172a">' +
+            '<p style="font-size:40px;margin:0 0 12px">🦁</p>' +
+            '<p style="font-weight:bold;margin:0 0 8px">Die Safari konnte nicht starten.</p>' +
+            '<p style="margin:0 0 16px">Dein Browser ist wahrscheinlich zu alt. Bitte Chrome im Play Store aktualisieren.</p>' +
+            '<pre style="white-space:pre-wrap;word-break:break-word;font-size:11px;color:#b91c1c;margin:0">' +
+            String(text).replace(/</g, '&lt;') + '</pre></div>';
+        }
+        window.__showStartError = showError;
+
+        // Syntaxfehler in einem der CDN-Skripte landen hier.
+        window.onerror = function (message, url, line) {
+          showError(message + '\n' + (url || '') + ':' + (line || ''));
+        };
+        // Falls ein CDN gar nicht antwortet, bleibt sonst nur "Lädt ...".
+        // Großzügig, weil alte Handys ~3 MB Babel erst herunterladen und übersetzen müssen.
+        setTimeout(function () {
+          if (!window.__appStarted) {
+            showError('Zeitüberschreitung beim Laden (React / Babel / Firebase). ' +
+              'Vielleicht ist die Internetverbindung zu langsam - bitte neu laden.');
+          }
+        }, 45000);
+
+        // --- Mini-Polyfills (Chrome < 54) ---
+        if (!Object.values) {
+          Object.values = function (o) {
+            return Object.keys(o).map(function (k) { return o[k]; });
+          };
+        }
+        if (!Array.prototype.includes) {
+          Array.prototype.includes = function (v) { return this.indexOf(v) !== -1; };
+        }
+        if (!String.prototype.includes) {
+          String.prototype.includes = function (v) { return this.indexOf(v) !== -1; };
+        }
+        if (!Array.from) {
+          Array.from = function (a) { return Array.prototype.slice.call(a); };
+        }
+      })();
+    </script>
+
+    <!-- React & ReactDOM (UMD-Builds sind ES5 und laufen auch auf alten Browsern) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
+
     <!-- Babel (übersetzt den React/JSX Code im Browser) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Firebase Import Map -->
-    <script type="importmap">
-      {
-        "imports": {
-          "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
-          "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
-          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
-        }
+    <!-- Firebase als klassische Skripte ("compat"-API).
+         Bewusst KEINE ES-Module + importmap: Import Maps gibt es erst ab Chrome 89,
+         alte Browser ignorieren sie und scheitern dann an "firebase/app"
+         ("Failed to resolve module specifier") -> die App startete nie. -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script>
+      // Firebase 11 ist ES2018 und lässt sich vor Chrome ~63 nicht parsen.
+      // Dann die alte ES5-Version nachladen - gleiche API, gleiche Datenbank.
+      if (typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) {
+        document.write(
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>' +
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"><\/script>' +
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"><\/script>'
+        );
       }
     </script>
 </head>
 <body class="bg-sky-200">
-    <div id="root"></div>
+    <div id="root" style="font:16px/1.5 sans-serif;padding:24px">Lädt ...</div>
 
-    <script type="text/babel" data-type="module">
-        import { initializeApp } from 'firebase/app';
-        import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, getDoc, arrayUnion, query, where, documentId } from 'firebase/firestore';
+    <!-- Kein data-type="module": so übersetzt Babel den Code bis auf ES5-Niveau
+         herunter (inkl. ?. und async/await) und braucht keine Modul-Unterstützung. -->
+    <script type="text/babel">
+        // --- FIREBASE: modulare Namen auf die klassische ("compat") API abbilden ---
+        // Firebase ist im <head> als normales Skript geladen (window.firebase), damit
+        // die App ohne ES-Module und ohne Import Map läuft. Diese kleine Schicht stellt
+        // dieselben Funktionsnamen bereit wie das modulare SDK.
+        const initializeApp = (config) => firebase.initializeApp(config);
+        const getAuth = (app) => firebase.auth(app);
+        const signInAnonymously = (auth) => auth.signInAnonymously();
+        const onAuthStateChanged = (auth, cb) => auth.onAuthStateChanged(cb);
+        const getFirestore = (app) => firebase.firestore(app);
+        const collection = (db, name) => db.collection(name);
+        const doc = (db, name, id) => db.collection(name).doc(id);
+        const where = (field, op, value) => (ref) => ref.where(field, op, value);
+        const query = (ref, ...constraints) => constraints.reduce((r, add) => add(r), ref);
+        const documentId = () => firebase.firestore.FieldPath.documentId();
+        const onSnapshot = (ref, next, error) => ref.onSnapshot(next, error);
+        const getDoc = (ref) => ref.get();
+        const setDoc = (ref, data, options) => ref.set(data, options || {});
+        const updateDoc = (ref, data) => ref.update(data);
+        const addDoc = (ref, data) => ref.add(data);
+        const arrayUnion = (...values) => firebase.firestore.FieldValue.arrayUnion(...values);
+        // Im modularen SDK ist exists() eine Methode, in der compat-API eine Eigenschaft.
+        const snapExists = (snap) => (typeof snap.exists === 'function' ? snap.exists() : !!snap.exists);
 
         const { useState, useEffect, useCallback, useRef } = React;
 
@@ -538,7 +621,7 @@
 
             const userRef = doc(db, DB_COLLECTIONS.devices, user.uid);
             const unsubUser = onSnapshot(userRef, (docSnap) => {
-              if (docSnap.exists()) {
+              if (snapExists(docSnap)) {
                 setLinkedProfileIds(docSnap.data().linkedProfiles || []);
               } else {
                 setLinkedProfileIds([]);
@@ -600,7 +683,7 @@
             const docSnap = await getDoc(profileRef);
             let themeToSet = 'classic';
 
-            if (!docSnap.exists()) {
+            if (!snapExists(docSnap)) {
               await setDoc(profileRef, {
                 name: setupName.trim(), 
                 avatar: setupAvatar,
@@ -1634,8 +1717,12 @@
           );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+        const rootEl = document.getElementById('root');
+        rootEl.removeAttribute('style');
+        rootEl.textContent = '';
+        const root = ReactDOM.createRoot(rootEl);
         root.render(<App />);
+        window.__appStarted = true;
     </script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * Fallbacks für alte Browser (z. B. Android-Chrome < 88).
+ * Diese Regeln landen unverändert im Build (assets/lernkumpel.css).
+ * ------------------------------------------------------------------ */
+
+/* aspect-ratio gibt es erst ab Chrome 88. Der Pseudo-Element-Trick
+   erzwingt quadratische Kacheln (Zahlen-Tastatur) auch vorher. */
+@supports not (aspect-ratio: 1 / 1) {
+  .aspect-square::before {
+    content: "";
+    display: block;
+    width: 0;
+    padding-bottom: 100%;
+  }
+}

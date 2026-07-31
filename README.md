@@ -72,9 +72,37 @@ Das Besondere: Dank der geteilten Datenbank können erspielte Münzen und Profil
 Dieses Projekt ist extrem leichtgewichtig und auf minimalen Wartungsaufwand ausgelegt. Es benötigt keinen komplexen Build-Prozess (wie Node.js oder Webpack) und kann direkt über GitHub Pages gehostet werden.
 
 - **Frontend:** React 18 & ReactDOM (via CDN eingebunden), Babel Standalone (für JSX im Browser).
-- **Styling:** Tailwind CSS (via CDN).
+- **Styling:** Tailwind CSS. Hub und Zahlen-Safari laden das fertige `assets/lernkumpel.css` (siehe unten), die übrigen Apps noch den CDN-Compiler.
 - **Backend & Datenbank:** Firebase (Firestore für Highscores und Profile, Anonymous Auth für unsichtbaren Login).
 - **Icons:** Inline-SVGs (Lucide React inspiriert) für absolute Unabhängigkeit von externen Font-Bibliotheken.
+
+### 📱 Alte Handys / alte Browser
+
+`index.html` (Hub) und `zahlen-safari/index.html` laufen bewusst auch auf sehr alten
+Android-Chrome-Versionen (ca. ab Chrome 45). Dafür gilt dort:
+
+| Nicht benutzen | Stattdessen | Grund |
+| --- | --- | --- |
+| `<script src="https://cdn.tailwindcss.com">` | `assets/lernkumpel.css` + `node build-css.mjs` | Der CDN-Compiler ist ES2020 und stirbt vor Chrome 80 mit einem SyntaxError - die Seite bleibt unformatiert. |
+| `<script type="importmap">` + `import ... from 'firebase/app'` | Firebase als klassische `*-compat.js`-Skripte + die Shim-Schicht am Anfang des App-Skripts | Import Maps gibt es erst ab Chrome 89. Vorher scheitert der Import ("Failed to resolve module specifier") und es bleibt ein **weißer Bildschirm**. |
+| `<script type="text/babel" data-type="module">` | `<script type="text/babel">` | Ohne `data-type="module"` übersetzt Babel bis auf ES5-Niveau (inkl. `?.` und `async/await`) und braucht keine Modul-Unterstützung. |
+
+Firebase wird in der Zahlen-Safari als `11.6.1`-compat-SDK geladen; kann der Browser das
+nicht parsen (vor ca. Chrome 63), lädt die Seite automatisch das ES5-SDK `8.10.1` nach.
+Beide sprechen dieselbe API und dieselbe Datenbank. Startet die App gar nicht, erscheint
+statt einer weißen Seite eine Fehlermeldung mit der Ursache.
+
+### 🎨 CSS bauen
+
+Nach **jeder** Änderung an Tailwind-Klassen in `index.html` oder `zahlen-safari/index.html`:
+
+```bash
+node build-css.mjs        # erzeugt assets/lernkumpel.css (nur Node nötig, kein npm install)
+```
+
+Das Skript ruft Tailwind per `npx` auf und schreibt anschließend modernes CSS in
+altbrowsertaugliches um (`rgb(1 2 3/.5)` → `rgba(1,2,3,.5)`, `:where()`, `inset`).
+Fallbacks für alte Browser (z. B. `aspect-ratio`) stehen in `assets/tailwind-input.css`.
 
 ## 📂 Ordnerstruktur
 
@@ -83,6 +111,11 @@ Um das "Geteilte Universum" auf GitHub Pages optimal abzubilden, ist das Repo wi
 ```text
 LernKumpel/
 ├── index.html               # Hauptmenü (Hub)
+├── build-css.mjs            # baut assets/lernkumpel.css (node build-css.mjs)
+├── tailwind.config.js       # welche Seiten nach Tailwind-Klassen durchsucht werden
+├── assets/
+│   ├── tailwind-input.css   # Tailwind-Direktiven + Alt-Browser-Fallbacks
+│   └── lernkumpel.css       # generiert - nicht direkt bearbeiten
 ├── zahlen-safari/
 │   └── index.html           # Mathe-App
 ├── lese-fuchs/
