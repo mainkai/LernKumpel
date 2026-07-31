@@ -30,7 +30,12 @@ service cloud.firestore {
         'albumBonusUnlocked',
         'adventureStars',
         'surpriseRewards',
-        'activePetId'
+        'activePetId',
+        'xp',
+        'treats',
+        'petLevels',
+        'petOutfits',
+        'petAccessories'
       ]);
     }
 
@@ -47,7 +52,12 @@ service cloud.firestore {
         && (!data.keys().hasAny(['albumBonusUnlocked']) || data.albumBonusUnlocked is bool)
         && (!data.keys().hasAny(['adventureStars']) || data.adventureStars is int)
         && (!data.keys().hasAny(['surpriseRewards']) || data.surpriseRewards is list)
-        && (!data.keys().hasAny(['activePetId']) || data.activePetId == null || data.activePetId is string);
+        && (!data.keys().hasAny(['activePetId']) || data.activePetId == null || data.activePetId is string)
+        && (!data.keys().hasAny(['xp']) || data.xp is int)
+        && (!data.keys().hasAny(['treats']) || data.treats is int)
+        && (!data.keys().hasAny(['petLevels']) || data.petLevels is map)
+        && (!data.keys().hasAny(['petOutfits']) || data.petOutfits is map)
+        && (!data.keys().hasAny(['petAccessories']) || data.petAccessories is list);
     }
 
     function canAccessProfile(profileId) {

@@ -15,8 +15,13 @@ Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 **Features:**
 
 - 🎓 **Altersgerechte Level:** Von Kindergarten (nur Plus bis 10) über Schulanfänger und 1. bis zur 4. Klasse (große Zahlen, Division).
-- 🧩 **Lücken-Modus:** Fördert das algebraische Denken (z.B. 5 + _ = 12).
+- 🕐 **Uhrzeit-Level:** Eine analoge Uhr mit Ziffern und Zeigern wird abgelesen und die Zeit vierstellig eingetippt (z.B. `0730`). Übt den Übergang analog → digital.
+- 💶 **Euro-&-Cent-Level:** Summen (`1,20 € + 0,80 €`), Rückgeld (`Du zahlst mit 5 €`) und Mehrfachkäufe (`3 × 0,70 €`). Eingegeben wird in Cent - die Anzeige formatiert live mit (`200` → `2,00 €`), was das Stellenwert-Verständnis stützt.
+- 🧩 **Lücken-Modus:** Fördert das algebraische Denken (z.B. 5 + _ = 12). In den Level Uhrzeit und Euro gibt es ihn nicht.
+- 🎖️ **Endlose Rangleiter:** Jede Runde bringt Erfahrungspunkte (XP = Rundenpunkte). Die Ränge hören nie auf - nach `Zahlen-Sternenkind` geht es mit `II`, `III`, … weiter. Jeder Aufstieg zahlt Münzen und Leckerli, damit Münzen auch dann noch einen Sinn haben, wenn schon alles gekauft ist.
 - 🪙 **Shop-System:** Richtige Antworten bringen Münzen. Damit können Kinder neue, liebevoll gestaltete Themes (Baustelle 🚧, Weltraum 🚀, Einhorn 🦄 etc.) freischalten.
+- ❄️ **Saison-Themes:** Weihnachten 🎄, Ostern 🐣, Sommer 🏖️ und Halloween 🎃 sind nur in ihrem Zeitraum im Shop. Einmal gekauft bleiben sie für immer nutzbar und belegen keinen der begrenzten Theme-Slots.
+- 🐾 **Tiere, Gehege & Kunststücke:** 14 Tiere mit eigenen Lauf-Animationen. Antippen (oder von selbst, alle 14-30 Sekunden) macht das Tier ein Kunststück mit Sprechblase - und findet manchmal Münzen. Tiere sammeln Stufen (durchs Mitspielen und durch Füttern mit Leckerli 🍖), höhere Stufen finden öfter Münzen. Im **Gehege** laufen alle Tiere gemeinsam herum, dort wird gefüttert und Zubehör (12 Hüte, Brillen, Kronen …) angezogen.
 - 🎁 **Stickerheft:** Besonders gute Runden werden mit zufälligen Sammel-Stickern belohnt.
 - ⭐ **Abenteuerbuch & Bonus-Stern:** Ist das Stickerheft voll, wird ein neues Abenteuerbuch mit Sternen-Welten freigeschaltet. Außerdem gibt es pro Runde einen Joker-Stern, der eine schwere Aufgabe überspringen kann oder am Ende Bonuspunkte bringt.
 - 👥 **Multi-User fähig:** Geschwister können sich ein Tablet teilen. Die App merkt sich alle Profile und Spielstände auf dem Gerät.
@@ -160,6 +165,13 @@ const firebaseConfig = {
 ### Firestore-Regeln
 
 Im Projekt liegt eine Vorlage unter `firestore.rules`, die zu den aktuell verwendeten Collections `devices`, `global_profiles` und `app_highscores` passt.
+
+> **⚠️ Nach einem Update der Zahlen-Safari immer zuerst die Regeln hochladen!**
+> `validProfileData()` erlaubt per `hasOnly()` nur eine feste Liste von Profil-Feldern.
+> Kommen neue Felder dazu (aktuell `xp`, `treats`, `petLevels`, `petOutfits`,
+> `petAccessories` für Rangleiter und Tiere), lehnt Firestore ohne aktualisierte
+> Regeln **jeden** Profil-Schreibvorgang ab: Die Runde wird gespielt, aber Münzen,
+> XP und Sticker landen nie in der Datenbank - sichtbar nur in der Browser-Konsole.
 
 Wenn Firestore bisher im Testmodus lief, muessen diese Regeln vor Ablauf der 30 Tage in Firebase uebernommen werden. Sonst werden Client-Anfragen blockiert, obwohl die App selbst korrekt gebaut ist.
 

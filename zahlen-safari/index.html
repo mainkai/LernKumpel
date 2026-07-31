@@ -98,6 +98,107 @@
           90% { transform: translateX(40px) translateY(0px) rotate(0deg) scaleX(-1); }
         }
         .animate-pet-rabbit-zoom { animation: petRabbitZoom 4s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petDragonFly {
+          0%, 100% { transform: translateX(14px) translateY(0px) rotate(-4deg) scaleX(1); }
+          15% { transform: translateX(70px) translateY(-34px) rotate(6deg) scaleX(1); }
+          30% { transform: translateX(140px) translateY(-12px) rotate(-5deg) scaleX(1); }
+          45% { transform: translateX(230px) translateY(-40px) rotate(7deg) scaleX(1); }
+          50% { transform: translateX(258px) translateY(-26px) rotate(0deg) scaleX(-1); }
+          65% { transform: translateX(180px) translateY(-44px) rotate(-6deg) scaleX(-1); }
+          80% { transform: translateX(96px) translateY(-10px) rotate(5deg) scaleX(-1); }
+          95% { transform: translateX(30px) translateY(-30px) rotate(-3deg) scaleX(-1); }
+        }
+        .animate-pet-dragon-fly { animation: petDragonFly 8.5s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petPenguinSlide {
+          0%, 8% { transform: translateX(16px) translateY(0px) rotate(0deg) scaleX(1); }
+          20% { transform: translateX(60px) translateY(4px) rotate(-70deg) scaleX(1); }
+          40% { transform: translateX(210px) translateY(4px) rotate(-70deg) scaleX(1); }
+          48%, 56% { transform: translateX(240px) translateY(0px) rotate(0deg) scaleX(1); }
+          58% { transform: translateX(240px) translateY(0px) rotate(0deg) scaleX(-1); }
+          70% { transform: translateX(190px) translateY(4px) rotate(70deg) scaleX(-1); }
+          90% { transform: translateX(40px) translateY(4px) rotate(70deg) scaleX(-1); }
+          98%, 100% { transform: translateX(16px) translateY(0px) rotate(0deg) scaleX(1); }
+        }
+        .animate-pet-penguin-slide { animation: petPenguinSlide 7.5s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petCatStroll {
+          0% { transform: translateX(20px) rotate(0deg) scaleX(1); }
+          12% { transform: translateX(70px) rotate(-4deg) scaleX(1); }
+          24% { transform: translateX(120px) rotate(4deg) scaleX(1); }
+          34%, 42% { transform: translateX(150px) rotate(0deg) scaleX(1); }
+          48% { transform: translateX(150px) rotate(0deg) scaleX(-1); }
+          62% { transform: translateX(104px) rotate(4deg) scaleX(-1); }
+          76% { transform: translateX(58px) rotate(-4deg) scaleX(-1); }
+          88% { transform: translateX(20px) rotate(0deg) scaleX(-1); }
+          100% { transform: translateX(20px) rotate(0deg) scaleX(1); }
+        }
+        .animate-pet-cat-stroll { animation: petCatStroll 11s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petBeeBuzz {
+          0%, 100% { transform: translateX(18px) translateY(-6px) scaleX(1); }
+          10% { transform: translateX(58px) translateY(-40px) scaleX(1); }
+          20% { transform: translateX(96px) translateY(-4px) scaleX(1); }
+          30% { transform: translateX(146px) translateY(-46px) scaleX(1); }
+          40% { transform: translateX(196px) translateY(-8px) scaleX(1); }
+          50% { transform: translateX(248px) translateY(-38px) scaleX(-1); }
+          60% { transform: translateX(198px) translateY(-2px) scaleX(-1); }
+          70% { transform: translateX(148px) translateY(-44px) scaleX(-1); }
+          80% { transform: translateX(94px) translateY(-6px) scaleX(-1); }
+          90% { transform: translateX(52px) translateY(-36px) scaleX(-1); }
+        }
+        .animate-pet-bee-buzz { animation: petBeeBuzz 3.6s linear infinite; transform-origin: center bottom; }
+        @keyframes petTurtleCrawl {
+          0% { transform: translateX(14px) rotate(0deg) scaleX(1); }
+          46% { transform: translateX(150px) rotate(2deg) scaleX(1); }
+          50% { transform: translateX(152px) rotate(0deg) scaleX(-1); }
+          96% { transform: translateX(14px) rotate(-2deg) scaleX(-1); }
+          100% { transform: translateX(14px) rotate(0deg) scaleX(1); }
+        }
+        .animate-pet-turtle-crawl { animation: petTurtleCrawl 18s linear infinite; transform-origin: center bottom; }
+        @keyframes petUnicornGallop {
+          0%, 100% { transform: translateX(16px) translateY(0px) rotate(0deg) scaleX(1); }
+          8% { transform: translateX(52px) translateY(-22px) rotate(-8deg) scaleX(1); }
+          16% { transform: translateX(96px) translateY(0px) rotate(6deg) scaleX(1); }
+          26% { transform: translateX(152px) translateY(-26px) rotate(-8deg) scaleX(1); }
+          36% { transform: translateX(206px) translateY(0px) rotate(6deg) scaleX(1); }
+          46% { transform: translateX(252px) translateY(-18px) rotate(0deg) scaleX(1); }
+          50% { transform: translateX(252px) translateY(0px) rotate(0deg) scaleX(-1); }
+          60% { transform: translateX(200px) translateY(-24px) rotate(8deg) scaleX(-1); }
+          72% { transform: translateX(140px) translateY(0px) rotate(-6deg) scaleX(-1); }
+          84% { transform: translateX(82px) translateY(-22px) rotate(8deg) scaleX(-1); }
+          94% { transform: translateX(36px) translateY(0px) rotate(0deg) scaleX(-1); }
+        }
+        .animate-pet-unicorn-gallop { animation: petUnicornGallop 5.4s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petGhostDrift {
+          0%, 100% { transform: translateX(20px) translateY(-10px) scale(1); opacity: 0.35; }
+          15% { transform: translateX(74px) translateY(-26px) scale(1.05); opacity: 0.95; }
+          35% { transform: translateX(150px) translateY(-6px) scale(0.96); opacity: 0.7; }
+          50% { transform: translateX(232px) translateY(-24px) scale(1.04); opacity: 1; }
+          70% { transform: translateX(150px) translateY(-4px) scale(0.96); opacity: 0.55; }
+          85% { transform: translateX(72px) translateY(-28px) scale(1.03); opacity: 0.9; }
+        }
+        .animate-pet-ghost-drift { animation: petGhostDrift 9.5s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes petCrabScuttle {
+          0%, 6% { transform: translateX(16px) rotate(0deg); }
+          14%, 34% { transform: translateX(120px) rotate(-6deg); }
+          42%, 62% { transform: translateX(244px) rotate(6deg); }
+          70%, 90% { transform: translateX(130px) rotate(-6deg); }
+          100% { transform: translateX(16px) rotate(0deg); }
+        }
+        .animate-pet-crab-scuttle { animation: petCrabScuttle 6.4s cubic-bezier(.7,0,.3,1) infinite; transform-origin: center bottom; }
+
+        /* Einmalige Kunststücke. Sie liegen auf einem INNEREN Element, damit die
+           Lauf-Animation des äußeren Containers ungestört weiterläuft. */
+        @keyframes petTrickSpin { 0% { transform: rotate(0deg) scale(1); } 40% { transform: rotate(360deg) scale(1.35); } 70% { transform: rotate(720deg) scale(1.1); } 100% { transform: rotate(720deg) scale(1); } }
+        .animate-pet-trick-spin { animation: petTrickSpin 1.1s ease-in-out 1; }
+        @keyframes petTrickFlip { 0% { transform: translateY(0) rotate(0deg); } 45% { transform: translateY(-34px) rotate(-180deg); } 100% { transform: translateY(0) rotate(-360deg); } }
+        .animate-pet-trick-flip { animation: petTrickFlip 1.1s cubic-bezier(.4,0,.5,1) 1; }
+        @keyframes petTrickGrow { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.9); } 60% { transform: scale(0.75); } 80% { transform: scale(1.2); } }
+        .animate-pet-trick-grow { animation: petTrickGrow 1.1s ease-in-out 1; }
+        @keyframes petTrickWiggle { 0%, 100% { transform: rotate(0deg) scale(1); } 15% { transform: rotate(-26deg) scale(1.12); } 35% { transform: rotate(24deg) scale(1.12); } 55% { transform: rotate(-18deg) scale(1.08); } 75% { transform: rotate(14deg) scale(1.04); } }
+        .animate-pet-trick-wiggle { animation: petTrickWiggle 1s ease-in-out 1; }
+        @keyframes petTrickJump { 0%, 100% { transform: translateY(0) scale(1); } 20% { transform: translateY(-6px) scale(1.1, 0.85); } 50% { transform: translateY(-52px) scale(0.9, 1.15); } 80% { transform: translateY(0) scale(1.15, 0.8); } }
+        .animate-pet-trick-jump { animation: petTrickJump 1.05s cubic-bezier(.3,0,.4,1) 1; }
+        @keyframes petSparkleRise { 0% { opacity: 0; transform: translateY(6px) scale(0.6); } 30% { opacity: 1; transform: translateY(-10px) scale(1.1); } 100% { opacity: 0; transform: translateY(-38px) scale(0.8); } }
+        .animate-pet-sparkle { animation: petSparkleRise 1.4s ease-out 1 forwards; }
         @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-slide-up { animation: slideUpFade 0.4s ease-out forwards; }
         @keyframes spinSlow { 100% { transform: rotate(360deg); } }
@@ -264,6 +365,54 @@
         const Unlock = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>;
         const Maximize = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M21 16v3a2 2 0 0 1-2 2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
         const Minimize = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 8h3a2 2 0 0 0 2-2V3"></path><path d="M21 8h-3a2 2 0 0 1-2-2V3"></path><path d="M16 21v-3a2 2 0 0 1 2-2h3"></path><path d="M8 21v-3a2 2 0 0 0-2-2H3"></path></svg>;
+        // --- ANALOGE UHR (für das Uhrzeit-Level) ---
+        // Mit Ziffern 1-12, weil Kinder die Zeigerstellung sonst nur raten.
+        const AnalogClock = ({ hour = 12, minute = 0, size = 108 }) => {
+          const r = size / 2;
+          const hands = [];
+          const addHand = (angle, length, width, color, key) => {
+            const rad = (angle - 90) * Math.PI / 180;
+            hands.push(
+              <line
+                key={key}
+                x1={r} y1={r}
+                x2={r + Math.cos(rad) * length}
+                y2={r + Math.sin(rad) * length}
+                stroke={color} strokeWidth={width} strokeLinecap="round"
+              />
+            );
+          };
+          addHand(((hour % 12) + minute / 60) * 30, r * 0.48, Math.max(4, size * 0.05), '#1f2937', 'h');
+          addHand(minute * 6, r * 0.76, Math.max(2, size * 0.03), '#dc2626', 'm');
+
+          const marks = [];
+          for (let i = 1; i <= 12; i++) {
+            const rad = (i * 30 - 90) * Math.PI / 180;
+            marks.push(
+              <text
+                key={'n' + i}
+                x={r + Math.cos(rad) * (r * 0.78)}
+                y={r + Math.sin(rad) * (r * 0.78) + size * 0.045}
+                textAnchor="middle"
+                fontSize={size * 0.14}
+                fontWeight="bold"
+                fill="#374151"
+              >
+                {i}
+              </text>
+            );
+          }
+
+          return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+              <circle cx={r} cy={r} r={r - 2} fill="#ffffff" stroke="#1f2937" strokeWidth="3" />
+              {marks}
+              {hands}
+              <circle cx={r} cy={r} r={Math.max(3, size * 0.03)} fill="#1f2937" />
+            </svg>
+          );
+        };
+
         const Users = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 
         // --- FIREBASE SETUP ---
@@ -292,6 +441,104 @@
         const MAX_OWNED_THEMES = 4;
         const BONUS_STAR_ENDGAME_POINTS = 120;
         const SURPRISE_BOX_PRICE = 1000;
+        const TREAT_BOX_PRICE = 250;      // Kiste, wenn schon alles gefunden ist: Leckerli
+        const TREATS_PER_BOX = 5;
+
+        // --- SPIELSTUFEN ---
+        // Die IDs sind bewusst Zahlen: die Bestenliste speichert level als int/float
+        // (siehe firestore.rules), Strings würde die Datenbank ablehnen.
+        // short: was im Menü steht (zwei Spalten), desc: die Erklärung darunter.
+        const LEVELS = [
+          { id: 0, label: 'K', short: 'Kindergarten', desc: 'Kindergarten (nur +, bis 10)' },
+          { id: 0.5, label: 'S', short: 'Schulanfänger', desc: 'Schulanfänger (+ bis 20, - bis 10)' },
+          { id: 1, label: '1', short: '1. Klasse', desc: '1. Klasse (bis 20)' },
+          { id: 2, label: '2', short: '2. Klasse', desc: '2. Klasse (bis 100, erstes 1x1)' },
+          { id: 3, label: '3', short: '3. Klasse', desc: '3. Klasse (bis 1.000, 1x1)' },
+          { id: 4, label: '4', short: '4. Klasse', desc: '4. Klasse (Große Zahlen, ÷)' },
+          { id: 5, label: '🕐', short: 'Uhrzeit', desc: 'Uhrzeit: Zeiger lesen, digital tippen', kind: 'clock', noGap: true },
+          { id: 6, label: '€', short: 'Euro & Cent', desc: 'Euro & Cent: Preise und Rückgeld', kind: 'money', noGap: true }
+        ];
+        const sameLevel = (a, b) => String(a) === String(b);
+        const getLevelInfo = (levelId) => LEVELS.filter((l) => sameLevel(l.id, levelId))[0] || LEVELS[2];
+        const getLevelKind = (levelId) => getLevelInfo(levelId).kind || 'arith';
+
+        // --- ENDLOSE RANGLEITER ---
+        // Jede Runde bringt Erfahrungspunkte (XP = Rundenpunkte). Die Leiter hört nie
+        // auf: es gibt immer einen nächsten Rang, auch wenn alles gekauft ist.
+        const RANK_TITLES = [
+          'Zahlen-Küken', 'Rechen-Knappe', 'Zahlen-Späher', 'Rechen-Ritter', 'Zahlen-Jäger',
+          'Rechen-Meister', 'Zahlen-Kapitän', 'Rechen-Magier', 'Zahlen-Häuptling',
+          'Rechen-Professor', 'Zahlen-Drache', 'Rechen-Legende', 'Zahlen-Sternenkind'
+        ];
+        const RANKS_PER_TITLE = 5;
+        const RANK_ICONS = ['🌱', '🛡️', '🔭', '⚔️', '🏹', '🎓', '⚓', '🪄', '🪶', '📐', '🐉', '👑', '🌟'];
+        const xpForRank = (rank) => 700 + Math.round(260 * Math.pow(rank, 1.25));
+        const toRomanish = (n) => {
+          const numerals = ['', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+          return n <= 10 ? numerals[n - 1] : String(n);
+        };
+        // Nach der letzten Titel-Stufe geht es mit "Zahlen-Sternenkind II, III, ..."
+        // weiter - so bleibt auch Rang 200 noch ein Titel und keine nackte Zahl.
+        const getRankLabel = (rank) => {
+          const tier = Math.floor((Math.max(1, rank) - 1) / RANKS_PER_TITLE);
+          const lastTier = RANK_TITLES.length - 1;
+          return {
+            title: tier <= lastTier
+              ? RANK_TITLES[tier]
+              : RANK_TITLES[lastTier] + ' ' + toRomanish(tier - lastTier + 1),
+            icon: RANK_ICONS[Math.min(tier, RANK_ICONS.length - 1)]
+          };
+        };
+        const getRankInfo = (xp) => {
+          const totalXp = Math.max(0, xp || 0);
+          let rank = 1;
+          let spent = 0;
+          let need = xpForRank(1);
+          while (totalXp - spent >= need && rank < 999) {
+            spent += need;
+            rank += 1;
+            need = xpForRank(rank);
+          }
+          const label = getRankLabel(rank);
+          return {
+            rank,
+            title: label.title,
+            icon: label.icon,
+            into: totalXp - spent,
+            need,
+            progress: Math.min(1, (totalXp - spent) / need)
+          };
+        };
+        // Jeder Rangaufstieg zahlt aus - deshalb bleiben Münzen für immer sinnvoll.
+        const getRankUpReward = (rank) => ({
+          coins: 60 + rank * 15,
+          treats: rank % RANKS_PER_TITLE === 0 ? 3 : 1
+        });
+
+        // --- SAISON-THEMES ---
+        // Nur im passenden Zeitraum im Shop. Einmal gekauft bleiben sie für immer
+        // nutzbar - weggenommen wird einem Kind nichts.
+        const SEASONS = {
+          winter: { name: 'Winterzeit', icon: '❄️', from: '11-25', to: '01-07' },
+          easter: { name: 'Osterzeit', icon: '🐣', from: '03-10', to: '04-25' },
+          summer: { name: 'Sommerzeit', icon: '☀️', from: '06-10', to: '09-10' },
+          spooky: { name: 'Gruselzeit', icon: '🕸️', from: '10-15', to: '11-05' }
+        };
+        const monthDayNow = (now) => {
+          const d = now || new Date();
+          return (d.getMonth() + 1) * 100 + d.getDate();
+        };
+        const parseMonthDay = (value) => parseInt(value.substring(0, 2), 10) * 100 + parseInt(value.substring(3, 5), 10);
+        const formatMonthDay = (value) => value.substring(3, 5) + '.' + value.substring(0, 2) + '.';
+        const isSeasonActive = (seasonId, now) => {
+          const season = SEASONS[seasonId];
+          if (!season) return false;
+          const today = monthDayNow(now);
+          const from = parseMonthDay(season.from);
+          const to = parseMonthDay(season.to);
+          // Fenster über den Jahreswechsel (z. B. 25.11. - 07.01.) läuft "verkehrt herum".
+          return from <= to ? (today >= from && today <= to) : (today >= from || today <= to);
+        };
 
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
         const STICKER_POOL = ['🍎', '🦋', '🦖', '🐙', '🦄', '🐉', '🪐', '🚀', '🏰', '💎', '🧸', '🍕', '🍦', '🎈', '🎁', '👑', '⚽', '🎨', '🎸', '🌈'];
@@ -304,13 +551,102 @@
           { id: 'toy-whoopee', type: 'button', name: 'Pups-Knopf', icon: '💨', sound: 'whoopee' },
           { id: 'toy-squeak', type: 'button', name: 'Quietsch-Knopf', icon: '🐭', sound: 'squeak' },
           { id: 'toy-honk', type: 'button', name: 'Hup-Knopf', icon: '📯', sound: 'honk' },
-          { id: 'pet-panda', type: 'pet', name: 'Wackel-Panda', icon: '🐼', motionClass: 'animate-pet-wobble', laneClass: 'bottom-28' },
-          { id: 'pet-octopus', type: 'pet', name: 'Tanz-Oktopus', icon: '🐙', motionClass: 'animate-pet-roam-right', laneClass: 'bottom-24' },
-          { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', laneClass: 'bottom-32' },
-          { id: 'pet-monkey', type: 'pet', name: 'Hoppel-Affe', icon: '🐵', motionClass: 'animate-pet-monkey-hop', laneClass: 'bottom-28' },
-          { id: 'pet-frog', type: 'pet', name: 'Sprung-Frosch', icon: '🐸', motionClass: 'animate-pet-frog-bounce', laneClass: 'bottom-24' },
-          { id: 'pet-rabbit', type: 'pet', name: 'Flitz-Hase', icon: '🐰', motionClass: 'animate-pet-rabbit-zoom', laneClass: 'bottom-32' }
+          { id: 'toy-boing', type: 'button', name: 'Sprung-Knopf', icon: '🪀', sound: 'boing' },
+          { id: 'toy-magic', type: 'button', name: 'Zauber-Knopf', icon: '🪄', sound: 'magic' },
+          { id: 'pet-panda', type: 'pet', name: 'Wackel-Panda', icon: '🐼', motionClass: 'animate-pet-wobble', lane: 1, sound: 'squeak', phrases: ['Bambus schmeckt!', 'Noch eine Aufgabe?', 'Ich wackel mit!'] },
+          { id: 'pet-octopus', type: 'pet', name: 'Tanz-Oktopus', icon: '🐙', motionClass: 'animate-pet-roam-right', lane: 0, sound: 'squeak', phrases: ['Acht Arme, acht Punkte!', 'Blubb blubb!', 'Ich kann jonglieren!'] },
+          { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', lane: 2, sound: 'honk', phrases: ['Quaaak!', 'Watschel, watschel...', 'Wo ist der Teich?'] },
+          { id: 'pet-monkey', type: 'pet', name: 'Hoppel-Affe', icon: '🐵', motionClass: 'animate-pet-monkey-hop', lane: 1, sound: 'squeak', phrases: ['Uuh-aah!', 'Banane gegen Punkte?', 'Ich turne mit!'] },
+          { id: 'pet-frog', type: 'pet', name: 'Sprung-Frosch', icon: '🐸', motionClass: 'animate-pet-frog-bounce', lane: 0, sound: 'boing', phrases: ['Quak!', 'Hüpf mit mir!', 'Ich sammle Fliegen.'] },
+          { id: 'pet-rabbit', type: 'pet', name: 'Flitz-Hase', icon: '🐰', motionClass: 'animate-pet-rabbit-zoom', lane: 2, sound: 'boing', phrases: ['Schneller!', 'Ich war zuerst da!', 'Möhren-Zeit!'] },
+          { id: 'pet-dragon', type: 'pet', name: 'Flatter-Drache', icon: '🐉', motionClass: 'animate-pet-dragon-fly', lane: 0, sound: 'magic', phrases: ['Ich puste Feuer!', 'Fliegen ist toll!', 'Rechnen macht stark.'] },
+          { id: 'pet-penguin', type: 'pet', name: 'Rutsch-Pinguin', icon: '🐧', motionClass: 'animate-pet-penguin-slide', lane: 0, sound: 'honk', phrases: ['Bauchrutsche!', 'Brrr, kalt!', 'Fisch wäre jetzt gut.'] },
+          { id: 'pet-cat', type: 'pet', name: 'Schleich-Katze', icon: '🐱', motionClass: 'animate-pet-cat-stroll', lane: 1, sound: 'squeak', phrases: ['Miau.', 'Ich pass auf dich auf.', 'Nur ein Nickerchen...'] },
+          { id: 'pet-bee', type: 'pet', name: 'Summ-Biene', icon: '🐝', motionClass: 'animate-pet-bee-buzz', lane: 2, sound: 'squeak', phrases: ['Bzzzz!', 'Fleißig wie du!', 'Honig für Gewinner!'] },
+          { id: 'pet-turtle', type: 'pet', name: 'Ruhe-Schildkröte', icon: '🐢', motionClass: 'animate-pet-turtle-crawl', lane: 0, sound: 'boing', phrases: ['Langsam, aber sicher.', 'Ich komme schon noch.', 'Denk ruhig nach.'] },
+          { id: 'pet-unicorn', type: 'pet', name: 'Galopp-Einhorn', icon: '🦄', motionClass: 'animate-pet-unicorn-gallop', lane: 1, sound: 'magic', phrases: ['Regenbogen-Galopp!', 'Du zauberst Zahlen!', 'Glitzer für dich!'] },
+          { id: 'pet-ghost', type: 'pet', name: 'Kicher-Geist', icon: '👻', motionClass: 'animate-pet-ghost-drift', lane: 2, sound: 'magic', phrases: ['Huuuh!', 'Erschreckt?', 'Ich schwebe nur so rum.'] },
+          { id: 'pet-crab', type: 'pet', name: 'Seitwärts-Krabbe', icon: '🦀', motionClass: 'animate-pet-crab-scuttle', lane: 0, sound: 'squeak', phrases: ['Klick-klack!', 'Immer seitwärts!', 'Zange hoch!'] }
         ];
+
+        // --- TIERE: STUFEN, KUNSTSTÜCKE, ZUBEHÖR ---
+        const PET_TRICK_CLASSES = [
+          'animate-pet-trick-spin', 'animate-pet-trick-flip', 'animate-pet-trick-grow',
+          'animate-pet-trick-wiggle', 'animate-pet-trick-jump'
+        ];
+        const PET_GENERIC_PHRASES = [
+          'Super gerechnet!', 'Weiter so!', 'Du schaffst das!', 'Noch eine Runde?',
+          'Ich hab dich lieb!', 'Kitzel mich nicht!', 'Wieder ein Kunststück!',
+          'Schau, was ich kann!', 'Hast du ein Leckerli?'
+        ];
+        const PET_LEVEL_NAMES = ['Baby', 'Kumpel', 'Profi', 'Star', 'Champion', 'Legende'];
+        const PET_XP_PER_ROUND = 20;          // fürs Mitspielen als aktives Tier
+        const PET_XP_PER_PERFECT_ROUND = 40;  // Bonus bei fehlerfreier Runde
+        const PET_XP_PER_TREAT = 60;          // ein Leckerli füttern
+        const PET_XP_PER_TRICK = 4;           // Antippen zählt ein wenig
+        const PET_MAX_LEVEL = 20;
+        const getPetLevel = (xp) => {
+          const totalXp = Math.max(0, xp || 0);
+          let level = 1;
+          let spent = 0;
+          let need = 120;
+          while (totalXp - spent >= need && level < PET_MAX_LEVEL) {
+            spent += need;
+            level += 1;
+            need = 120 + (level - 1) * 70;
+          }
+          const maxed = level >= PET_MAX_LEVEL;
+          return {
+            level,
+            name: PET_LEVEL_NAMES[Math.min(Math.floor((level - 1) / 4), PET_LEVEL_NAMES.length - 1)],
+            into: maxed ? need : totalXp - spent,
+            need,
+            progress: maxed ? 1 : Math.min(1, (totalXp - spent) / need),
+            maxed
+          };
+        };
+        // Höhere Stufen finden häufiger Münzen - ein Grund, ein Tier lange zu behalten.
+        const getPetFindChance = (level) => Math.min(0.45, 0.08 + (level - 1) * 0.03);
+        const getPetFindAmount = (level) => 1 + Math.floor(Math.random() * (2 + level));
+
+        const PET_ACCESSORIES = [
+          { id: 'acc-flower', name: 'Blume', icon: '🌸', price: 120 },
+          { id: 'acc-cap', name: 'Käppi', icon: '🧢', price: 150 },
+          { id: 'acc-party', name: 'Partyhut', icon: '🥳', price: 180 },
+          { id: 'acc-bow', name: 'Schleife', icon: '🎀', price: 200 },
+          { id: 'acc-scarf', name: 'Schal', icon: '🧣', price: 220 },
+          { id: 'acc-glasses', name: 'Sonnenbrille', icon: '🕶️', price: 260 },
+          { id: 'acc-helmet', name: 'Helm', icon: '⛑️', price: 300 },
+          { id: 'acc-headphones', name: 'Kopfhörer', icon: '🎧', price: 350 },
+          { id: 'acc-tophat', name: 'Zylinder', icon: '🎩', price: 420 },
+          { id: 'acc-crown', name: 'Krone', icon: '👑', price: 600 },
+          { id: 'acc-wizardhat', name: 'Zauberhut', icon: '🧙', price: 800 },
+          { id: 'acc-halo', name: 'Sternenkranz', icon: '✨', price: 950 }
+        ];
+        const getAccessoryById = (accessoryId) => PET_ACCESSORIES.filter((acc) => acc.id === accessoryId)[0] || null;
+        const pickRandom = (list) => list[Math.floor(Math.random() * list.length)];
+
+        // --- UHRZEIT & GELD ---
+        // padStart gibt es erst ab Chrome 57, darum die eigene Mini-Variante.
+        const pad2 = (value) => (value < 10 ? '0' + value : String(value));
+        const MONEY_ITEMS = [
+          { icon: '🍎', name: 'Apfel' }, { icon: '🍪', name: 'Keks' }, { icon: '🥕', name: 'Karotte' },
+          { icon: '🍌', name: 'Banane' }, { icon: '🍦', name: 'Eis' }, { icon: '✏️', name: 'Stift' },
+          { icon: '📓', name: 'Heft' }, { icon: '🎈', name: 'Ballon' }, { icon: '🧃', name: 'Saft' },
+          { icon: '🍫', name: 'Schoki' }, { icon: '⚽', name: 'Ball' }, { icon: '🧸', name: 'Teddy' }
+        ];
+        const formatCents = (cents) => {
+          const abs = Math.abs(Math.round(cents || 0));
+          return (cents < 0 ? '-' : '') + Math.floor(abs / 100) + ',' + pad2(abs % 100) + ' €';
+        };
+        // Preise immer in 10-Cent-Schritten: das lässt sich im Kopf rechnen.
+        const randomPrice = (maxCents) => (1 + Math.floor(Math.random() * Math.max(1, Math.floor(maxCents / 10)))) * 10;
+        // Was das Kind gerade tippt, sofort als Uhrzeit / Geldbetrag zeigen.
+        const formatTimeInput = (digits) => {
+          const filled = (digits + '____').substring(0, 4);
+          return filled.substring(0, 2) + ':' + filled.substring(2, 4);
+        };
+        const formatMoneyInput = (digits) => (digits === '' ? '_,__ €' : formatCents(parseInt(digits, 10)));
 
         const hasCompletedStickerAlbum = (stickers = []) => stickers.length >= STICKER_POOL.length;
         const getAdventureWorldProgress = (starCount = 0) => {
@@ -358,8 +694,15 @@
           robot: { id: 'robot', price: 1400, name: 'Roboter', icon: '🤖', pageBg: 'bg-slate-200', deviceBg: 'bg-cyan-600', deviceBorder: 'border-cyan-800', bandBg: 'bg-slate-950', displayBg: 'bg-cyan-50', displayBorder: 'border-slate-800', numpadBg: 'bg-slate-800', btnDefault: 'bg-slate-100 text-slate-900 hover:bg-white shadow-[0_6px_0_0_rgb(203,213,225)]', btnAction: 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-[0_6px_0_0_rgb(6,182,212)]', btnDelete: 'bg-rose-500 hover:bg-rose-400 text-white shadow-[0_6px_0_0_rgb(244,63,94)]', textMain: 'text-cyan-700', emojis: { title: '🤖', success: '⚡🤖', retry: '🔋', fatal: '🧯' }, problemIcons: ['🤖', '⚙️', '🔩', '🔧', '💡', '🛰️', '📡', '🛠️', '🔋', '💻'] },
           castle: { id: 'castle', price: 1600, name: 'Schloss', icon: '🏰', pageBg: 'bg-stone-200', deviceBg: 'bg-violet-700', deviceBorder: 'border-violet-900', bandBg: 'bg-stone-900', displayBg: 'bg-violet-50', displayBorder: 'border-stone-700', numpadBg: 'bg-violet-950', btnDefault: 'bg-stone-100 text-stone-900 hover:bg-white shadow-[0_6px_0_0_rgb(231,229,228)]', btnAction: 'bg-violet-500 hover:bg-violet-400 text-white shadow-[0_6px_0_0_rgb(139,92,246)]', btnDelete: 'bg-amber-500 hover:bg-amber-400 text-stone-900 shadow-[0_6px_0_0_rgb(245,158,11)]', textMain: 'text-violet-700', emojis: { title: '👑', success: '🏰✨', retry: '🛡️', fatal: '🐉' }, problemIcons: ['🏰', '👑', '🛡️', '🗡️', '🐉', '🪄', '🏹', '🕯️', '📜', '⚔️'] },
           candy: { id: 'candy', price: 1800, name: 'Suedigkeiten', icon: '🍬', pageBg: 'bg-rose-100', deviceBg: 'bg-pink-500', deviceBorder: 'border-pink-700', bandBg: 'bg-rose-900', displayBg: 'bg-pink-50', displayBorder: 'border-rose-300', numpadBg: 'bg-rose-800', btnDefault: 'bg-rose-50 text-rose-900 hover:bg-white shadow-[0_6px_0_0_rgb(254,205,211)]', btnAction: 'bg-fuchsia-500 hover:bg-fuchsia-400 text-white shadow-[0_6px_0_0_rgb(217,70,239)]', btnDelete: 'bg-orange-400 hover:bg-orange-300 text-white shadow-[0_6px_0_0_rgb(251,146,60)]', textMain: 'text-pink-600', emojis: { title: '🍭', success: '🍬🎉', retry: '🍪', fatal: '🍋' }, problemIcons: ['🍬', '🍭', '🧁', '🍩', '🍪', '🍓', '🍒', '🍫', '🍦', '🎂'] },
-          volcano: { id: 'volcano', price: 2200, name: 'Vulkan', icon: '🌋', pageBg: 'bg-orange-300', deviceBg: 'bg-stone-800', deviceBorder: 'border-stone-950', bandBg: 'bg-red-950', displayBg: 'bg-orange-50', displayBorder: 'border-stone-800', numpadBg: 'bg-stone-900', btnDefault: 'bg-orange-100 text-stone-950 hover:bg-white shadow-[0_6px_0_0_rgb(253,186,116)]', btnAction: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', btnDelete: 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-[0_6px_0_0_rgb(245,158,11)]', textMain: 'text-red-700', emojis: { title: '🌋', success: '🔥🦖', retry: '🌫️', fatal: '🪨' }, problemIcons: ['🌋', '🔥', '🪨', '🦖', '🦕', '🌴', '☄️', '🦴', '🌪️', '⚡'] }
+          volcano: { id: 'volcano', price: 2200, name: 'Vulkan', icon: '🌋', pageBg: 'bg-orange-300', deviceBg: 'bg-stone-800', deviceBorder: 'border-stone-950', bandBg: 'bg-red-950', displayBg: 'bg-orange-50', displayBorder: 'border-stone-800', numpadBg: 'bg-stone-900', btnDefault: 'bg-orange-100 text-stone-950 hover:bg-white shadow-[0_6px_0_0_rgb(253,186,116)]', btnAction: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', btnDelete: 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-[0_6px_0_0_rgb(245,158,11)]', textMain: 'text-red-700', emojis: { title: '🌋', success: '🔥🦖', retry: '🌫️', fatal: '🪨' }, problemIcons: ['🌋', '🔥', '🪨', '🦖', '🦕', '🌴', '☄️', '🦴', '🌪️', '⚡'] },
+          // --- Saison-Themes: nur im jeweiligen Zeitraum im Shop sichtbar ---
+          winter: { id: 'winter', season: 'winter', price: 900, name: 'Weihnachten', icon: '🎄', pageBg: 'bg-sky-100', deviceBg: 'bg-red-700', deviceBorder: 'border-red-900', bandBg: 'bg-emerald-950', displayBg: 'bg-sky-50', displayBorder: 'border-emerald-900', numpadBg: 'bg-emerald-900', btnDefault: 'bg-sky-50 text-emerald-950 hover:bg-white shadow-[0_6px_0_0_rgb(186,230,253)]', btnAction: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_6px_0_0_rgb(5,150,105)]', btnDelete: 'bg-red-600 hover:bg-red-500 text-white shadow-[0_6px_0_0_rgb(220,38,38)]', textMain: 'text-red-700', emojis: { title: '🎅', success: '🎁🎉', retry: '❄️', fatal: '🥶' }, problemIcons: ['🎄', '🎁', '⛄', '❄️', '🔔', '🕯️', '🍪', '🦌', '🛷', '⭐'] },
+          easter: { id: 'easter', season: 'easter', price: 700, name: 'Ostern', icon: '🐣', pageBg: 'bg-lime-100', deviceBg: 'bg-yellow-400', deviceBorder: 'border-amber-500', bandBg: 'bg-lime-900', displayBg: 'bg-yellow-50', displayBorder: 'border-lime-800', numpadBg: 'bg-lime-800', btnDefault: 'bg-lime-50 text-lime-950 hover:bg-white shadow-[0_6px_0_0_rgb(217,249,157)]', btnAction: 'bg-pink-400 hover:bg-pink-300 text-white shadow-[0_6px_0_0_rgb(244,114,182)]', btnDelete: 'bg-sky-400 hover:bg-sky-300 text-white shadow-[0_6px_0_0_rgb(56,189,248)]', textMain: 'text-amber-500', emojis: { title: '🐰', success: '🐣🎉', retry: '🥚', fatal: '🍳' }, problemIcons: ['🐣', '🐰', '🥚', '🌷', '🌼', '🦋', '🧺', '🐤', '🌱', '🍫'] },
+          summer: { id: 'summer', season: 'summer', price: 700, name: 'Sommer', icon: '🏖️', pageBg: 'bg-amber-100', deviceBg: 'bg-orange-400', deviceBorder: 'border-orange-600', bandBg: 'bg-cyan-900', displayBg: 'bg-amber-50', displayBorder: 'border-cyan-800', numpadBg: 'bg-cyan-800', btnDefault: 'bg-amber-50 text-cyan-950 hover:bg-white shadow-[0_6px_0_0_rgb(254,215,170)]', btnAction: 'bg-cyan-500 hover:bg-cyan-400 text-white shadow-[0_6px_0_0_rgb(6,182,212)]', btnDelete: 'bg-orange-500 hover:bg-orange-400 text-white shadow-[0_6px_0_0_rgb(249,115,22)]', textMain: 'text-orange-500', emojis: { title: '🏖️', success: '🍉🎉', retry: '🌊', fatal: '🥵' }, problemIcons: ['🏖️', '🍉', '🩴', '🕶️', '⛱️', '🍦', '🐚', '🌞', '🏄', '🧃'] },
+          spooky: { id: 'spooky', season: 'spooky', price: 900, name: 'Halloween', icon: '🎃', pageBg: 'bg-violet-950', deviceBg: 'bg-orange-600', deviceBorder: 'border-orange-800', bandBg: 'bg-black', displayBg: 'bg-orange-100', displayBorder: 'border-violet-900', numpadBg: 'bg-violet-950', btnDefault: 'bg-orange-100 text-violet-950 hover:bg-white shadow-[0_6px_0_0_rgb(254,215,170)]', btnAction: 'bg-violet-600 hover:bg-violet-500 text-white shadow-[0_6px_0_0_rgb(124,58,237)]', btnDelete: 'bg-lime-500 hover:bg-lime-400 text-violet-950 shadow-[0_6px_0_0_rgb(132,204,22)]', textMain: 'text-orange-500', emojis: { title: '🎃', success: '🍬🦇', retry: '🕸️', fatal: '💀' }, problemIcons: ['🎃', '👻', '🦇', '🕷️', '🕸️', '🧙', '🍬', '💀', '🧟', '🌙'] }
         };
+        const isSeasonalTheme = (themeData) => Boolean(themeData && themeData.season);
+        const isThemeInShop = (themeData, now) => !isSeasonalTheme(themeData) || isSeasonActive(themeData.season, now);
 
         // --- CUSTOM HOOKS ---
         function useAudio() {
@@ -516,6 +859,49 @@
 
             if (soundId === 'honk') {
               playHonkSound();
+              return;
+            }
+
+            // Sprungfeder: schnell fallende Tonhöhe, ein paar Mal wiederholt.
+            if (soundId === 'boing') {
+              const ctx = ctxRef.current;
+              const now = ctx.currentTime;
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              const wobble = ctx.createOscillator();
+              const wobbleGain = ctx.createGain();
+
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(660, now);
+              osc.frequency.exponentialRampToValueAtTime(120, now + 0.5);
+
+              wobble.type = 'sine';
+              wobble.frequency.setValueAtTime(18, now);
+              wobbleGain.gain.setValueAtTime(90, now);
+              wobbleGain.gain.exponentialRampToValueAtTime(4, now + 0.5);
+              wobble.connect(wobbleGain);
+              wobbleGain.connect(osc.frequency);
+
+              gain.gain.setValueAtTime(0.0001, now);
+              gain.gain.exponentialRampToValueAtTime(0.14, now + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(now);
+              wobble.start(now);
+              osc.stop(now + 0.58);
+              wobble.stop(now + 0.58);
+              return;
+            }
+
+            // Zauberstab: aufsteigende Glitzer-Kette.
+            if (soundId === 'magic') {
+              const steps = [784, 988, 1175, 1568, 1976];
+              for (let i = 0; i < steps.length; i++) {
+                setTimeout(() => playTone(steps[i], 'sine', 0.22, 0.05), i * 55);
+              }
+              setTimeout(() => playTone(2637, 'triangle', 0.35, 0.03), 300);
             }
           }, [playTone, playWhoopeeSound, playHonkSound]);
           return {
@@ -636,7 +1022,7 @@
           
           // Game State
           const [score, setScore] = useState(0);
-          const [problem, setProblem] = useState({ num1: 0, num2: 0, op: '+', answer: 0, missingPart: 'answer', icon: '❓' });
+          const [problem, setProblem] = useState({ kind: 'arith', num1: 0, num2: 0, op: '+', answer: 0, missingPart: 'answer', icon: '❓' });
           const [userAnswer, setUserAnswer] = useState('');
           const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
           const [problemsDone, setProblemsDone] = useState(0);
@@ -646,7 +1032,7 @@
           const [feedback, setFeedback] = useState(null);
           
           // Reward State (End of Game)
-          const [roundRewards, setRoundRewards] = useState({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null });
+          const [roundRewards, setRoundRewards] = useState({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null, xpGained: 0, rankUps: [], rankUpCoins: 0, treats: 0, petLevelUp: null });
           const [roundRank, setRoundRank] = useState(null);
           const [roundBonusAvailable, setRoundBonusAvailable] = useState(false);
           const [roundBonusUsed, setRoundBonusUsed] = useState(false);
@@ -654,6 +1040,11 @@
           // Setup Form State
           const [setupName, setSetupName] = useState('');
           const [setupAvatar, setSetupAvatar] = useState('🦊');
+
+          // Tier-Kunststücke (Antippen + spontane Überraschungen)
+          const [petTrick, setPetTrick] = useState(null);
+          const petTrickTimeoutRef = useRef(null);
+          const petCoinCooldownRef = useRef(0);
 
           const profile = profiles.find(p => p.id === activeProfileId);
           const theme = THEMES[currentThemeId] || THEMES.classic;
@@ -671,6 +1062,19 @@
           const ownedPets = unlockedSurpriseRewards.filter((reward) => reward.type === 'pet');
           const activePet = ownedPets.find((reward) => reward.id === profile?.activePetId) || ownedPets[ownedPets.length - 1] || null;
           const sessionProblemsRef = useRef(new Set());
+
+          // --- RANG, LECKERLI, TIER-STUFEN ---
+          const rankInfo = getRankInfo(profile?.xp || 0);
+          const treats = profile?.treats || 0;
+          const petLevels = profile?.petLevels || {};
+          const petOutfits = profile?.petOutfits || {};
+          const ownedAccessoryIds = profile?.petAccessories || [];
+          // Saison-Themes zählen absichtlich nicht gegen das Theme-Limit: sie sind ein
+          // Geschenk auf Zeit und sollen keinen Dauerplatz wegnehmen.
+          const ownedRegularThemeCount = (profile?.unlockedThemes || []).filter((id) => !isSeasonalTheme(THEMES[id])).length;
+          // Uhrzeit und Euro haben keinen Lücken-Modus - eine alte Auswahl darf dort
+          // nicht nachwirken, sonst gäbe es Extrapunkte ohne Lücken-Aufgaben.
+          const effectiveGameMode = getLevelInfo(level).noGap ? 'normal' : gameMode;
 
           // --- THEME SYNC ---
           useEffect(() => {
@@ -693,6 +1097,12 @@
               setScreen('start');
             }
           }, [screen, fullStickerAlbum]);
+
+          useEffect(() => {
+            if (screen === 'pets' && ownedPets.length === 0) {
+              setScreen('start');
+            }
+          }, [screen, ownedPets.length]);
 
           // --- FIREBASE INIT ---
           useEffect(() => {
@@ -785,7 +1195,12 @@
                 albumBonusUnlocked: false,
                 adventureStars: 0,
                 surpriseRewards: [],
-                activePetId: null
+                activePetId: null,
+                xp: 0,
+                treats: 0,
+                petLevels: {},
+                petOutfits: {},
+                petAccessories: []
               });
             } else {
               themeToSet = docSnap.data().activeTheme || 'classic';
@@ -805,11 +1220,12 @@
           };
 
           const buyTheme = async (themeToBuy) => {
+            const seasonal = isSeasonalTheme(themeToBuy);
             if (
               !profile ||
               profile.coins < themeToBuy.price ||
               profile.unlockedThemes.includes(themeToBuy.id) ||
-              profile.unlockedThemes.length >= maxOwnedThemesAllowed
+              (seasonal ? !isSeasonActive(themeToBuy.season) : ownedRegularThemeCount >= maxOwnedThemesAllowed)
             ) return;
             playCoin();
             const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
@@ -880,9 +1296,26 @@
               worldRewardCoins: 0,
               unusedBonusPoints: 0,
               bonusUsed: false,
-              boxReward: reward
+              boxReward: reward,
+              xpGained: 0,
+              rankUps: [],
+              rankUpCoins: 0,
+              treats: 0,
+              petLevelUp: null
             });
             setScreen('result');
+          };
+
+          // Wenn alle Kisteninhalte gefunden sind, gibt es Leckerli statt Nichts -
+          // damit Münzen auch im Endlos-Spiel noch einen Zweck haben.
+          const buyTreatBox = async () => {
+            if (!profile || profile.coins < TREAT_BOX_PRICE) return;
+            initAudio();
+            playTada();
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), {
+              coins: profile.coins - TREAT_BOX_PRICE,
+              treats: treats + TREATS_PER_BOX
+            });
           };
 
           const activatePet = async (petId) => {
@@ -891,6 +1324,105 @@
             await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), { activePetId: petId });
           };
 
+          const buyAccessory = async (accessory) => {
+            if (!profile || ownedAccessoryIds.includes(accessory.id) || profile.coins < accessory.price) return;
+            playCoin();
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), {
+              coins: profile.coins - accessory.price,
+              petAccessories: ownedAccessoryIds.concat([accessory.id])
+            });
+          };
+
+          // Ein Zubehör kann immer nur bei einem Tier sitzen - sonst müsste man es
+          // doppelt kaufen und Kinder verstehen dann nicht, wo ihre Krone geblieben ist.
+          const dressPet = async (petId, accessoryId) => {
+            if (!profile || !activeProfileId) return;
+            playClick();
+            const nextOutfits = {};
+            Object.keys(petOutfits).forEach((id) => {
+              if (petOutfits[id] !== accessoryId) nextOutfits[id] = petOutfits[id];
+            });
+            if (accessoryId && petOutfits[petId] !== accessoryId) nextOutfits[petId] = accessoryId;
+            else delete nextOutfits[petId];
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), { petOutfits: nextOutfits });
+          };
+
+          const feedPet = async (petId) => {
+            if (!profile || treats < 1) return;
+            initAudio();
+            const before = getPetLevel(petLevels[petId] || 0);
+            const nextXp = (petLevels[petId] || 0) + PET_XP_PER_TREAT;
+            const after = getPetLevel(nextXp);
+            const nextLevels = Object.assign({}, petLevels);
+            nextLevels[petId] = nextXp;
+
+            if (after.level > before.level) playTada(); else playCoin();
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), {
+              treats: treats - 1,
+              petLevels: nextLevels
+            });
+          };
+
+          // --- KUNSTSTÜCKE ---
+          // Antippen oder Zufall: das Tier macht etwas Unerwartetes. Manchmal findet
+          // es dabei sogar Münzen (mit Abklingzeit, damit Dauertippen nichts bringt).
+          const runPetTrick = useCallback((pet, spontaneous) => {
+            if (!pet) return;
+            const petXp = petLevels[pet.id] || 0;
+            const levelInfo = getPetLevel(petXp);
+            const phrases = (pet.phrases || []).concat(PET_GENERIC_PHRASES);
+            const now = Date.now();
+
+            let foundCoins = 0;
+            if (now - petCoinCooldownRef.current > 45000 && Math.random() < getPetFindChance(levelInfo.level)) {
+              foundCoins = getPetFindAmount(levelInfo.level);
+              petCoinCooldownRef.current = now;
+            }
+
+            if (!spontaneous) {
+              initAudio();
+              playSillySound(pet.sound || 'squeak');
+            }
+            if (foundCoins > 0) playCoin();
+
+            setPetTrick({
+              petId: pet.id,
+              trickClass: pickRandom(PET_TRICK_CLASSES),
+              phrase: foundCoins > 0 ? 'Schau, ' + foundCoins + ' Münzen!' : pickRandom(phrases),
+              coins: foundCoins,
+              key: now
+            });
+
+            if (petTrickTimeoutRef.current) clearTimeout(petTrickTimeoutRef.current);
+            petTrickTimeoutRef.current = setTimeout(() => setPetTrick(null), 2400);
+
+            if (!activeProfileId) return;
+            const nextLevels = Object.assign({}, petLevels);
+            nextLevels[pet.id] = petXp + PET_XP_PER_TRICK;
+            const payload = { petLevels: nextLevels };
+            if (foundCoins > 0) payload.coins = (profile?.coins || 0) + foundCoins;
+            updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), payload)
+              .catch((err) => console.error('Pet trick error:', err));
+          }, [petLevels, activeProfileId, profile?.coins, initAudio, playSillySound, playCoin]);
+
+          // Spontane Überraschung im Menü: alle 14-30 Sekunden.
+          useEffect(() => {
+            if (!activePet || screen !== 'start') return;
+            let cancelled = false;
+            let timer = null;
+            const schedule = () => {
+              timer = setTimeout(() => {
+                if (cancelled) return;
+                runPetTrick(activePet, true);
+                schedule();
+              }, 14000 + Math.random() * 16000);
+            };
+            schedule();
+            return () => { cancelled = true; if (timer) clearTimeout(timer); };
+          }, [activePet?.id, screen, runPetTrick]);
+
+          useEffect(() => () => { if (petTrickTimeoutRef.current) clearTimeout(petTrickTimeoutRef.current); }, []);
+
           const playToyButtonReward = useCallback((reward) => {
             initAudio();
             playSillySound(reward.sound);
@@ -898,7 +1430,7 @@
 
           const calculatePerfectSolveBonus = useCallback(() => {
             let pointsEarned = 100;
-            if (gameMode === 'gap') pointsEarned += 20;
+            if (effectiveGameMode === 'gap') pointsEarned += 20;
 
             const currentStreak = streak + 1;
             const comboBonus = currentStreak >= 3 ? 30 : 0;
@@ -906,7 +1438,7 @@
             const speedBonus = Math.floor(50 / Math.log2((Math.max(0, secondsTaken) / 4) + 2));
 
             return { pointsEarned, currentStreak, comboBonus, speedBonus };
-          }, [gameMode, streak, problemStartTime]);
+          }, [effectiveGameMode, streak, problemStartTime]);
 
           // --- SPIEL LOGIK ---
           const generateProblem = useCallback((currentLevel, mode, themeId) => {
@@ -914,6 +1446,97 @@
             let ops = [];
             let problemSignature = '';
             let attempts = 0;
+
+            const currentThemeData = THEMES[themeId] || THEMES.classic;
+            const randomThemeIcon = () => currentThemeData.problemIcons[Math.floor(Math.random() * currentThemeData.problemIcons.length)];
+
+            const finish = (nextProblem) => {
+              setProblem(nextProblem);
+              setUserAnswer('');
+              setAttemptsLeft(MAX_ATTEMPTS);
+              setFeedback(null);
+              setLastBonusEarned(0);
+              setProblemStartTime(Date.now());
+            };
+
+            const kind = getLevelKind(currentLevel);
+
+            // --- UHRZEIT: Zeiger lesen, vierstellig digital eintippen ---
+            if (kind === 'clock') {
+              let hour = 12;
+              let minute = 0;
+              do {
+                hour = 1 + Math.floor(Math.random() * 12);
+                const roll = Math.random();
+                if (roll < 0.4) minute = pickRandom([0, 30]);
+                else if (roll < 0.7) minute = pickRandom([15, 45]);
+                else minute = Math.floor(Math.random() * 12) * 5;
+                problemSignature = 'clock' + hour + '-' + minute;
+                attempts++;
+              } while (sessionProblemsRef.current.has(problemSignature) && attempts < 50);
+
+              if (attempts >= 50) sessionProblemsRef.current.clear();
+              sessionProblemsRef.current.add(problemSignature);
+
+              finish({
+                kind: 'clock',
+                hour,
+                minute,
+                answer: pad2(hour) + pad2(minute),
+                missingPart: 'answer',
+                icon: randomThemeIcon()
+              });
+              return;
+            }
+
+            // --- EURO & CENT: Summe, Rückgeld oder mehrmals derselbe Preis ---
+            if (kind === 'money') {
+              let moneyType = 'sum';
+              let aCents = 0;
+              let bCents = 0;
+              let times = 0;
+              let answerCents = 0;
+
+              do {
+                moneyType = pickRandom(['sum', 'sum', 'change', 'times']);
+                times = 0;
+                bCents = 0;
+
+                if (moneyType === 'sum') {
+                  aCents = randomPrice(400);
+                  bCents = randomPrice(400);
+                  answerCents = aCents + bCents;
+                } else if (moneyType === 'change') {
+                  bCents = pickRandom([200, 500, 1000]);   // bezahlt mit ...
+                  aCents = randomPrice(bCents - 10);       // ... für diesen Preis
+                  answerCents = bCents - aCents;
+                } else {
+                  times = 2 + Math.floor(Math.random() * 3);
+                  aCents = randomPrice(Math.floor(300 / times));
+                  answerCents = aCents * times;
+                }
+
+                problemSignature = 'money' + moneyType + '-' + aCents + '-' + bCents + '-' + times;
+                attempts++;
+              } while (sessionProblemsRef.current.has(problemSignature) && attempts < 50);
+
+              if (attempts >= 50) sessionProblemsRef.current.clear();
+              sessionProblemsRef.current.add(problemSignature);
+
+              finish({
+                kind: 'money',
+                moneyType,
+                aCents,
+                bCents,
+                times,
+                answer: answerCents,
+                missingPart: 'answer',
+                itemA: pickRandom(MONEY_ITEMS),
+                itemB: pickRandom(MONEY_ITEMS),
+                icon: randomThemeIcon()
+              });
+              return;
+            }
 
             do {
               switch (currentLevel) {
@@ -966,15 +1589,7 @@
             let missingPart = 'answer';
             if (mode === 'gap') missingPart = ['num1', 'num2'][Math.floor(Math.random() * 2)];
 
-            const currentThemeData = THEMES[themeId] || THEMES.classic;
-            const randomIcon = currentThemeData.problemIcons[Math.floor(Math.random() * currentThemeData.problemIcons.length)];
-
-            setProblem({ num1, num2, op, answer, missingPart, icon: randomIcon });
-            setUserAnswer('');
-            setAttemptsLeft(MAX_ATTEMPTS);
-            setFeedback(null);
-            setLastBonusEarned(0);
-            setProblemStartTime(Date.now());
+            finish({ kind: 'arith', num1, num2, op, answer, missingPart, icon: randomThemeIcon() });
           }, []);
 
           const startGame = () => {
@@ -983,10 +1598,10 @@
             setProblemsDone(0);
             setStreak(0);
             setRoundRank(null);
-            setRoundRewards({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null });
+            setRoundRewards({ coins: 0, sticker: null, adventureStar: 0, unlockedWorlds: [], worldRewardCoins: 0, unusedBonusPoints: 0, bonusUsed: false, boxReward: null, xpGained: 0, rankUps: [], rankUpCoins: 0, treats: 0, petLevelUp: null });
             setRoundBonusAvailable(albumBonusUnlocked);
             setRoundBonusUsed(false);
-            generateProblem(level, gameMode, currentThemeId);
+            generateProblem(level, effectiveGameMode, currentThemeId);
             setScreen('game');
           };
 
@@ -995,6 +1610,21 @@
             if (problem.missingPart === 'num2') return problem.num2;
             return problem.answer;
           }, [problem]);
+
+          // Uhrzeit wird als Text verglichen ('0730'), Geld als Cent-Zahl.
+          const isAnswerCorrect = useCallback((input) => {
+            if (problem.kind === 'clock') return input.length === 4 && input === problem.answer;
+            if (problem.kind === 'money') return parseInt(input, 10) === problem.answer;
+            return parseInt(input, 10) === getExpectedAnswer();
+          }, [problem, getExpectedAnswer]);
+
+          const formatSolution = useCallback(() => {
+            if (problem.kind === 'clock') return formatTimeInput(problem.answer);
+            if (problem.kind === 'money') return formatCents(problem.answer);
+            return String(getExpectedAnswer());
+          }, [problem, getExpectedAnswer]);
+
+          const maxInputLength = problem.kind === 'clock' ? 4 : 5;
 
           const handleGameEnd = async (baseScore, finalStreak, bonusUnusedAtEnd = false) => {
             const unusedBonusPoints = bonusUnusedAtEnd ? BONUS_STAR_ENDGAME_POINTS : 0;
@@ -1035,6 +1665,42 @@
               earnedCoins += worldRewardCoins;
             }
 
+            // --- ENDLOSE RANGLEITER ---
+            // Die Rundenpunkte sind gleichzeitig Erfahrungspunkte. Jeder Aufstieg zahlt
+            // Münzen und Leckerli - es gibt also immer ein nächstes Ziel.
+            const perfectRound = finalStreak === MAX_PROBLEMS;
+            const previousXp = profile.xp || 0;
+            const xpGained = Math.max(0, finalScore);
+            const nextXp = previousXp + xpGained;
+            const previousRank = getRankInfo(previousXp).rank;
+            const nextRank = getRankInfo(nextXp).rank;
+            const rankUps = [];
+            let rankUpCoins = 0;
+            let earnedTreats = perfectRound ? 1 : 0;
+
+            for (let r = previousRank + 1; r <= nextRank; r++) {
+              const reward = getRankUpReward(r);
+              const label = getRankLabel(r);
+              rankUps.push({ rank: r, title: label.title, icon: label.icon, coins: reward.coins, treats: reward.treats });
+              rankUpCoins += reward.coins;
+              earnedTreats += reward.treats;
+            }
+            earnedCoins += rankUpCoins;
+
+            // --- AKTIVES TIER LERNT MIT ---
+            let petLevelUp = null;
+            const nextPetLevels = Object.assign({}, petLevels);
+            if (activePet) {
+              const petXpBefore = petLevels[activePet.id] || 0;
+              const petXpAfter = petXpBefore + PET_XP_PER_ROUND + (perfectRound ? PET_XP_PER_PERFECT_ROUND : 0);
+              nextPetLevels[activePet.id] = petXpAfter;
+              const levelBefore = getPetLevel(petXpBefore);
+              const levelAfter = getPetLevel(petXpAfter);
+              if (levelAfter.level > levelBefore.level) {
+                petLevelUp = { name: activePet.name, icon: activePet.icon, level: levelAfter.level, title: levelAfter.name };
+              }
+            }
+
             setRoundRewards({
               coins: earnedCoins,
               sticker: newSticker,
@@ -1043,12 +1709,17 @@
               worldRewardCoins,
               unusedBonusPoints,
               bonusUsed: roundBonusUsed,
-              boxReward: null
+              boxReward: null,
+              xpGained,
+              rankUps,
+              rankUpCoins,
+              treats: earnedTreats,
+              petLevelUp
             });
-            
+
             let rank = null;
             if (finalScore > 0) {
-              const relevantScores = highscores.filter(h => Number(h.level) === Number(level) && (h.mode || 'normal') === gameMode);
+              const relevantScores = highscores.filter(h => sameLevel(h.level, level) && (h.mode || 'normal') === effectiveGameMode);
               let calculatedRank = 1;
               for (let s of relevantScores) {
                 if (finalScore > s.score) break;
@@ -1065,7 +1736,7 @@
                   avatar: profile.avatar,
                   score: finalScore,
                   level: level,
-                  mode: gameMode,
+                  mode: effectiveGameMode,
                   theme: currentThemeId,
                   timestamp: Date.now()
                 });
@@ -1073,12 +1744,21 @@
             }
 
             const profileRef = doc(db, DB_COLLECTIONS.profiles, activeProfileId);
-            await updateDoc(profileRef, {
-              coins: (profile.coins || 0) + earnedCoins,
-              stickers: updatedStickers,
-              albumBonusUnlocked: albumBonusUnlocked || completedAlbumThisRound,
-              adventureStars: (profile.adventureStars || 0) + earnedAdventureStar
-            });
+            try {
+              await updateDoc(profileRef, {
+                coins: (profile.coins || 0) + earnedCoins,
+                stickers: updatedStickers,
+                albumBonusUnlocked: albumBonusUnlocked || completedAlbumThisRound,
+                adventureStars: (profile.adventureStars || 0) + earnedAdventureStar,
+                xp: nextXp,
+                treats: treats + earnedTreats,
+                petLevels: nextPetLevels
+              });
+            } catch (e) {
+              // Ohne catch würde die Runde im letzten Bildschirm hängen bleiben. Häufigste
+              // Ursache: firestore.rules kennt ein neues Profil-Feld noch nicht (hasOnly).
+              console.error('Profil speichern fehlgeschlagen:', e);
+            }
 
             setScreen('result');
           };
@@ -1090,22 +1770,24 @@
                 handleGameEnd(nextScore, nextStreak, bonusUnusedAtEnd);
               } else {
                 setProblemsDone(prev => prev + 1);
-                generateProblem(level, gameMode, currentThemeId);
+                generateProblem(level, effectiveGameMode, currentThemeId);
               }
             }, delay);
           };
 
           const checkAnswer = useCallback(() => {
             if (userAnswer === '' || feedback) return;
+            // Bei der Uhrzeit sind immer vier Ziffern nötig. Ein zu frühes Tippen auf
+            // den Haken soll keinen Versuch kosten - es passiert einfach nichts.
+            if (problem.kind === 'clock' && userAnswer.length < 4) return;
 
-            const expected = getExpectedAnswer();
-            const isCorrect = parseInt(userAnswer, 10) === expected;
+            const isCorrect = isAnswerCorrect(userAnswer);
 
             if (isCorrect) {
               playSuccess();
               setFeedback('success');
               const perfectSolve = attemptsLeft === 3 ? calculatePerfectSolveBonus() : null;
-              let pointsEarned = perfectSolve ? perfectSolve.pointsEarned : attemptsLeft === 2 ? 50 + (gameMode === 'gap' ? 20 : 0) : 20 + (gameMode === 'gap' ? 20 : 0);
+              let pointsEarned = perfectSolve ? perfectSolve.pointsEarned : attemptsLeft === 2 ? 50 + (effectiveGameMode === 'gap' ? 20 : 0) : 20 + (effectiveGameMode === 'gap' ? 20 : 0);
 
               let currentStreak = perfectSolve ? perfectSolve.currentStreak : 0;
               setStreak(currentStreak);
@@ -1133,7 +1815,7 @@
                 advanceRound(score, 0, 3500, roundBonusAvailable);
               }
             }
-          }, [userAnswer, feedback, getExpectedAnswer, playSuccess, attemptsLeft, gameMode, playError, score, roundBonusAvailable, calculatePerfectSolveBonus]);
+          }, [userAnswer, feedback, problem, isAnswerCorrect, playSuccess, attemptsLeft, effectiveGameMode, playError, score, roundBonusAvailable, calculatePerfectSolveBonus]);
 
           const useRoundBonusStar = useCallback(() => {
             if (!roundBonusAvailable || feedback) return;
@@ -1156,8 +1838,8 @@
           const handleInput = useCallback((val) => {
             if (feedback === 'success' || feedback === 'fatal' || feedback === 'bonus') return;
             playClick();
-            setUserAnswer(prev => prev.length >= 5 ? prev : prev + val);
-          }, [feedback, playClick]);
+            setUserAnswer(prev => prev.length >= maxInputLength ? prev : prev + val);
+          }, [feedback, playClick, maxInputLength]);
 
           const handleDelete = useCallback(() => {
             if (feedback === 'success' || feedback === 'fatal' || feedback === 'bonus') return;
@@ -1194,19 +1876,95 @@
             </span>
           );
 
+          // --- TIER-DARSTELLUNG ---
+          // Wichtig: die Lauf-Animation sitzt auf dem äußeren Container, das
+          // Kunststück auf dem inneren Element. Sonst würde das Tier beim Trick
+          // an den linken Rand zurückspringen.
+          const renderPetCompanion = (pet, options) => {
+            if (!pet) return null;
+            const opts = options || {};
+            const levelInfo = getPetLevel(petLevels[pet.id] || 0);
+            const accessory = getAccessoryById(petOutfits[pet.id]);
+            const trick = petTrick && petTrick.petId === pet.id ? petTrick : null;
+            // Standard: das Tier läuft oben über den farbigen Bogen. Dort liegt kein
+            // Knopf - am Kartenboden verdeckte es je nach Bildschirmhöhe den LOS-Knopf
+            // oder die Menü-Kacheln und fing deren Antippen ab.
+            const style = opts.style || { top: (44 + (pet.lane || 0) * 18) + 'px' };
+
+            return (
+              <div
+                key={pet.id}
+                className={`absolute left-0 z-20 ${pet.motionClass}`}
+                style={style}
+              >
+                <div className="relative">
+                  {trick && trick.phrase && (
+                    <div className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/95 border-2 border-gray-200 rounded-2xl px-2 py-0.5 text-[11px] font-bold text-gray-700 shadow-md animate-pop-in ${opts.bubbleAbove ? 'bottom-full mb-1' : 'top-full mt-1'}`}>
+                      {trick.phrase}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => runPetTrick(pet, false)}
+                    title={pet.name + ' antippen'}
+                    aria-label={pet.name + ' antippen'}
+                    className={`relative block leading-none ${opts.sizeClass || 'text-5xl'} ${trick ? trick.trickClass : ''}`}
+                  >
+                    {pet.icon}
+                    {accessory && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-2xl pointer-events-none">{accessory.icon}</span>
+                    )}
+                  </button>
+                  {trick && trick.coins > 0 && (
+                    <span className="absolute -top-3 -right-3 text-lg animate-pet-sparkle pointer-events-none">🪙</span>
+                  )}
+                  {levelInfo.level > 1 && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/90 border border-emerald-300 rounded-full px-1.5 text-[10px] font-black text-emerald-700 pointer-events-none">
+                      {levelInfo.level}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          };
+
+          const renderRankBar = () => (
+            <div className="mb-3 bg-indigo-50 border-2 border-indigo-100 rounded-2xl px-3 py-2 text-left">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl shrink-0">{rankInfo.icon}</span>
+                  <span className="font-black text-indigo-900 text-sm truncate">Rang {rankInfo.rank} - {rankInfo.title}</span>
+                </div>
+                <span className="text-[11px] font-bold text-indigo-500 shrink-0 whitespace-nowrap">{rankInfo.into} / {rankInfo.need} XP</span>
+              </div>
+              <div className="h-2.5 bg-indigo-100 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: (rankInfo.progress * 100).toFixed(1) + '%' }}></div>
+              </div>
+            </div>
+          );
+
           // --- RENDER HILFS-KOMPONENTEN ---
           const TopBar = () => {
             if (!profile || screen === 'setup' || screen === 'profile_select') return null; 
             return (
               <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
-                <button onClick={() => { setActiveProfileId(null); setScreen('profile_select'); playClick(); }} className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up">
+                <button onClick={() => { setActiveProfileId(null); setScreen('profile_select'); playClick(); }} className="relative bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up">
                   <span className="text-2xl">{profile.avatar}</span>
+                  {/* Rang-Abzeichen am Avatar: kostet keine Breite in der Leiste. */}
+                  <span className="absolute -top-1 left-6 bg-indigo-500 text-white text-[10px] font-black rounded-full px-1.5 border-2 border-white shadow-sm" title={'Rang ' + rankInfo.rank + ' - ' + rankInfo.title}>
+                    {rankInfo.rank}
+                  </span>
                   {/* Früher hidden sm:inline - der Name war auf Handys immer versteckt,
                       obwohl die Design-Fläche (448px) genug Platz hat. */}
-                  <span className="font-bold text-gray-800 max-w-[7rem] truncate">{profile.name}</span>
+                  <span className="font-bold text-gray-800 max-w-[6rem] truncate">{profile.name}</span>
                   <Users size={16} className="text-sky-500 ml-1" />
                 </button>
                 <div className="flex items-center gap-2">
+                  {treats > 0 && (
+                    <div className="bg-orange-200 rounded-full px-3 py-2 flex items-center gap-1 shadow-md pointer-events-auto border-2 border-orange-100 animate-slide-up" title="Leckerli für deine Tiere">
+                      <span className="font-black text-orange-900">{treats}</span>
+                      <span className="text-lg">🍖</span>
+                    </div>
+                  )}
                   {fullscreen.supported && (
                     <button
                       onClick={() => { playClick(); fullscreen.toggle(); }}
@@ -1305,15 +2063,7 @@
               return (
                 <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 text-center relative overflow-hidden transition-colors duration-500 flex flex-col max-h-full">
                   <div className={`absolute top-0 left-0 w-full h-32 ${theme.deviceBg} rounded-b-[50%] -translate-y-10 transition-colors duration-500`}></div>
-                  {activePet && (
-                    <button
-                      onClick={() => activatePet(activePet.id)}
-                      className={`absolute left-0 ${activePet.laneClass || 'bottom-28'} text-5xl z-20 ${activePet.motionClass}`}
-                      title={activePet.name}
-                    >
-                      {activePet.icon}
-                    </button>
-                  )}
+                  {renderPetCompanion(activePet)}
 
                   <div className="relative z-10 flex-1 overflow-y-auto pb-2">
                     <div className="w-28 h-28 mx-auto bg-white rounded-full border-4 border-white shadow-lg mb-4 flex items-center justify-center text-6xl animate-float">{theme.emojis.title}</div>
@@ -1327,35 +2077,42 @@
                       ))}
                     </div>
 
+                    {renderRankBar()}
+
                     <div className="flex bg-gray-100 rounded-xl p-1 mb-4 shadow-inner">
-                      <button onClick={() => { playClick(); setGameMode('normal'); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${gameMode === 'normal' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>Normal (A+B=?)</button>
-                      <button onClick={() => { playClick(); setGameMode('gap'); }} title="Lücken-Aufgaben bringen Extra-Punkte!" className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1 ${gameMode === 'gap' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Lücken (A+?=C) <HelpCircle size={14}/></button>
+                      <button onClick={() => { playClick(); setGameMode('normal'); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${effectiveGameMode === 'normal' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>Normal (A+B=?)</button>
+                      <button
+                        onClick={() => { playClick(); setGameMode('gap'); }}
+                        disabled={getLevelInfo(level).noGap}
+                        title={getLevelInfo(level).noGap ? 'In diesem Level gibt es keine Lücken-Aufgaben' : 'Lücken-Aufgaben bringen Extra-Punkte!'}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1 ${getLevelInfo(level).noGap ? 'text-gray-300' : effectiveGameMode === 'gap' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                      >
+                        Lücken (A+?=C) <HelpCircle size={14}/>
+                      </button>
                     </div>
 
-                    <div className="mb-6 grid grid-cols-1 gap-2">
-                      {[
-                        { lvl: 0, label: 'K', desc: 'Kindergarten (nur +, bis 10)' },
-                        { lvl: 0.5, label: 'S', desc: 'Schulanfänger (+ bis 20, - bis 10)' },
-                        { lvl: 1, label: '1', desc: '1. Klasse (bis 20)' },
-                        { lvl: 2, label: '2', desc: '2. Klasse (bis 100, erstes 1x1)' },
-                        { lvl: 3, label: '3', desc: '3. Klasse (bis 1.000, 1x1)' },
-                        { lvl: 4, label: '4', desc: '4. Klasse (Große Zahlen, ÷)' }
-                      ].map((item) => (
-                        <button key={item.lvl} onClick={() => { playClick(); setLevel(item.lvl); }} className={`py-2 px-4 rounded-xl border-2 font-bold text-left flex items-center transition-all ${level === item.lvl ? 'bg-gray-100 border-gray-400 text-gray-800 shadow-md transform scale-105' : 'border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 text-xs ${level === item.lvl ? theme.deviceBg + ' text-white font-black' : 'bg-gray-200 text-gray-500'}`}>{item.label}</div>
-                          {item.desc}
+                    {/* Zwei Spalten: mit acht Stufen wäre eine Spalte so hoch, dass der
+                        LOS-Knopf aus dem Bild rutscht. Die ausführliche Erklärung steht
+                        darunter - immer nur für die gewählte Stufe. */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {LEVELS.map((item) => (
+                        <button key={item.id} onClick={() => { playClick(); setLevel(item.id); }} title={item.desc} className={`py-1.5 px-2 rounded-xl border-2 font-bold text-left text-sm flex items-center transition-all ${sameLevel(level, item.id) ? 'bg-gray-100 border-gray-400 text-gray-800 shadow-md' : 'border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
+                          <div className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center mr-2 text-xs ${sameLevel(level, item.id) ? theme.deviceBg + ' text-white font-black' : 'bg-gray-200 text-gray-500'}`}>{item.label}</div>
+                          <span className="truncate">{item.short}</span>
                         </button>
                       ))}
                     </div>
+                    <p className="text-xs font-bold text-gray-500 mt-2 mb-4">{getLevelInfo(level).desc}</p>
 
                     <button onClick={startGame} className="w-full bg-green-500 hover:bg-green-600 text-white font-black text-2xl py-4 rounded-2xl shadow-[0_8px_0_0_rgb(21,128,61)] active:shadow-none active:translate-y-2 transition-all flex items-center justify-center gap-3 mb-4">
                       <Play fill="currentColor" size={28} /> LOS!
                     </button>
 
-                    <div className={`grid gap-2 ${fullStickerAlbum ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                    <div className="grid gap-2 grid-cols-3">
                       <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Bestenliste</span></button>
                       <button onClick={() => { playClick(); setScreen('shop'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><ShoppingCart size={20} className="text-blue-500"/> <span className="text-xs">Shop</span></button>
                       <button onClick={() => { playClick(); setScreen('stickers'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><BookOpen size={20} className="text-pink-500"/> <span className="text-xs">Sticker</span></button>
+                      {ownedPets.length > 0 && <button onClick={() => { playClick(); setScreen('pets'); }} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-emerald-100 hover:bg-emerald-200 text-emerald-900"><span className="text-xl">🐾</span> <span className="text-xs">Gehege</span></button>}
                       {fullStickerAlbum && <button onClick={() => { playClick(); setScreen('adventure'); }} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-amber-100 hover:bg-amber-200 text-amber-900"><span className="text-xl">🗺️</span> <span className="text-xs">Abenteuerbuch</span></button>}
                     </div>
                   </div>
@@ -1364,88 +2121,242 @@
             }
 
             if (screen === 'shop') {
-              const ownedThemeCount = profile.unlockedThemes.length;
-              const atThemeLimit = ownedThemeCount >= maxOwnedThemesAllowed;
+              const atThemeLimit = ownedRegularThemeCount >= maxOwnedThemesAllowed;
               const allBoxesOpened = surpriseRewardIds.length >= SURPRISE_REWARDS.length;
+              const allThemes = Object.values(THEMES);
+              const regularThemes = allThemes.filter((t) => !isSeasonalTheme(t)).sort((a, b) => a.price - b.price);
+              const seasonalThemes = allThemes.filter((t) => isSeasonalTheme(t) && isThemeInShop(t));
+              // Saison vorbei, aber schon gekauft: weiter anzeigen, damit man das Theme
+              // umschalten oder verkaufen kann.
+              const keptSeasonalThemes = allThemes.filter((t) => isSeasonalTheme(t) && !isThemeInShop(t) && profile.unlockedThemes.includes(t.id));
 
-              return (
-                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-blue-500"><ShoppingCart size={40} /></div>
-                    <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
-                    <p className="text-gray-500 font-medium">Schalte neue Welten frei!</p>
-                    <p className="text-sm font-bold text-blue-600 mt-2">Themes im Besitz: {ownedThemeCount} / {maxOwnedThemesAllowed}</p>
-                    {extraThemeSlots > 0 && <p className="text-xs font-bold text-emerald-600 mt-1">+{extraThemeSlots} Extra-Theme-Slots aus dem Abenteuerbuch</p>}
-                  </div>
+              const renderThemeRow = (t) => {
+                const seasonal = isSeasonalTheme(t);
+                const season = seasonal ? SEASONS[t.season] : null;
+                const isOwned = profile.unlockedThemes.includes(t.id);
+                const isClassic = t.id === 'classic';
+                const blockedBySlots = !seasonal && atThemeLimit;
+                const buyable = seasonal ? isThemeInShop(t) : true;
+                const canBuy = profile.coins >= t.price && !blockedBySlots && buyable;
 
-                  <div className="mb-4 bg-fuchsia-50 rounded-2xl border-2 border-fuchsia-200 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-left">
-                        <div className="font-black text-fuchsia-900 text-lg">Überraschungskiste</div>
-                        <div className="text-xs font-bold text-fuchsia-700 mt-1">Schon gesammelt: {surpriseRewardIds.length} / {SURPRISE_REWARDS.length}</div>
+                return (
+                  <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${isOwned ? 'bg-green-50 border-green-200' : seasonal ? 'bg-white border-fuchsia-200' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-2xl ${t.deviceBg}`}>{t.icon}</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-gray-800 truncate">{t.name}</div>
+                        {!isOwned && <div className="text-sm font-bold text-yellow-600 flex items-center gap-1">{t.price} 🪙</div>}
+                        {isOwned && <div className="text-sm font-bold text-green-600 flex items-center gap-1"><Check size={20} strokeWidth={3}/></div>}
+                        {season && !isOwned && <div className="text-[11px] font-bold text-fuchsia-600">nur bis {formatMonthDay(season.to)}</div>}
                       </div>
-                      <button
-                        onClick={buySurpriseBox}
-                        disabled={profile.coins < SURPRISE_BOX_PRICE || allBoxesOpened}
-                        className={`shrink-0 rounded-2xl px-4 py-3 font-black transition-all ${profile.coins >= SURPRISE_BOX_PRICE && !allBoxesOpened ? 'bg-fuchsia-500 hover:bg-fuchsia-600 text-white shadow-[0_6px_0_0_rgb(192,38,211)] active:shadow-none active:translate-y-2' : 'bg-gray-200 text-gray-400'}`}
-                      >
-                        🎁 {SURPRISE_BOX_PRICE} 🪙
-                      </button>
                     </div>
-                    {allBoxesOpened && <div className="text-xs font-bold text-emerald-700 mt-3">Alle Kisteninhalte wurden bereits gefunden.</div>}
-                    {ownedPets.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {ownedPets.map((pet) => (
-                          <button key={pet.id} onClick={() => activatePet(pet.id)} className={`px-3 py-2 rounded-xl font-bold text-sm transition-colors ${activePet?.id === pet.id ? 'bg-emerald-200 text-emerald-900' : 'bg-white text-gray-700 hover:bg-emerald-50'}`}>
-                            {pet.icon} {pet.name}
+
+                    {!isOwned ? (
+                      <button
+                        onClick={() => buyTheme(t)}
+                        disabled={!canBuy}
+                        aria-label="Theme kaufen"
+                        title={canBuy ? 'Kaufen' : blockedBySlots ? `Maximal ${maxOwnedThemesAllowed} Themes gleichzeitig` : 'Nicht genug Münzen'}
+                        className={`shrink-0 w-10 h-10 rounded-lg font-bold shadow-sm flex items-center justify-center transition-all ${canBuy ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
+                      >
+                        {canBuy ? <ShoppingCart size={16}/> : <Lock size={16}/>}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={() => changeTheme(t.id)} className={`px-4 py-2 rounded-lg font-bold transition-all ${currentThemeId === t.id ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                          {currentThemeId === t.id ? 'Aktiv' : 'Wählen'}
+                        </button>
+                        {!isClassic && (
+                          <button
+                            onClick={() => sellTheme(t)}
+                            aria-label="Theme verkaufen"
+                            className="w-10 h-10 rounded-lg font-bold transition-all bg-yellow-100 text-yellow-800 hover:bg-yellow-200 flex items-center justify-center"
+                            title={`Verkaufen für ${Math.floor(t.price * 0.5)} Münzen`}
+                          >
+                            💸
                           </button>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
+                );
+              };
 
-                  <div className="flex-1 overflow-y-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 mb-6 space-y-3">
-                    {Object.values(THEMES).sort((a, b) => a.price - b.price).map(t => {
-                      const isOwned = profile.unlockedThemes.includes(t.id);
-                      const isClassic = t.id === 'classic';
-                      const canAfford = profile.coins >= t.price;
-                      const canBuy = canAfford && !atThemeLimit;
+              return (
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                  <div className="text-center mb-4">
+                    <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-blue-500"><ShoppingCart size={32} /></div>
+                    <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
+                    <p className="text-sm font-bold text-blue-600 mt-1">Themes im Besitz: {ownedRegularThemeCount} / {maxOwnedThemesAllowed}</p>
+                    {extraThemeSlots > 0 && <p className="text-xs font-bold text-emerald-600">+{extraThemeSlots} Extra-Slots aus dem Abenteuerbuch</p>}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-1">
+                    {/* --- SAISON --- */}
+                    {seasonalThemes.length > 0 && (
+                      <div className="bg-fuchsia-50 rounded-2xl border-2 border-fuchsia-200 p-4">
+                        <div className="font-black text-fuchsia-900 mb-1">{SEASONS[seasonalThemes[0].season].icon} {SEASONS[seasonalThemes[0].season].name}</div>
+                        <p className="text-xs font-bold text-fuchsia-700 mb-3">Nur in dieser Jahreszeit im Shop! Saison-Themes brauchen keinen Theme-Slot.</p>
+                        <div className="space-y-3">
+                          {seasonalThemes.map(renderThemeRow)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* --- KISTEN --- */}
+                    <div className="bg-fuchsia-50 rounded-2xl border-2 border-fuchsia-200 p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-left min-w-0">
+                          <div className="font-black text-fuchsia-900">Überraschungskiste</div>
+                          <div className="text-xs font-bold text-fuchsia-700">Gesammelt: {surpriseRewardIds.length} / {SURPRISE_REWARDS.length}</div>
+                        </div>
+                        <button
+                          onClick={buySurpriseBox}
+                          disabled={profile.coins < SURPRISE_BOX_PRICE || allBoxesOpened}
+                          className={`shrink-0 rounded-2xl px-4 py-3 font-black transition-all ${profile.coins >= SURPRISE_BOX_PRICE && !allBoxesOpened ? 'bg-fuchsia-500 hover:bg-fuchsia-600 text-white shadow-[0_6px_0_0_rgb(192,38,211)] active:shadow-none active:translate-y-2' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                          🎁 {SURPRISE_BOX_PRICE} 🪙
+                        </button>
+                      </div>
+                      {allBoxesOpened && <div className="text-xs font-bold text-emerald-700">Alle Tiere und Knöpfe sind gefunden!</div>}
+
+                      <div className="flex items-center justify-between gap-3 border-t-2 border-fuchsia-100 pt-3">
+                        <div className="text-left min-w-0">
+                          <div className="font-black text-orange-900">Leckerli-Kiste</div>
+                          <div className="text-xs font-bold text-orange-700">{TREATS_PER_BOX} Leckerli - du hast {treats}</div>
+                        </div>
+                        <button
+                          onClick={buyTreatBox}
+                          disabled={profile.coins < TREAT_BOX_PRICE}
+                          className={`shrink-0 rounded-2xl px-4 py-3 font-black transition-all ${profile.coins >= TREAT_BOX_PRICE ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-[0_6px_0_0_rgb(234,88,12)] active:shadow-none active:translate-y-2' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                          🍖 {TREAT_BOX_PRICE} 🪙
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* --- TIER-ZUBEHÖR --- */}
+                    {ownedPets.length > 0 && (
+                      <div className="bg-emerald-50 rounded-2xl border-2 border-emerald-200 p-4">
+                        <div className="font-black text-emerald-900 mb-1">🐾 Tier-Zubehör</div>
+                        <p className="text-xs font-bold text-emerald-700 mb-3">Im Gehege ziehst du es deinen Tieren an.</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {PET_ACCESSORIES.map((acc) => {
+                            const owned = ownedAccessoryIds.includes(acc.id);
+                            const canBuy = !owned && profile.coins >= acc.price;
+                            return (
+                              <button
+                                key={acc.id}
+                                onClick={() => buyAccessory(acc)}
+                                disabled={owned || !canBuy}
+                                title={owned ? acc.name + ' (gekauft)' : acc.name + ' für ' + acc.price + ' Münzen'}
+                                className={`rounded-xl p-2 border-2 flex flex-col items-center gap-0.5 transition-all ${owned ? 'bg-green-100 border-green-300' : canBuy ? 'bg-white border-emerald-200 hover:bg-emerald-100 active:scale-95' : 'bg-gray-100 border-gray-200 opacity-60'}`}
+                              >
+                                <span className="text-2xl leading-none">{acc.icon}</span>
+                                <span className="text-[10px] font-bold text-gray-600 truncate w-full text-center">{acc.name}</span>
+                                <span className={`text-[10px] font-black ${owned ? 'text-green-700' : 'text-yellow-600'}`}>{owned ? 'gekauft' : acc.price + ' 🪙'}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* --- THEMES --- */}
+                    <div className="bg-gray-50 rounded-2xl p-4 border-2 border-gray-100 space-y-3">
+                      {regularThemes.map(renderThemeRow)}
+                      {keptSeasonalThemes.map(renderThemeRow)}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => { playClick(); setScreen('start'); }}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+                    aria-label="Zurück zur Startseite"
+                    title="Zurück"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                </div>
+              );
+            }
+
+            if (screen === 'pets') {
+              return (
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                  <div className="text-center mb-3">
+                    <h2 className="text-3xl font-extrabold text-gray-800">Tier-Gehege</h2>
+                    <p className="text-gray-500 font-medium text-sm">Antippen für Kunststücke, füttern für neue Stufen.</p>
+                  </div>
+
+                  {/* Alle Tiere laufen gleichzeitig herum. Die Bahnen werden hier per
+                      Inline-Stil gesetzt, weil die Kiste flacher ist als im Menü. Die
+                      negative animation-delay verteilt sie sofort über die Wiese -
+                      ohne sie würden alle gemeinsam links am Rand starten. */}
+                  <div className="relative h-36 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-b from-sky-200 to-emerald-200 border-2 border-emerald-300 mb-3">
+                    {ownedPets.map((pet, index) => renderPetCompanion(pet, {
+                      sizeClass: 'text-3xl',
+                      bubbleAbove: true,
+                      style: { bottom: (4 + (index % 4) * 24) + 'px', animationDelay: '-' + (index * 3.1).toFixed(1) + 's' }
+                    }))}
+                  </div>
+
+                  <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl px-3 py-2 mb-3 flex items-center justify-between gap-2">
+                    <span className="font-bold text-orange-900 text-sm shrink-0">Leckerli: <span className="font-black">{treats}</span> 🍖</span>
+                    <span className="text-[11px] font-bold text-orange-700 text-right">aus Rängen, perfekten Runden und dem Shop</span>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-4">
+                    {ownedPets.map((pet) => {
+                      const levelInfo = getPetLevel(petLevels[pet.id] || 0);
+                      const isActive = activePet && activePet.id === pet.id;
+                      const wornId = petOutfits[pet.id] || null;
+
                       return (
-                        <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${isOwned ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
+                        <div key={pet.id} className={`rounded-2xl border-2 p-3 ${isActive ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50 border-gray-200'}`}>
                           <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${t.deviceBg}`}>{t.icon}</div>
-                            <div>
-                              <div className="font-bold text-gray-800">{t.name}</div>
-                              {!isOwned && <div className="text-sm font-bold text-yellow-600 flex items-center gap-1">{t.price} 🪙</div>}
-                              {isOwned && <div className="text-sm font-bold text-green-600 flex items-center gap-1"><Check size={20} strokeWidth={3}/></div>}
+                            <button onClick={() => runPetTrick(pet, false)} className="text-4xl shrink-0 active:scale-90 transition-transform" title="Kunststück!">{pet.icon}</button>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-black text-gray-800 truncate">{pet.name}</div>
+                              <div className="text-[11px] font-bold text-emerald-700">Stufe {levelInfo.level} - {levelInfo.name}{levelInfo.maxed ? ' (max)' : ''}</div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+                                <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: (levelInfo.progress * 100).toFixed(1) + '%' }}></div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1 shrink-0">
+                              <button
+                                onClick={() => activatePet(pet.id)}
+                                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${isActive ? 'bg-emerald-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                              >
+                                {isActive ? 'Dabei' : 'Mitnehmen'}
+                              </button>
+                              <button
+                                onClick={() => feedPet(pet.id)}
+                                disabled={treats < 1 || levelInfo.maxed}
+                                title={levelInfo.maxed ? 'Höchste Stufe erreicht' : treats < 1 ? 'Keine Leckerli übrig' : 'Ein Leckerli füttern'}
+                                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${treats > 0 && !levelInfo.maxed ? 'bg-orange-400 hover:bg-orange-500 text-white' : 'bg-gray-200 text-gray-400'}`}
+                              >
+                                🍖 Füttern
+                              </button>
                             </div>
                           </div>
 
-                          {!isOwned ? (
-                            <button
-                              onClick={() => buyTheme(t)}
-                              disabled={!canBuy}
-                              aria-label="Theme kaufen"
-                              title={canBuy ? 'Kaufen' : atThemeLimit ? `Maximal ${maxOwnedThemesAllowed} Themes gleichzeitig` : 'Nicht genug Münzen'}
-                              className={`w-10 h-10 rounded-lg font-bold shadow-sm flex items-center justify-center transition-all ${canBuy ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
-                            >
-                              {canBuy ? <ShoppingCart size={16}/> : <Lock size={16}/>}
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => changeTheme(t.id)} className={`px-4 py-2 rounded-lg font-bold transition-all ${currentThemeId === t.id ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
-                                {currentThemeId === t.id ? 'Aktiv' : 'Wählen'}
-                              </button>
-                              {!isClassic && (
-                                <button
-                                  onClick={() => sellTheme(t)}
-                                  aria-label="Theme verkaufen"
-                                  className="w-10 h-10 rounded-lg font-bold transition-all bg-yellow-100 text-yellow-800 hover:bg-yellow-200 flex items-center justify-center"
-                                  title={`Verkaufen für ${Math.floor(t.price * 0.5)} Münzen`}
-                                >
-                                  💸
-                                </button>
-                              )}
+                          {ownedAccessoryIds.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {ownedAccessoryIds.map(getAccessoryById).filter(Boolean).map((acc) => {
+                                const wornHere = wornId === acc.id;
+                                const wornElsewhere = !wornHere && Object.keys(petOutfits).some((id) => petOutfits[id] === acc.id);
+                                return (
+                                  <button
+                                    key={acc.id}
+                                    onClick={() => dressPet(pet.id, acc.id)}
+                                    title={wornHere ? acc.name + ' abnehmen' : wornElsewhere ? acc.name + ' hierher umhängen' : acc.name + ' anziehen'}
+                                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center border-2 transition-all ${wornHere ? 'bg-emerald-200 border-emerald-400 scale-105' : wornElsewhere ? 'bg-white border-gray-200 opacity-40' : 'bg-white border-gray-200 hover:bg-emerald-50'}`}
+                                  >
+                                    {acc.icon}
+                                  </button>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -1558,7 +2469,7 @@
             }
 
             if (screen === 'highscores') {
-              const topScores = highscores.filter(h => Number(h.level) === Number(level) && (h.mode || 'normal') === gameMode).slice(0, 10);
+              const topScores = highscores.filter(h => sameLevel(h.level, level) && (h.mode || 'normal') === effectiveGameMode).slice(0, 10);
 
               return (
                 <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
@@ -1568,22 +2479,15 @@
 
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-center gap-1 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
-                        {[
-                          { id: 0, label: 'K' },
-                          { id: 0.5, label: 'S' },
-                          { id: 1, label: '1' },
-                          { id: 2, label: '2' },
-                          { id: 3, label: '3' },
-                          { id: 4, label: '4' }
-                        ].map(l => (
-                          <button key={l.id} onClick={() => { playClick(); setLevel(l.id); }} className={`w-10 h-10 rounded-lg font-bold transition-all ${level === l.id ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>
+                        {LEVELS.map(l => (
+                          <button key={l.id} onClick={() => { playClick(); setLevel(l.id); }} title={l.desc} className={`w-9 h-9 rounded-lg font-bold transition-all ${sameLevel(level, l.id) ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>
                             {l.label}
                           </button>
                         ))}
                       </div>
                       <div className="flex justify-center gap-1 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
-                        <button onClick={() => { playClick(); setGameMode('normal'); }} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${gameMode === 'normal' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>Normal</button>
-                        <button onClick={() => { playClick(); setGameMode('gap'); }} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${gameMode === 'gap' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>Lücken</button>
+                        <button onClick={() => { playClick(); setGameMode('normal'); }} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${effectiveGameMode === 'normal' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>Normal</button>
+                        <button onClick={() => { playClick(); setGameMode('gap'); }} disabled={getLevelInfo(level).noGap} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${getLevelInfo(level).noGap ? 'text-gray-300' : effectiveGameMode === 'gap' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}>Lücken</button>
                       </div>
                     </div>
                   </div>
@@ -1621,7 +2525,7 @@
             if (screen === 'result') {
               const isBoxRewardResult = Boolean(roundRewards.boxReward);
               const finalDisplayedScore = score + roundRewards.unusedBonusPoints;
-              const earnedBadge = getBadge(finalDisplayedScore, gameMode);
+              const earnedBadge = getBadge(finalDisplayedScore, effectiveGameMode);
 
               return (
                 <div className="bg-white rounded-[2rem] shadow-2xl w-full p-8 text-center animate-pop-in flex flex-col max-h-full overflow-y-auto">
@@ -1640,7 +2544,7 @@
                     <div className="bg-sky-50 rounded-3xl p-6 mb-4 border-2 border-sky-100 relative">
                       <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3"><Medal size={40} className="text-yellow-500 drop-shadow-md" /></div>
                       <div className="text-6xl font-black text-gray-800 mb-2">{finalDisplayedScore}</div>
-                      <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">Punkte (Lvl {level === 0 ? 'K' : level})</div>
+                      <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">Punkte (Lvl {getLevelInfo(level).label})</div>
                     </div>
                   )}
 
@@ -1659,6 +2563,13 @@
                       </div>
                     )}
 
+                    {roundRewards.treats > 0 && (
+                      <div className="flex-1 bg-orange-50 rounded-2xl p-3 border border-orange-200 flex flex-col items-center justify-center animate-pop-in">
+                        <div className="text-sm font-bold text-orange-800 mb-1">Leckerli</div>
+                        <div className="font-black text-xl text-orange-600 flex items-center gap-1">+{roundRewards.treats} 🍖</div>
+                      </div>
+                    )}
+
                     {roundRewards.sticker && (
                       <div className="flex-1 bg-pink-50 rounded-2xl p-3 border border-pink-200 flex flex-col items-center justify-center animate-pop-in" style={{ animationDelay: '0.5s' }}>
                         <div className="text-sm font-bold text-pink-800 mb-1">Neuer Sticker!</div>
@@ -1666,6 +2577,44 @@
                       </div>
                     )}
                   </div>
+
+                  {/* --- RANGLEITER --- */}
+                  {!isBoxRewardResult && (
+                    <div className="bg-indigo-50 rounded-2xl p-4 mb-4 border-2 border-indigo-100 text-left">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="font-black text-indigo-900 text-sm flex items-center gap-2 min-w-0">
+                          <span className="text-lg shrink-0">{rankInfo.icon}</span>
+                          <span className="truncate">Rang {rankInfo.rank} - {rankInfo.title}</span>
+                        </span>
+                        <span className="text-xs font-black text-indigo-600 shrink-0">+{roundRewards.xpGained} XP</span>
+                      </div>
+                      <div className="h-2.5 bg-indigo-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full transition-all duration-700" style={{ width: (rankInfo.progress * 100).toFixed(1) + '%' }}></div>
+                      </div>
+                      <div className="text-[11px] font-bold text-indigo-500 mt-1">
+                        Noch {Math.max(0, rankInfo.need - rankInfo.into)} XP bis Rang {rankInfo.rank + 1}
+                      </div>
+                    </div>
+                  )}
+
+                  {roundRewards.rankUps.length > 0 && (
+                    <div className="bg-indigo-100 rounded-2xl p-4 mb-4 border-2 border-indigo-300 animate-pop-in text-left">
+                      <div className="font-black text-indigo-900 mb-2 text-center">🎉 Rangaufstieg!</div>
+                      {roundRewards.rankUps.map((up) => (
+                        <div key={up.rank} className="font-bold text-indigo-800 text-sm">
+                          {up.icon} Rang {up.rank}: {up.title} <span className="text-yellow-700">+{up.coins} 🪙</span> <span className="text-orange-700">+{up.treats} 🍖</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {roundRewards.petLevelUp && (
+                    <div className="bg-emerald-50 rounded-2xl p-4 mb-4 border-2 border-emerald-300 animate-pop-in">
+                      <div className="text-4xl mb-1">{roundRewards.petLevelUp.icon}</div>
+                      <div className="font-black text-emerald-900">{roundRewards.petLevelUp.name} ist jetzt Stufe {roundRewards.petLevelUp.level}!</div>
+                      <div className="text-sm font-bold text-emerald-700">{roundRewards.petLevelUp.title} - findet jetzt öfter Münzen.</div>
+                    </div>
+                  )}
 
                   {(roundRewards.unusedBonusPoints > 0 || roundRewards.worldRewardCoins > 0 || roundRewards.unlockedWorlds.length > 0 || roundRewards.boxReward) && (
                     <div className="bg-amber-50 rounded-2xl p-4 mb-6 border-2 border-amber-200 shadow-sm text-left">
@@ -1693,6 +2642,24 @@
             }
 
             if (screen === 'game') {
+              // Fragetext und Rechnung für das Euro-Level.
+              let moneyQuestion = '';
+              let moneyExpression = '';
+              if (problem.kind === 'money') {
+                const itemA = problem.itemA || MONEY_ITEMS[0];
+                const itemB = problem.itemB || MONEY_ITEMS[1];
+                if (problem.moneyType === 'sum') {
+                  moneyQuestion = 'Was kostet alles zusammen?';
+                  moneyExpression = itemA.icon + ' ' + formatCents(problem.aCents) + '  +  ' + itemB.icon + ' ' + formatCents(problem.bCents);
+                } else if (problem.moneyType === 'change') {
+                  moneyQuestion = itemA.name + ' kostet ' + formatCents(problem.aCents) + '. Du zahlst mit ' + formatCents(problem.bCents) + '. Wie viel Rückgeld?';
+                  moneyExpression = formatCents(problem.bCents) + '  -  ' + formatCents(problem.aCents);
+                } else {
+                  moneyQuestion = 'Du kaufst ' + problem.times + ' x ' + itemA.name + '.';
+                  moneyExpression = problem.times + ' x ' + itemA.icon + ' ' + formatCents(problem.aCents);
+                }
+              }
+
               return (
                 <div className={`${theme.deviceBg} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full border-8 ${theme.deviceBorder} overflow-hidden flex flex-col transition-colors duration-500 ${feedback === 'error' || feedback === 'fatal' ? 'animate-shake' : ''}`}>
                   <div className={`${theme.bandBg} py-2 px-6 flex justify-between items-center text-gray-300 transition-colors duration-500`}>
@@ -1707,14 +2674,14 @@
                   <div className={`relative p-4 sm:p-6 ${theme.deviceBg} transition-colors duration-500`}>
                     <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 zs-display flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
                       <div className="flex justify-between items-start text-gray-800 font-mono text-xs sm:text-sm font-bold opacity-70 z-10">
-                        <div>Lvl{level === 0 ? 'K' : level} {gameMode === 'gap' ? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
+                        <div>Lvl {getLevelInfo(level).label} {effectiveGameMode === 'gap' ? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
                         <div className="flex items-center gap-2">
                           {streak >= 3 && <span className="text-orange-600 animate-pulse drop-shadow-sm" title={`${streak} in Folge richtig!`}>🔥 x{streak}</span>}
                           <div>Pkte: {score}</div>
                         </div>
                       </div>
 
-                      {!feedback && (
+                      {!feedback && problem.kind === 'arith' && (
                         <div className="absolute top-[35%] left-3 sm:left-6 transform -translate-y-1/2 text-4xl sm:text-5xl animate-float opacity-50 z-0 pointer-events-none">{problem.icon}</div>
                       )}
 
@@ -1743,7 +2710,7 @@
                         <div className={`absolute inset-0 flex flex-col items-center justify-center ${theme.displayBg} z-20 animate-pop-in`}>
                           <div className="text-5xl mb-1">{theme.emojis.fatal}</div>
                           <div className="font-bold text-lg text-gray-800">Die Lösung ist:</div>
-                          <div className="font-mono text-4xl text-red-800 font-black">{getExpectedAnswer()}</div>
+                          <div className="font-mono text-4xl text-red-800 font-black">{formatSolution()}</div>
                         </div>
                       )}
 
@@ -1751,17 +2718,39 @@
                         <div className={`absolute inset-0 flex flex-col items-center justify-center ${theme.displayBg} z-20 animate-pop-in`}>
                           <div className="text-6xl mb-1">⭐</div>
                           <div className="font-bold text-lg text-amber-900 uppercase tracking-widest">Weiter geht's</div>
-                          <div className="font-mono text-4xl text-amber-900 font-black mt-1">{getExpectedAnswer()}</div>
+                          <div className="font-mono text-4xl text-amber-900 font-black mt-1">{formatSolution()}</div>
                         </div>
                       )}
 
-                      <div className={`text-right font-mono text-4xl sm:text-5xl font-black text-gray-800 tracking-tight z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
-                        {problem.missingPart === 'num1' ? renderPlaceholder() : problem.num1}
-                        {' '}{getOpSymbol(problem.op)}{' '}
-                        {problem.missingPart === 'num2' ? renderPlaceholder() : problem.num2}
-                        <br className="sm:hidden" /> = {' '}
-                        {problem.missingPart === 'answer' ? renderPlaceholder() : problem.answer}
-                      </div>
+                      {problem.kind === 'clock' && (
+                        <div className={`flex items-center justify-between gap-2 z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
+                          <AnalogClock hour={problem.hour} minute={problem.minute} size={compact ? 88 : 108} />
+                          <div className="text-right">
+                            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Wie viel Uhr ist es?</div>
+                            <div className="font-mono text-4xl sm:text-5xl font-black text-blue-700 tracking-tight">{formatTimeInput(userAnswer)}</div>
+                            <div className="text-[10px] font-bold text-gray-500">immer 4 Ziffern (z.B. 0 7 3 0)</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {problem.kind === 'money' && (
+                        <div className={`z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
+                          <div className="text-[11px] font-bold text-gray-700 leading-snug text-left">{moneyQuestion}</div>
+                          <div className="font-mono text-xl sm:text-2xl font-black text-gray-800 text-right">{moneyExpression}</div>
+                          <div className="font-mono text-3xl sm:text-4xl font-black text-blue-700 text-right leading-tight">= {formatMoneyInput(userAnswer)}</div>
+                          <div className="text-[10px] font-bold text-gray-500 text-right">in Cent tippen (2,00 € = 200)</div>
+                        </div>
+                      )}
+
+                      {problem.kind !== 'clock' && problem.kind !== 'money' && (
+                        <div className={`text-right font-mono text-4xl sm:text-5xl font-black text-gray-800 tracking-tight z-10 mt-auto ${feedback ? 'opacity-0' : 'opacity-100'}`}>
+                          {problem.missingPart === 'num1' ? renderPlaceholder() : problem.num1}
+                          {' '}{getOpSymbol(problem.op)}{' '}
+                          {problem.missingPart === 'num2' ? renderPlaceholder() : problem.num2}
+                          <br className="sm:hidden" /> = {' '}
+                          {problem.missingPart === 'answer' ? renderPlaceholder() : problem.answer}
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -1777,17 +2766,18 @@
                       </button>
                     </div>
 
-                    <div className="zs-menu mt-8 relative flex items-center justify-center">
-                      {/* Spielzeug-Knöpfe. Lagen früher (in Prozent) über der Anzeige und
-                          verdeckten dort die Aufgabe - vor allem auf kleinen Displays.
-                          Absolut positioniert brauchen sie hier keine zusätzliche Höhe. */}
+                    {/* Spielzeug-Knöpfe. Lagen früher (in Prozent) über der Anzeige und
+                        verdeckten dort die Aufgabe - vor allem auf kleinen Displays.
+                        Eine Reihe mit dem Menü-Knopf: absolut positioniert würden sich
+                        die inzwischen fünf Knöpfe mit der Menü-Schrift überlappen. */}
+                    <div className={`zs-menu mt-8 flex items-center gap-2 ${ownedToyButtons.length > 0 ? 'justify-between' : 'justify-center'}`}>
                       {ownedToyButtons.length > 0 && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {ownedToyButtons.map((reward) => (
                             <button
                               key={reward.id}
                               onClick={() => playToyButtonReward(reward)}
-                              className="w-9 h-9 rounded-full bg-white/85 border-2 border-white shadow-lg text-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+                              className="w-8 h-8 rounded-full bg-white/85 border-2 border-white shadow-lg text-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
                               title={reward.name}
                               aria-label={reward.name}
                             >
@@ -1796,7 +2786,7 @@
                           ))}
                         </div>
                       )}
-                      <button onClick={() => { playClick(); setScreen('start'); }} className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors font-bold uppercase tracking-wider text-sm">
+                      <button onClick={() => { playClick(); setScreen('start'); }} className="shrink-0 text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors font-bold uppercase tracking-wider text-sm">
                         <ArrowLeft size={18} /> Menü
                       </button>
                     </div>
