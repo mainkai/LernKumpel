@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZahlenSafari</title>
+    <!-- "Zum Startbildschirm hinzufügen" öffnet die App dann ohne Browser-Leiste -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#bae6fd">
     
     <!-- Tailwind CSS: fertiges Stylesheet statt CDN-Compiler.
          Der CDN-Compiler (cdn.tailwindcss.com) ist modernes JS (ES2020) und scheitert
@@ -101,6 +105,39 @@
         
         /* Verhindert Pull-to-Refresh auf mobilen Browsern */
         body { overscroll-behavior-y: none; }
+
+        /* Kein Doppeltipp-Zoom: Kinder tippen schnell auf die Zahlentasten. */
+        html { touch-action: manipulation; -ms-touch-action: manipulation; }
+
+        /* ------------------------------------------------------------------ *
+         * Kompakter Modus: greift automatisch auf kleinen Displays (z. B.
+         * 360x640 CSS-Pixel). Ohne das würde die feste Design-Höhe die
+         * Skalierung bestimmen und die App nur ~60% des Schirms nutzen.
+         * ------------------------------------------------------------------ */
+        .zs-compact .zs-key {
+          aspect-ratio: auto;
+          height: 5.25rem;
+        }
+        /* Der Quadrat-Fallback für alte Browser muss hier ebenfalls weichen. */
+        .zs-compact .zs-key::before { content: none; padding-bottom: 0; }
+        .zs-compact .zs-display { height: 9rem; }
+        .zs-compact .zs-stage { padding-top: 3.5rem; }
+        .zs-compact .zs-menu { margin-top: 1rem; }
+        .zs-compact .zs-card { padding: 1.25rem; }
+
+        /* Die sm:-Varianten hängen an der Fensterbreite, die Design-Fläche ist aber
+           immer 448px breit. Auf breiten, flachen Fenstern (Laptop, Handy quer)
+           würden sie den Inhalt aufblähen und unten abschneiden - im kompakten
+           Modus gilt darum überall der Grundwert. */
+        @media (min-width: 640px) {
+          .zs-compact .sm\:p-6 { padding: 1rem; }
+          .zs-compact .sm\:px-4 { padding-left: 0.5rem; padding-right: 0.5rem; }
+          .zs-compact .sm\:gap-4 { gap: 0.75rem; }
+          .zs-compact .sm\:left-6 { left: 0.75rem; }
+          .zs-compact .sm\:text-sm { font-size: 0.75rem; line-height: 1rem; }
+          .zs-compact .sm\:text-4xl { font-size: 1.875rem; line-height: 2.25rem; }
+          .zs-compact .sm\:text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
+        }
     </style>
 
     <!-- Alte Browser: Fehler sichtbar machen (statt weißer Seite) + fehlende
@@ -225,6 +262,8 @@
         const BookOpen = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
         const Lock = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
         const Unlock = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>;
+        const Maximize = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M21 16v3a2 2 0 0 1-2 2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
+        const Minimize = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 8h3a2 2 0 0 0 2-2V3"></path><path d="M21 8h-3a2 2 0 0 1-2-2V3"></path><path d="M16 21v-3a2 2 0 0 1 2-2h3"></path><path d="M8 21v-3a2 2 0 0 0-2-2H3"></path></svg>;
         const Users = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 
         // --- FIREBASE SETUP ---
@@ -499,31 +538,83 @@
         }
 
         // --- GLOBALER SKALIERUNGS-HOOK ---
+        // Die App wird in einer festen "Design-Fläche" gebaut und als Ganzes skaliert.
+        // Die Breite ist fix (448), die HÖHE richtet sich nach dem Fenster - sonst
+        // bestimmt auf schmalen Handys die Design-Höhe die Skalierung und links und
+        // rechts bleiben große leere Ränder (auf 360x584 z. B. nur 61% Größe).
+        const DESIGN_WIDTH = 448;
+        const DESIGN_HEIGHT_MIN = 740;  // so flach darf es maximal werden (kompakter Modus)
+        const DESIGN_HEIGHT_MAX = 970;  // große Schirme: 970 statt 920, sonst wird der
+                                        // "Menü"-Knopf unter dem Ziffernblock abgeschnitten
+        const COMPACT_BELOW = 830;      // ab hier flachere Tasten/Anzeige
+
         function useAppScale() {
           const { useState, useEffect } = React;
-          const [scale, setScale] = useState(1);
+
+          const measure = () => {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            // 1. So groß wie es die Breite erlaubt ...
+            let scale = Math.min(winW / DESIGN_WIDTH, 1.2);
+            // 2. ... und die Design-Höhe füllt genau das Fenster.
+            let height = winH / scale;
+
+            if (height < DESIGN_HEIGHT_MIN) {
+              // Fenster ist zu flach: doch über die Höhe skalieren.
+              scale = winH / DESIGN_HEIGHT_MIN;
+              height = DESIGN_HEIGHT_MIN;
+            } else if (height > DESIGN_HEIGHT_MAX) {
+              // Sehr hohes Fenster (Desktop): nicht endlos strecken, mittig zentrieren.
+              height = DESIGN_HEIGHT_MAX;
+            }
+
+            return { scale, height: Math.round(height), compact: height < COMPACT_BELOW };
+          };
+
+          const [layout, setLayout] = useState(measure);
 
           useEffect(() => {
-            const updateScale = () => {
-              const CANVAS_WIDTH = 448;
-              const CANVAS_HEIGHT = 920;
-              const padding = 32;
-
-              const winW = window.innerWidth;
-              const winH = window.innerHeight;
-
-              const scaleW = winW / (CANVAS_WIDTH + padding);
-              const scaleH = winH / (CANVAS_HEIGHT + padding);
-
-              setScale(Math.min(scaleW, scaleH, 1.2));
+            const update = () => setLayout(measure());
+            update();
+            window.addEventListener('resize', update);
+            window.addEventListener('orientationchange', update);
+            return () => {
+              window.removeEventListener('resize', update);
+              window.removeEventListener('orientationchange', update);
             };
-
-            updateScale();
-            window.addEventListener('resize', updateScale);
-            return () => window.removeEventListener('resize', updateScale);
           }, []);
 
-          return scale;
+          return layout;
+        }
+
+        // --- VOLLBILD ---
+        function useFullscreen() {
+          const { useState, useEffect, useCallback } = React;
+          const el = document.documentElement;
+          const supported = !!(el.requestFullscreen || el.webkitRequestFullscreen);
+          const [isFullscreen, setIsFullscreen] = useState(false);
+
+          useEffect(() => {
+            const onChange = () => setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+            document.addEventListener('fullscreenchange', onChange);
+            document.addEventListener('webkitfullscreenchange', onChange);
+            return () => {
+              document.removeEventListener('fullscreenchange', onChange);
+              document.removeEventListener('webkitfullscreenchange', onChange);
+            };
+          }, []);
+
+          const toggle = useCallback(() => {
+            const active = document.fullscreenElement || document.webkitFullscreenElement;
+            const run = active
+              ? (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+              : (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+            // Alte Browser geben nichts zurück, neue ein Promise (kann abgelehnt werden).
+            if (run && run.catch) run.catch(() => {});
+          }, []);
+
+          return { isFullscreen, supported, toggle };
         }
 
         // --- HAUPTKOMPONENTE ---
@@ -1092,7 +1183,7 @@
 
           const getOpSymbol = (op) => { switch(op) { case '*': return '×'; case '/': return '÷'; default: return op; } };
           const renderCalculatorButton = (label, onClick, customClass = null) => (
-            <button key={label} onClick={onClick} className={`aspect-square rounded-xl text-3xl sm:text-4xl font-black flex items-center justify-center transition-all active:translate-y-2 active:shadow-none ${customClass ? customClass : theme.btnDefault}`}>
+            <button key={label} onClick={onClick} className={`zs-key aspect-square rounded-xl text-3xl sm:text-4xl font-black flex items-center justify-center transition-all active:translate-y-2 active:shadow-none ${customClass ? customClass : theme.btnDefault}`}>
               {label}
             </button>
           );
@@ -1110,20 +1201,34 @@
               <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
                 <button onClick={() => { setActiveProfileId(null); setScreen('profile_select'); playClick(); }} className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up">
                   <span className="text-2xl">{profile.avatar}</span>
-                  <span className="font-bold text-gray-800 hidden sm:inline">{profile.name}</span>
+                  {/* Früher hidden sm:inline - der Name war auf Handys immer versteckt,
+                      obwohl die Design-Fläche (448px) genug Platz hat. */}
+                  <span className="font-bold text-gray-800 max-w-[7rem] truncate">{profile.name}</span>
                   <Users size={16} className="text-sky-500 ml-1" />
                 </button>
-                <div className="bg-yellow-400 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200 animate-slide-up">
-                  <span className="font-black text-yellow-900 text-lg">{profile.coins}</span>
-                  <span className="text-xl">🪙</span>
+                <div className="flex items-center gap-2">
+                  {fullscreen.supported && (
+                    <button
+                      onClick={() => { playClick(); fullscreen.toggle(); }}
+                      className="bg-white/90 rounded-full p-2.5 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up text-gray-700"
+                      title={fullscreen.isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
+                      aria-label={fullscreen.isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
+                    >
+                      {fullscreen.isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+                    </button>
+                  )}
+                  <div className="bg-yellow-400 rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-yellow-200 animate-slide-up">
+                    <span className="font-black text-yellow-900 text-lg">{profile.coins}</span>
+                    <span className="text-xl">🪙</span>
+                  </div>
                 </div>
               </div>
             );
           };
 
-          const appScale = useAppScale();
-          const CANVAS_WIDTH = 448;
-          const CANVAS_HEIGHT = 920;
+          const { scale: appScale, height: CANVAS_HEIGHT, compact } = useAppScale();
+          const CANVAS_WIDTH = DESIGN_WIDTH;
+          const fullscreen = useFullscreen();
 
           const renderScreenContent = () => {
             if (isLoadingProfile || screen === 'loading') {
@@ -1198,7 +1303,7 @@
 
             if (screen === 'start') {
               return (
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 text-center relative overflow-hidden transition-colors duration-500 flex flex-col max-h-full">
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 text-center relative overflow-hidden transition-colors duration-500 flex flex-col max-h-full">
                   <div className={`absolute top-0 left-0 w-full h-32 ${theme.deviceBg} rounded-b-[50%] -translate-y-10 transition-colors duration-500`}></div>
                   {activePet && (
                     <button
@@ -1264,7 +1369,7 @@
               const allBoxesOpened = surpriseRewardIds.length >= SURPRISE_REWARDS.length;
 
               return (
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
                   <div className="text-center mb-6">
                     <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-blue-500"><ShoppingCart size={40} /></div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Shop</h2>
@@ -1362,7 +1467,7 @@
 
             if (screen === 'stickers') {
               return (
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
                   <div className="text-center mb-6">
                     <div className="w-20 h-20 mx-auto bg-pink-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-pink-500"><BookOpen size={40} /></div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Stickerheft</h2>
@@ -1404,7 +1509,7 @@
 
             if (screen === 'adventure') {
               return (
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
                   <div className="text-center mb-6">
                     <div className="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-2 shadow-inner text-4xl">⭐</div>
                     <h2 className="text-3xl font-extrabold text-gray-800">Abenteuerbuch</h2>
@@ -1456,7 +1561,7 @@
               const topScores = highscores.filter(h => Number(h.level) === Number(level) && (h.mode || 'normal') === gameMode).slice(0, 10);
 
               return (
-                <div className="bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
+                <div className="zs-card bg-white rounded-[2rem] shadow-2xl w-full p-6 sm:p-8 animate-pop-in flex flex-col max-h-full">
                   <div className="text-center mb-6">
                     <div className="w-20 h-20 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-4xl mb-2 shadow-inner">🏆</div>
                     <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Bestenliste</h2>
@@ -1610,7 +1715,7 @@
                         {reward.icon}
                       </button>
                     ))}
-                    <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
+                    <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 zs-display flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
                       <div className="flex justify-between items-start text-gray-800 font-mono text-xs sm:text-sm font-bold opacity-70 z-10">
                         <div>Lvl{level === 0 ? 'K' : level} {gameMode === 'gap' ? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
                         <div className="flex items-center gap-2">
@@ -1677,12 +1782,12 @@
                       {renderCalculatorButton('4', () => handleInput('4'))} {renderCalculatorButton('5', () => handleInput('5'))} {renderCalculatorButton('6', () => handleInput('6'))}
                       {renderCalculatorButton('1', () => handleInput('1'))} {renderCalculatorButton('2', () => handleInput('2'))} {renderCalculatorButton('3', () => handleInput('3'))}
                       {renderCalculatorButton('C', handleDelete, theme.btnDelete)} {renderCalculatorButton('0', () => handleInput('0'))}
-                      <button onClick={checkAnswer} className={`aspect-square rounded-xl text-2xl font-black flex flex-col items-center justify-center active:translate-y-2 active:shadow-none transition-all ${theme.btnAction}`}>
+                      <button onClick={checkAnswer} className={`zs-key aspect-square rounded-xl text-2xl font-black flex flex-col items-center justify-center active:translate-y-2 active:shadow-none transition-all ${theme.btnAction}`}>
                         <Check size={32} strokeWidth={4} /><span className="text-sm"></span>
                       </button>
                     </div>
 
-                    <div className="mt-8 text-center">
+                    <div className="zs-menu mt-8 text-center">
                       <button onClick={() => { playClick(); setScreen('start'); }} className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors mx-auto font-bold uppercase tracking-wider text-sm">
                         <ArrowLeft size={18} /> Menü
                       </button>
@@ -1706,10 +1811,12 @@
                   transform: `scale(${appScale})`,
                   transformOrigin: 'center'
                 }}
-                className="relative flex flex-col"
+                // shrink-0: ohne das quetscht der Flex-Container die feste
+                // Design-Breite zusammen und die Skalierung wirkt doppelt.
+                className={`relative flex flex-col shrink-0 ${compact ? 'zs-compact' : ''}`}
               >
                 <TopBar />
-                <div className="flex-1 w-full flex flex-col items-center justify-center pt-20 pb-4 px-2 sm:px-4 min-h-0">
+                <div className="zs-stage flex-1 w-full flex flex-col items-center justify-center pt-20 pb-4 px-2 sm:px-4 min-h-0">
                   {renderScreenContent()}
                 </div>
               </div>
