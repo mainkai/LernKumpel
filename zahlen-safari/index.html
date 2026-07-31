@@ -301,9 +301,9 @@
           { id: 'galaxy', name: 'Mondstation', icon: '🚀', accent: 'from-indigo-400 via-slate-800 to-indigo-950', text: 'text-indigo-100', starsRequired: 6, reward: 'Rakete startet ins All', coinReward: 1600, themeSlotReward: 1 }
         ];
         const SURPRISE_REWARDS = [
-          { id: 'toy-whoopee', type: 'button', name: 'Pups-Knopf', icon: '💨', sound: 'whoopee', position: 'left-[4%] top-[18%]' },
-          { id: 'toy-squeak', type: 'button', name: 'Quietsch-Knopf', icon: '🐭', sound: 'squeak', position: 'right-[4%] top-[26%]' },
-          { id: 'toy-honk', type: 'button', name: 'Hup-Knopf', icon: '📯', sound: 'honk', position: 'left-[8%] bottom-[18%]' },
+          { id: 'toy-whoopee', type: 'button', name: 'Pups-Knopf', icon: '💨', sound: 'whoopee' },
+          { id: 'toy-squeak', type: 'button', name: 'Quietsch-Knopf', icon: '🐭', sound: 'squeak' },
+          { id: 'toy-honk', type: 'button', name: 'Hup-Knopf', icon: '📯', sound: 'honk' },
           { id: 'pet-panda', type: 'pet', name: 'Wackel-Panda', icon: '🐼', motionClass: 'animate-pet-wobble', laneClass: 'bottom-28' },
           { id: 'pet-octopus', type: 'pet', name: 'Tanz-Oktopus', icon: '🐙', motionClass: 'animate-pet-roam-right', laneClass: 'bottom-24' },
           { id: 'pet-duck', type: 'pet', name: 'Watschel-Ente', icon: '🦆', motionClass: 'animate-pet-waddle', laneClass: 'bottom-32' },
@@ -1705,16 +1705,6 @@
                   </div>
 
                   <div className={`relative p-4 sm:p-6 ${theme.deviceBg} transition-colors duration-500`}>
-                    {ownedToyButtons.map((reward) => (
-                      <button
-                        key={reward.id}
-                        onClick={() => playToyButtonReward(reward)}
-                        className={`absolute ${reward.position} z-30 w-12 h-12 rounded-full bg-white/85 border-2 border-white shadow-lg text-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform`}
-                        title={reward.name}
-                      >
-                        {reward.icon}
-                      </button>
-                    ))}
                     <div className={`${theme.displayBg} border-8 ${theme.displayBorder} rounded-2xl p-4 shadow-inner relative h-48 zs-display flex flex-col justify-between overflow-hidden transition-colors duration-500`}>
                       <div className="flex justify-between items-start text-gray-800 font-mono text-xs sm:text-sm font-bold opacity-70 z-10">
                         <div>Lvl{level === 0 ? 'K' : level} {gameMode === 'gap' ? '(Lücken)' : ''} | Aufg. {problemsDone + 1}/{MAX_PROBLEMS}</div>
@@ -1787,8 +1777,26 @@
                       </button>
                     </div>
 
-                    <div className="zs-menu mt-8 text-center">
-                      <button onClick={() => { playClick(); setScreen('start'); }} className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors mx-auto font-bold uppercase tracking-wider text-sm">
+                    <div className="zs-menu mt-8 relative flex items-center justify-center">
+                      {/* Spielzeug-Knöpfe. Lagen früher (in Prozent) über der Anzeige und
+                          verdeckten dort die Aufgabe - vor allem auf kleinen Displays.
+                          Absolut positioniert brauchen sie hier keine zusätzliche Höhe. */}
+                      {ownedToyButtons.length > 0 && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                          {ownedToyButtons.map((reward) => (
+                            <button
+                              key={reward.id}
+                              onClick={() => playToyButtonReward(reward)}
+                              className="w-9 h-9 rounded-full bg-white/85 border-2 border-white shadow-lg text-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+                              title={reward.name}
+                              aria-label={reward.name}
+                            >
+                              {reward.icon}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <button onClick={() => { playClick(); setScreen('start'); }} className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors font-bold uppercase tracking-wider text-sm">
                         <ArrowLeft size={18} /> Menü
                       </button>
                     </div>
