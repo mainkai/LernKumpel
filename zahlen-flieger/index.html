@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zahlen-Flieger</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#7dd3fc">
+    <!-- Bewusst ohne Tailwind, React und Babel: reines ES5 + Canvas.
+         Startet dadurch auch auf sehr alten Android-Handys schnell
+         (siehe README, Abschnitt "Alte Handys / alte Browser"). -->
+    <style>
+      html, body { height: 100%; margin: 0; overflow: hidden; background: #bae6fd; }
+      body { font-family: "Trebuchet MS", "Segoe UI", Roboto, sans-serif; color: #0f172a;
+             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+      #game { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+      #overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto;
+                 background: rgba(186, 230, 253, 0.92); padding: 16px; box-sizing: border-box; }
+      #overlay.hidden { display: none; }
+      .card { background: #fff; border-radius: 28px; max-width: 440px; margin: 0 auto; padding: 20px 18px;
+              box-shadow: 0 10px 30px rgba(2, 132, 199, 0.25); text-align: center; }
+      .title { font-size: 34px; font-weight: 900; margin: 0 0 4px; color: #0369a1; }
+      .title span { color: #f59e0b; }
+      .sub { font-size: 15px; font-weight: bold; color: #64748b; margin: 0 0 14px; }
+      .big-emoji { font-size: 64px; line-height: 1; margin: 0 0 8px; }
+      .row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+      .chip { display: inline-block; background: #f1f5f9; border-radius: 999px; padding: 8px 14px; font-weight: 900; font-size: 18px; }
+      .chip.ticket { background: #fef3c7; color: #92400e; }
+      .btn { display: block; width: 100%; box-sizing: border-box; border: 0; border-radius: 18px; padding: 14px 12px;
+             font: inherit; font-weight: 900; font-size: 20px; cursor: pointer; text-decoration: none; margin-top: 10px; }
+      .btn-go { background: #22c55e; color: #fff; font-size: 26px; box-shadow: 0 7px 0 #15803d; }
+      .btn-go:active { transform: translateY(5px); box-shadow: 0 2px 0 #15803d; }
+      .btn-go[disabled] { background: #cbd5e1; box-shadow: 0 7px 0 #94a3b8; color: #f8fafc; }
+      .btn-safari { background: #f59e0b; color: #fff; box-shadow: 0 6px 0 #b45309; }
+      .btn-plain { background: #e2e8f0; color: #334155; font-size: 16px; }
+      .levels { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; }
+      .lvl { -webkit-box-flex: 1; flex: 1 1 45%; border: 3px solid #e2e8f0; background: #fff; border-radius: 14px;
+             padding: 8px 6px; font: inherit; font-weight: bold; font-size: 15px; color: #64748b; cursor: pointer; }
+      .lvl.on { border-color: #0ea5e9; background: #e0f2fe; color: #0c4a6e; }
+      .lvl small { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; }
+      .hint { background: #fff7ed; border: 2px solid #fed7aa; border-radius: 16px; padding: 12px; margin-top: 12px;
+              font-weight: bold; color: #9a3412; font-size: 15px; }
+      .profiles { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+      .profile { border: 3px solid #e2e8f0; background: #fff; border-radius: 20px; padding: 12px; min-width: 110px;
+                 font: inherit; font-weight: 900; font-size: 18px; cursor: pointer; }
+      .profile .av { display: block; font-size: 44px; line-height: 1.1; }
+      .profile small { display: block; font-size: 13px; color: #92400e; }
+      .stat { flex: 1 1 30%; background: #f8fafc; border-radius: 16px; padding: 10px 4px; font-weight: bold; color: #475569; font-size: 13px; }
+      .stat b { display: block; font-size: 26px; color: #0f172a; }
+      .tiny { font-size: 13px; color: #64748b; font-weight: bold; margin-top: 12px; }
+      .tiny a { color: #0369a1; }
+      .toggle { border: 0; background: #f1f5f9; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: bold; font-size: 16px; cursor: pointer; }
+    </style>
+
+    <!-- Fehler sichtbar machen statt weißer Seite (wie in der Zahlen-Safari). -->
+    <script>
+      window.__appStarted = false;
+      window.onerror = function (message, url, line) {
+        if (window.__appStarted) return;
+        var o = document.getElementById('overlay');
+        if (o) o.innerHTML = '<div class="card"><div class="big-emoji">🐤</div><p><b>Der Flieger konnte nicht starten.</b></p>' +
+          '<p style="font-size:12px;color:#b91c1c;word-break:break-word">' + String(message).replace(/</g, '&lt;') + '<br>' + (url || '') + ':' + (line || '') + '</p></div>';
+      };
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script>
+      // Firebase 11 ist ES2018 - vor Chrome ~63 die ES5-Version nachladen (gleiche API).
+      if (typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) {
+        document.write(
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>' +
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"><\/script>' +
+          '<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"><\/script>'
+        );
+      }
+    </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="overlay"><div class="card"><div class="big-emoji">🐤</div><p class="sub">Lädt ...</p></div></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // =====================================================================
+    // EINSTELLUNGEN
+    // =====================================================================
+    var TICKET_COST = 1;          // Tickets pro Flug
+    var WELCOME_TICKETS = 2;      // wer noch nie ein Ticket hatte, darf zweimal probieren
+    var GATES_PER_ROUND = 15;     // Runde endet nach so vielen Toren ...
+    var HEARTS = 3;               // ... oder wenn alle Herzen weg sind
+    var COINS_PER_CORRECT = 2;
+    var COINS_FULL_ROUND = 10;    // alle Tore geschafft, mit mindestens einem Herz
+    var BASE_HEIGHT = 640;        // logische Spielhöhe, alles skaliert darauf
+
+    // Denkzeit pro Tor in Sekunden: die Aufgabe erscheint, sobald das letzte Tor
+    // durchflogen ist, das nächste Tor kommt erst nach dieser Zeit an.
+    var LEVELS = [
+      { id: 'count', name: 'Zählen', desc: 'Wie viele Tiere? (1-10)', gaps: 2, think: 6.5 },
+      { id: 'k', name: 'Kindergarten', desc: 'Plus bis 10', gaps: 2, think: 6.5 },
+      { id: 's', name: 'Schulanfänger', desc: 'Plus bis 20, Minus bis 10', gaps: 3, think: 6.5 },
+      { id: '1', name: '1. Klasse', desc: 'Plus und Minus bis 20', gaps: 3, think: 6 },
+      { id: '2', name: '2. Klasse', desc: 'Bis 100, erstes 1×1', gaps: 3, think: 6.5 },
+      { id: '3', name: '3. Klasse', desc: 'Großes 1×1, bis 100', gaps: 3, think: 6.5 }
+    ];
+    var COUNT_ANIMALS = ['🐞', '🐟', '🐥', '🐸', '🦋', '🐌', '🐝'];
+    var PRAISE = ['Super!', 'Toll!', 'Klasse!', 'Prima!', 'Spitze!', 'Wow!', 'Genau!'];
+    // Sprechblasen des Vogels - je alberner, desto besser.
+    var BONK_LINES = ['Autsch!', 'Aua!', 'Uff!', 'Mein Schnabel!', 'Hoppla!', 'Wer hat da ein Rohr hingestellt?', 'Rohr im Weg!', 'Ich seh Sterne!'];
+    var HEAD_LINES = ['Mein Kopf!', 'Bonk!', 'Aua, die Decke!', 'Zu hoch!', 'Beule!'];
+    var FLOOR_LINES = ['Boing!', 'Hui!', 'Hopsa!', 'Trampolin!', 'Huiii!'];
+    var HAPPY_LINES = ['Juhu!', 'Hihi!', 'Jippie!', 'Ich kann rechnen!', 'Piep piep!', 'Yeah!'];
+    var CONFUSED_LINES = ['Hä?', 'Huch?', 'Ups!', 'Oh-oh!', 'Nanu?'];
+
+    // =====================================================================
+    // KLEINE HELFER
+    // =====================================================================
+    function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+    function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+    function shuffle(list) {
+      for (var i = list.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = list[i]; list[i] = list[j]; list[j] = t;
+      }
+      return list;
+    }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+    function getLevel(id) {
+      for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].id === id) return LEVELS[i];
+      return LEVELS[1];
+    }
+    function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+    function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+    // =====================================================================
+    // AUFGABEN
+    // =====================================================================
+    var lastProblemKey = '';
+
+    function makeArith(levelId) {
+      var a, b, op, r = Math.random();
+      if (levelId === 'k') {
+        a = rnd(1, 9); b = rnd(1, 10 - a); op = '+';
+      } else if (levelId === 's') {
+        if (r < 0.6) { a = rnd(2, 15); b = rnd(1, 20 - a); op = '+'; }
+        else { a = rnd(3, 10); b = rnd(1, a - 1); op = '-'; }
+      } else if (levelId === '1') {
+        if (r < 0.5) { a = rnd(2, 18); b = rnd(1, 20 - a); op = '+'; }
+        else { a = rnd(5, 20); b = rnd(1, a - 1); op = '-'; }
+      } else if (levelId === '2') {
+        if (r < 0.3) { a = pick([2, 5, 10]); b = rnd(1, 10); if (Math.random() < 0.5) { var t = a; a = b; b = t; } op = '*'; }
+        else if (r < 0.65) { a = rnd(1, 8) * 10; b = rnd(1, 9); if (Math.random() < 0.4) b = rnd(1, 9 - a / 10) * 10; op = '+'; }
+        else { a = rnd(20, 99); b = Math.random() < 0.5 ? rnd(1, 9) : rnd(1, Math.floor(a / 10)) * 10; op = '-'; }
+      } else {
+        if (r < 0.5) { a = rnd(2, 10); b = rnd(2, 10); op = '*'; }
+        else if (r < 0.75) { a = rnd(11, 80); b = rnd(5, 99 - a); op = '+'; }
+        else { a = rnd(30, 100); b = rnd(5, a - 5); op = '-'; }
+      }
+      var answer = op === '+' ? a + b : op === '-' ? a - b : a * b;
+      var sym = op === '*' ? '×' : op === '-' ? '−' : '+';
+      var word = op === '*' ? 'mal' : op === '-' ? 'minus' : 'plus';
+      return { kind: 'arith', a: a, b: b, op: op, answer: answer, key: a + op + b,
+               text: a + ' ' + sym + ' ' + b + ' = ?', solved: a + ' ' + sym + ' ' + b + ' = ' + answer,
+               speak: 'Wie viel ist ' + a + ' ' + word + ' ' + b + '?',
+               speakSolved: a + ' ' + word + ' ' + b + ' ist ' + answer + '.' };
+    }
+
+    function makeCount() {
+      var n = rnd(1, 10);
+      var animal = pick(COUNT_ANIMALS);
+      return { kind: 'count', answer: n, animal: animal, key: 'c' + n,
+               text: '', solved: n + ' ' + animal,
+               speak: 'Wie viele Tiere siehst du?', speakSolved: 'Es sind ' + n + '.' };
+    }
+
+    function makeProblem(levelId) {
+      var p, tries = 0;
+      do { p = levelId === 'count' ? makeCount() : makeArith(levelId); tries++; }
+      while (p.key === lastProblemKey && tries < 10);
+      lastProblemKey = p.key;
+      return p;
+    }
+
+    // Falsche Antworten sollen "fast richtig" sein, sonst rät man nur.
+    function makeChoices(p, n) {
+      var x = p.answer, cands = [x - 1, x + 1, x - 2, x + 2];
+      if (p.kind === 'arith' && p.op === '*') cands = [x + p.a, x - p.a, x + p.b, x - p.b, x + 1, x - 1];
+      else if (x >= 20) cands = [x + 10, x - 10, x + 1, x - 1, x + 2, x - 2];
+      var min = p.kind === 'count' ? 1 : 0;
+      var max = p.kind === 'count' ? 10 : 1000;
+      var out = [x];
+      shuffle(cands);
+      for (var i = 0; i < cands.length && out.length < n; i++) {
+        var c = cands[i];
+        if (c >= min && c <= max && out.indexOf(c) === -1) out.push(c);
+      }
+      var extra = 3;
+      while (out.length < n) { var e = x + extra++; if (out.indexOf(e) === -1 && e <= max) out.push(e); else if (extra > 30) break; }
+      return shuffle(out);
+    }
+
+    // =====================================================================
+    // TON & SPRACHE
+    // =====================================================================
+    var audioCtx = null;
+    var soundOn = load('zf_sound') !== 'off';
+
+    function initAudio() {
+      if (audioCtx) { if (audioCtx.state === 'suspended' && audioCtx.resume) audioCtx.resume(); return; }
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) { try { audioCtx = new Ctx(); } catch (e) { audioCtx = null; } }
+    }
+    function tone(freq, start, dur, type, vol, slideTo) {
+      if (!soundOn || !audioCtx) return;
+      var t0 = audioCtx.currentTime + start;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+      gain.gain.setValueAtTime(vol || 0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    var sfx = {
+      flap: function () { tone(520, 0, 0.09, 'triangle', 0.06, 760); },
+      good: function () { tone(660, 0, 0.12, 'triangle', 0.16); tone(880, 0.1, 0.12, 'triangle', 0.16); tone(1320, 0.2, 0.22, 'triangle', 0.14); },
+      bad: function () { tone(300, 0, 0.18, 'sine', 0.18, 220); tone(220, 0.16, 0.28, 'sine', 0.16, 160); },
+      bonk: function () { tone(140, 0, 0.16, 'square', 0.08, 90); tone(1400, 0.12, 0.6, 'sine', 0.07, 300); },
+      tonk: function () { tone(900, 0, 0.05, 'square', 0.05); tone(260, 0.03, 0.18, 'triangle', 0.14, 180); },
+      boing: function () { tone(160, 0, 0.3, 'sine', 0.16, 560); },
+      tweet: function () { tone(1800, 0, 0.08, 'sine', 0.07, 2500); tone(2200, 0.1, 0.1, 'sine', 0.07, 1700); },
+      end: function () { tone(523, 0, 0.15, 'triangle', 0.15); tone(659, 0.15, 0.15, 'triangle', 0.15); tone(784, 0.3, 0.15, 'triangle', 0.15); tone(1047, 0.45, 0.35, 'triangle', 0.15); }
+    };
+
+    var germanVoice = null;
+    function findVoice() {
+      if (!window.speechSynthesis) return;
+      var voices = window.speechSynthesis.getVoices() || [];
+      for (var i = 0; i < voices.length; i++) {
+        if (/^de/i.test(voices[i].lang)) { germanVoice = voices[i]; return; }
+      }
+    }
+    if (window.speechSynthesis) {
+      findVoice();
+      window.speechSynthesis.onvoiceschanged = findVoice;
+    }
+    function say(text) {
+      if (!soundOn || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'de-DE';
+        if (germanVoice) u.voice = germanVoice;
+        u.rate = 0.95;
+        u.pitch = 1.1;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    // =====================================================================
+    // FIREBASE: dieselben Profile wie Zahlen-Safari & Co.
+    // =====================================================================
+    var firebaseConfig = {
+      apiKey: "AIzaSyAsJ-pcrHNgdmAJkM3PgLQt-WZMv1iyMrg",
+      authDomain: "zahlensafari.firebaseapp.com",
+      projectId: "zahlensafari",
+      storageBucket: "zahlensafari.firebasestorage.app",
+      messagingSenderId: "569809723706",
+      appId: "1:569809723706:web:7a1befeff13b36422c7003"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+
+    var profiles = [];
+    var activeProfileId = null;
+    var noDevice = false;
+    var profilesLoaded = false;
+    var unsubProfiles = null;
+
+    // ?profile=xyz aus der Zahlen-Safari übernimmt das Profil direkt.
+    var urlProfile = (function () {
+      var m = /[?&]profile=([^&]+)/.exec(window.location.search);
+      return m ? decodeURIComponent(m[1]) : null;
+    })();
+
+    function getProfile() {
+      for (var i = 0; i < profiles.length; i++) if (profiles[i].id === activeProfileId) return profiles[i];
+      return null;
+    }
+    // Wer das Feld noch nie hatte, bekommt einmalig Willkommens-Tickets.
+    function ticketsOf(p) {
+      if (!p) return 0;
+      return typeof p.tickets === 'number' ? p.tickets : WELCOME_TICKETS;
+    }
+
+    auth.signInAnonymously().catch(function (e) { console.error('Auth error', e); });
+    auth.onAuthStateChanged(function (user) {
+      if (!user) return;
+      db.collection('devices').doc(user.uid).onSnapshot(function (snap) {
+        var exists = typeof snap.exists === 'function' ? snap.exists() : !!snap.exists;
+        var ids = exists ? (snap.data().linkedProfiles || []) : [];
+        if (!ids.length) { noDevice = true; profilesLoaded = true; renderOverlay(); return; }
+        noDevice = false;
+        if (unsubProfiles) unsubProfiles();
+        unsubProfiles = db.collection('global_profiles')
+          .where(firebase.firestore.FieldPath.documentId(), 'in', ids.slice(0, 10))
+          .onSnapshot(function (qs) {
+            profiles = qs.docs.map(function (d) { var data = d.data(); data.id = d.id; return data; });
+            profilesLoaded = true;
+            if (!activeProfileId) {
+              var wanted = urlProfile || load('zf_profile');
+              for (var i = 0; i < profiles.length; i++) if (profiles[i].id === wanted) activeProfileId = wanted;
+              if (!activeProfileId && profiles.length === 1) activeProfileId = profiles[0].id;
+            }
+            if (state === 'loading') state = activeProfileId ? 'menu' : 'profiles';
+            if (state === 'menu' || state === 'profiles') renderOverlay();
+          }, function (err) { console.error('Profile error:', err); });
+      }, function (err) { console.error('Device error:', err); });
+    });
+
+    function saveProfile(fields) {
+      if (!activeProfileId) return;
+      db.collection('global_profiles').doc(activeProfileId).update(fields).catch(function (e) {
+        // Häufigste Ursache: firestore.rules kennt "tickets"/"fliegerBest" noch nicht.
+        console.error('Profil speichern fehlgeschlagen:', e);
+      });
+    }
+
+    // =====================================================================
+    // CANVAS & LAYOUT
+    // =====================================================================
+    var canvas = document.getElementById('game');
+    var ctx = canvas.getContext('2d');
+    var W = 360, H = BASE_HEIGHT, scale = 1, dpr = 1;
+    var HUD_H = 118, GROUND_H = 54;
+
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      var cw = window.innerWidth, ch = window.innerHeight;
+      canvas.width = Math.round(cw * dpr);
+      canvas.height = Math.round(ch * dpr);
+      // Höhe ist der Maßstab; auf sehr schmalen Bildschirmen die Breite.
+      scale = Math.min(ch / BASE_HEIGHT, cw / 340) * dpr;
+      W = canvas.width / scale;
+      H = canvas.height / scale;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function playTop() { return HUD_H; }
+    function playBottom() { return H - GROUND_H; }
+
+    // =====================================================================
+    // SPIELZUSTAND
+    // =====================================================================
+    var state = 'loading';      // loading | profiles | menu | ready | play | over
+    var levelId = load('zf_level') || 'k';
+    var bird, gates, particles, floaters, clouds;
+    var hearts, score, gateNo, streak, speed, coinsEarned;
+    var problem, feedback, invuln, groundX, overTimer, endShown, roundResult;
+    var time = 0;
+
+    // Neben Position und Tempo trägt der Vogel lauter Zeitgeber für seine Grimassen.
+    function newBird() {
+      return { x: Math.max(80, W * 0.26), y: (playTop() + playBottom()) / 2, vy: 0, r: 17, flap: 0, rot: 0,
+               squash: 0, dizzy: 0, xEyes: 0, bump: 0, happy: 0, spin: 0, confused: 0,
+               blink: 0, nextBlink: 2, bubble: null };
+    }
+
+    function birdSay(text, seconds) {
+      bird.bubble = { text: text, t: seconds || 1.4, age: 0 };
+    }
+
+    function feathers(count) {
+      for (var i = 0; i < count; i++) {
+        particles.push({ feather: true, x: bird.x, y: bird.y, vx: -60 + Math.random() * 120, vy: -120 - Math.random() * 120,
+                         rot: Math.random() * 6, vr: -6 + Math.random() * 12, life: 1.4 + Math.random() * 0.6, color: '#fde047' });
+      }
+    }
+
+    function updateBirdFx(dt) {
+      bird.squash = Math.max(0, bird.squash - dt);
+      bird.dizzy = Math.max(0, bird.dizzy - dt);
+      bird.xEyes = Math.max(0, bird.xEyes - dt);
+      bird.bump = Math.max(0, bird.bump - dt);
+      bird.happy = Math.max(0, bird.happy - dt);
+      bird.confused = Math.max(0, bird.confused - dt);
+      bird.spin = Math.max(0, bird.spin - dt * 1.8);
+      bird.blink = Math.max(0, bird.blink - dt);
+      bird.nextBlink -= dt;
+      if (bird.nextBlink <= 0) { bird.blink = 0.13; bird.nextBlink = 1.5 + Math.random() * 3.5; }
+      if (bird.bubble) { bird.bubble.t -= dt; bird.bubble.age += dt; if (bird.bubble.t <= 0) bird.bubble = null; }
+    }
+
+    function resetRound() {
+      bird = newBird();
+      gates = []; particles = []; floaters = [];
+      hearts = HEARTS; score = 0; gateNo = 0; streak = 0; speed = 95; coinsEarned = 0;
+      feedback = null; invuln = 0; groundX = 0; overTimer = 0; endShown = false; roundResult = null;
+      nextProblem();
+      birdSay('Los geht\'s!', 1.6);
+    }
+
+    function initClouds() {
+      clouds = [];
+      for (var i = 0; i < 5; i++) clouds.push({ x: Math.random() * 1400, y: 140 + Math.random() * 260, s: 0.6 + Math.random() * 0.7 });
+    }
+    initClouds();
+
+    function nextProblem() {
+      problem = makeProblem(levelId);
+      problem.choices = makeChoices(problem, getLevel(levelId).gaps);
+      say(problem.speak);
+    }
+
+    function spawnGate() {
+      var lvl = getLevel(levelId);
+      var n = problem.choices.length;
+      var top = playTop() + 6, bottom = playBottom() - 6;
+      var area = bottom - top;
+      var gapH = n === 2 ? area * 0.32 : area * 0.255;
+      var solid = (area - n * gapH) / (n + 1);
+      var gaps = [];
+      for (var i = 0; i < n; i++) {
+        var y0 = top + solid + i * (gapH + solid);
+        gaps.push({ y0: y0, y1: y0 + gapH, value: problem.choices[i], correct: problem.choices[i] === problem.answer, popped: false, wrong: false });
+      }
+      // Gleich viel Denkzeit, egal wie breit der Bildschirm ist. Auf breiten
+      // Bildschirmen taucht das Tor deshalb mitten im Bild auf (blendet ein).
+      var dist = speed * lvl.think;
+      gates.push({ x: bird.x + dist, w: 64, gaps: gaps, resolved: false, problem: problem, age: 0 });
+    }
+
+    function flap() {
+      initAudio();
+      if (state === 'ready') { state = 'play'; spawnGate(); }
+      if (state !== 'play') return;
+      bird.vy = -300;
+      bird.flap = 1;
+      sfx.flap();
+    }
+
+    function gapAt(gate, y) {
+      for (var i = 0; i < gate.gaps.length; i++) {
+        var g = gate.gaps[i];
+        if (y >= g.y0 - 4 && y <= g.y1 + 4) return g;
+      }
+      return null;
+    }
+
+    function burst(x, y, color, count) {
+      for (var i = 0; i < count; i++) {
+        var a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 220;
+        particles.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.8 + Math.random() * 0.4, color: color });
+      }
+    }
+
+    function loseHeart() {
+      hearts--;
+      invuln = 1.4;
+      streak = 0;
+    }
+
+    function resolveGate(gate) {
+      gate.resolved = true;
+      gateNo++;
+      var g = gapAt(gate, bird.y);
+      var p = gate.problem;
+      if (g && g.correct) {
+        g.popped = true;
+        score++; streak++; coinsEarned += COINS_PER_CORRECT;
+        speed = Math.min(140, speed + 3);
+        burst(gate.x, (g.y0 + g.y1) / 2, '#facc15', 18);
+        floaters.push({ x: gate.x, y: (g.y0 + g.y1) / 2, text: '+1 ⭐', life: 1.1 });
+        feedback = { good: true, text: pick(PRAISE), t: 1.2 };
+        sfx.good();
+        bird.happy = 1; bird.spin = 1;
+        if (Math.random() < 0.4) { birdSay(pick(HAPPY_LINES), 1.1); setTimeout(sfx.tweet, 350); }
+      } else {
+        if (g) {
+          g.wrong = true;
+          if (invuln <= 0) loseHeart();
+          bird.confused = 1.6;
+          birdSay(pick(CONFUSED_LINES), 1.4);
+        }
+        // Durch die Wand geflogen hat schon ein Herz gekostet (bonk).
+        feedback = { good: false, text: p.solved, t: 2.2 };
+        sfx.bad();
+        say((g ? 'Fast! ' : '') + p.speakSolved);
+      }
+      if (hearts <= 0 || gateNo >= GATES_PER_ROUND) { endRound(); return; }
+      // Nächste Aufgabe kommt etwas später, damit die Lösung kurz stehen bleibt.
+      var delay = feedback.good ? 500 : 1500;
+      setTimeout(function () {
+        if (state !== 'play') return;
+        nextProblem();
+        spawnGate();
+      }, delay);
+    }
+
+    function endRound() {
+      state = 'over';
+      overTimer = 1.2;
+      var full = hearts > 0 && gateNo >= GATES_PER_ROUND;
+      if (full) coinsEarned += COINS_FULL_ROUND;
+      var p = getProfile();
+      var best = (p && p.fliegerBest && p.fliegerBest[levelId]) || 0;
+      roundResult = { score: score, coins: coinsEarned, full: full, newBest: score > best, best: Math.max(best, score) };
+      if (p) {
+        var bestMap = {};
+        var old = p.fliegerBest || {};
+        for (var k in old) if (old.hasOwnProperty(k)) bestMap[k] = old[k];
+        bestMap[levelId] = roundResult.best;
+        saveProfile({ coins: (p.coins || 0) + coinsEarned, fliegerBest: bestMap });
+      }
+      if (full) { bird.happy = 99; birdSay('Geschafft!', 99); }
+      else { bird.xEyes = 99; bird.dizzy = 99; birdSay('Puh ... Pause!', 99); }
+      sfx.end();
+      say(score === 1 ? 'Eine Aufgabe richtig!' : score + ' Aufgaben richtig!');
+    }
+
+    // =====================================================================
+    // UPDATE
+    // =====================================================================
+    function update(dt) {
+      time += dt;
+      for (var c = 0; c < clouds.length; c++) {
+        clouds[c].x -= (state === 'play' ? speed : 25) * 0.18 * clouds[c].s * dt;
+        if (clouds[c].x < -160) { clouds[c].x = W + 100 + Math.random() * 300; clouds[c].y = 140 + Math.random() * 260; }
+      }
+      if (state === 'ready' || state === 'menu' || state === 'profiles' || state === 'loading') {
+        if (bird) { bird.y = (playTop() + playBottom()) / 2 + Math.sin(time * 3) * 10; bird.rot = 0; bird.flap = (Math.sin(time * 10) + 1) / 2; updateBirdFx(dt); }
+        groundX -= 40 * dt;
+        return;
+      }
+      if (state === 'over') {
+        overTimer -= dt;
+        bird.vy = Math.min(bird.vy + 900 * dt, 400);
+        bird.y = Math.min(bird.y + bird.vy * dt, playBottom() - bird.r);
+        if (roundResult && roundResult.full) {
+          // Freudenhüpfer auf dem Boden
+          bird.rot = 0;
+          if (bird.y >= playBottom() - bird.r) { bird.vy = -260; bird.squash = 0.2; bird.flap = 1; }
+          bird.flap = Math.max(0, bird.flap - dt * 4);
+        } else {
+          bird.rot = Math.min(1.2, bird.rot + dt * 2);   // plumps, liegt auf der Seite
+        }
+        updateBirdFx(dt);
+        updateParticles(dt);
+        if (overTimer <= 0 && !endShown) { endShown = true; renderOverlay(); }
+        return;
+      }
+
+      // Sanfte Schwerkraft - Boden und Decke tun nicht weh.
+      bird.vy = Math.min(bird.vy + 860 * dt, 380);
+      bird.y += bird.vy * dt;
+      if (bird.y > playBottom() - bird.r) {
+        // Boden ist ein Trampolin
+        var hard = bird.vy > 200;
+        bird.y = playBottom() - bird.r;
+        bird.vy = hard ? -280 : -140;
+        if (hard) {
+          bird.squash = 0.25;
+          sfx.boing();
+          if (!bird.bubble && Math.random() < 0.6) birdSay(pick(FLOOR_LINES), 0.9);
+        }
+      }
+      if (bird.y < playTop() + bird.r) {
+        // Kopf an der Decke (dem Aufgaben-Schild) gestoßen: Beule, Sternchen, runter.
+        if (bird.vy < -150) {
+          bird.bump = 3; bird.dizzy = Math.max(bird.dizzy, 1); bird.squash = 0.2;
+          sfx.tonk();
+          feathers(2);
+          if (!bird.bubble || bird.bubble.age > 0.6) birdSay(pick(HEAD_LINES), 1.1);
+          bird.vy = 160;
+        } else {
+          bird.vy = Math.max(bird.vy, 0);
+        }
+        bird.y = playTop() + bird.r;
+      }
+      bird.rot = Math.max(-0.5, Math.min(0.9, bird.vy / 500));
+      bird.flap = Math.max(0, bird.flap - dt * 4);
+      updateBirdFx(dt);
+      if (invuln > 0) invuln -= dt;
+      if (feedback) { feedback.t -= dt; if (feedback.t <= 0) feedback = null; }
+      groundX -= speed * dt;
+
+      for (var i = gates.length - 1; i >= 0; i--) {
+        var g = gates[i];
+        g.x -= speed * dt;
+        g.age += dt;
+        if (g.shake > 0) g.shake -= dt;
+        var dx = Math.abs(bird.x - g.x);
+        // Wand berührt: ein Herz weg, dann kurz "Geist" und durchfliegen.
+        if (!g.resolved && dx < g.w / 2 + bird.r * 0.5 && !gapAt(g, bird.y) && invuln <= 0) {
+          loseHeart();
+          sfx.bonk();
+          burst(bird.x, bird.y, '#94a3b8', 6);
+          feathers(6);
+          g.shake = 0.4;
+          bird.xEyes = 0.6; bird.dizzy = 2; bird.bump = 4; bird.squash = 0.25;
+          bird.vy = -80;
+          birdSay(pick(BONK_LINES), 1.6);
+        }
+        if (!g.resolved && bird.x >= g.x) {
+          resolveGate(g);
+          if (state !== 'play') return;
+        }
+        if (g.x < -100) gates.splice(i, 1);
+      }
+      updateParticles(dt);
+    }
+
+    function updateParticles(dt) {
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        if (p.feather) {
+          // Federn trudeln langsam und schaukelnd nach unten
+          p.vy = Math.min(p.vy + 260 * dt, 60);
+          p.vx *= (1 - 1.5 * dt);
+          p.x += (p.vx + Math.sin(p.life * 7) * 40) * dt - (speed || 0) * 0.3 * dt;
+          p.rot += p.vr * dt;
+        } else {
+          p.vy += 500 * dt; p.x += p.vx * dt;
+        }
+        p.y += p.vy * dt; p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (var j = floaters.length - 1; j >= 0; j--) {
+        floaters[j].y -= 50 * dt; floaters[j].life -= dt;
+        if (floaters[j].life <= 0) floaters.splice(j, 1);
+      }
+    }
+
+    // =====================================================================
+    // ZEICHNEN
+    // =====================================================================
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function drawCloud(x, y, s) {
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.arc(x, y, 22 * s, 0, Math.PI * 2);
+      ctx.arc(x + 26 * s, y - 12 * s, 28 * s, 0, Math.PI * 2);
+      ctx.arc(x + 56 * s, y, 22 * s, 0, Math.PI * 2);
+      ctx.rect(x, y - 2 * s, 56 * s, 22 * s);
+      ctx.fill();
+    }
+
+    function drawBackground() {
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#7dd3fc');
+      grad.addColorStop(1, '#e0f2fe');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+      // Sonne
+      ctx.fillStyle = '#fde68a';
+      ctx.beginPath(); ctx.arc(W - 60, HUD_H + 50, 30, 0, Math.PI * 2); ctx.fill();
+      for (var i = 0; i < clouds.length; i++) drawCloud(clouds[i].x, clouds[i].y, clouds[i].s);
+      // Hügel
+      ctx.fillStyle = '#bbf7d0';
+      var base = playBottom();
+      ctx.beginPath(); ctx.moveTo(0, base);
+      for (var x = 0; x <= W + 20; x += 20) ctx.lineTo(x, base - 40 - Math.sin((x - groundX * 0.2) / 90) * 22);
+      ctx.lineTo(W, base); ctx.closePath(); ctx.fill();
+    }
+
+    function drawGround() {
+      var y = playBottom();
+      ctx.fillStyle = '#a3e635';
+      ctx.fillRect(0, y, W, GROUND_H);
+      ctx.fillStyle = '#65a30d';
+      ctx.fillRect(0, y, W, 6);
+      ctx.fillStyle = '#84cc16';
+      var off = ((groundX % 40) + 40) % 40;
+      for (var x = -40 + off; x < W + 40; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, y + 6); ctx.lineTo(x + 20, y + 6); ctx.lineTo(x + 10, y + GROUND_H); ctx.closePath(); ctx.fill();
+      }
+    }
+
+    function drawPipe(x, y0, y1, w) {
+      if (y1 - y0 < 1) return;
+      ctx.fillStyle = '#4ade80';
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 3;
+      ctx.fillRect(x - w / 2, y0, w, y1 - y0);
+      ctx.strokeRect(x - w / 2, y0, w, y1 - y0);
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(x - w / 2 + 8, y0, 8, y1 - y0);
+    }
+
+    function drawCap(x, y, w) {
+      ctx.fillStyle = '#22c55e';
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 3;
+      roundRect(x - w / 2 - 6, y - 8, w + 12, 16, 5);
+      ctx.fill(); ctx.stroke();
+    }
+
+    function drawGate(g) {
+      if (g.shake > 0) { ctx.save(); ctx.translate(Math.sin(time * 70) * g.shake * 12, 0); }
+      drawGateBody(g);
+      if (g.shake > 0) ctx.restore();
+    }
+
+    function drawGateBody(g) {
+      var top = playTop(), bottom = playBottom();
+      var y = top;
+      for (var i = 0; i < g.gaps.length; i++) {
+        drawPipe(g.x, y, g.gaps[i].y0, g.w);
+        y = g.gaps[i].y1;
+      }
+      drawPipe(g.x, y, bottom, g.w);
+      for (var j = 0; j < g.gaps.length; j++) {
+        var gap = g.gaps[j];
+        if (gap.y0 > top + 2) drawCap(g.x, gap.y0, g.w);
+        if (gap.y1 < bottom - 2) drawCap(g.x, gap.y1, g.w);
+        drawBalloon(g, gap);
+      }
+    }
+
+    function drawBalloon(g, gap) {
+      if (gap.popped) return;
+      var cy = (gap.y0 + gap.y1) / 2;
+      var r = Math.min(34, (gap.y1 - gap.y0) * 0.3);
+      var showAnswer = g.resolved && gap.correct;
+      ctx.fillStyle = gap.wrong ? '#fecaca' : showAnswer ? '#bbf7d0' : '#ffffff';
+      ctx.strokeStyle = gap.wrong ? '#ef4444' : showAnswer ? '#16a34a' : '#0ea5e9';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(g.x, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      var label = String(gap.value);
+      ctx.font = '900 ' + Math.round(label.length > 2 ? r * 0.85 : r * 1.05) + 'px "Trebuchet MS", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, g.x, cy + 2);
+    }
+
+    function drawBird() {
+      if (invuln > 0 && Math.floor(invuln * 10) % 2 === 0 && state === 'play') ctx.globalAlpha = 0.55;
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      // Salto nach einem richtigen Tor
+      ctx.rotate(bird.rot - (1 - bird.spin) * Math.PI * 2 * (bird.spin > 0 ? 1 : 0));
+      var sq = Math.min(1, bird.squash / 0.25);
+      ctx.scale(1 + sq * 0.35, 1 - sq * 0.3);
+      var r = bird.r;
+      // Körper
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Bauch
+      ctx.fillStyle = '#fef9c3';
+      ctx.beginPath(); ctx.arc(-2, 6, r * 0.6, 0, Math.PI * 2); ctx.fill();
+      // Flügel
+      ctx.save();
+      ctx.translate(-6, 2);
+      ctx.rotate(-0.4 - bird.flap * 0.9);
+      ctx.fillStyle = '#fde047';
+      ctx.strokeStyle = '#ca8a04';
+      ctx.beginPath();
+      if (ctx.ellipse) ctx.ellipse(-4, 0, 11, 7, 0, 0, Math.PI * 2);
+      else ctx.arc(-4, 0, 8, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+      drawEye(7, -6);
+      // Beule auf dem Kopf (wächst kurz an, schrumpft dann langsam)
+      if (bird.bump > 0) {
+        var b = Math.min(1, bird.bump) * (bird.bump > 3.6 ? (4 - bird.bump) / 0.4 : 1);
+        ctx.fillStyle = '#fb7185';
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(1, -r + 1, 3 + 5 * b, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.arc(-1, -r - 2 * b, 1.6 * b, 0, Math.PI * 2); ctx.fill();
+      }
+      // Schnabel
+      ctx.fillStyle = '#fb923c';
+      ctx.beginPath(); ctx.moveTo(r - 3, -1); ctx.lineTo(r + 11, 3); ctx.lineTo(r - 3, 8); ctx.closePath(); ctx.fill();
+      // Wange
+      ctx.fillStyle = 'rgba(251,113,133,0.55)';
+      ctx.beginPath(); ctx.arc(3, 4, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      if (bird.dizzy > 0) drawDizzyStars();
+      if (bird.confused > 0) {
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = '900 24px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('?', bird.x + 4 + Math.sin(time * 12) * 3, bird.y - bird.r - 16);
+      }
+      if (bird.bubble) drawBubble();
+    }
+
+    // Auge mit Gesichtsausdruck: X (k.o.), Spirale (schwindelig), ^ (fröhlich), zu (blinzeln).
+    function drawEye(x, y) {
+      ctx.lineCap = 'round';
+      if (bird.xEyes > 0) {
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke();
+        return;
+      }
+      if (bird.happy > 0) {
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(x, y + 2, 4.5, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+        return;
+      }
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(x, y, 6.5, 0, Math.PI * 2); ctx.fill();
+      if (bird.dizzy > 0) {
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        for (var a = 0; a < Math.PI * 4; a += 0.3) {
+          var rr = a * 0.42, ang = a - time * 10;
+          if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr);
+        }
+        ctx.stroke();
+        return;
+      }
+      if (bird.blink > 0) {
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.lineTo(x + 5, y); ctx.stroke();
+        return;
+      }
+      // Pupille schaut nach oben, wenn er verwirrt ist, sonst in Flugrichtung
+      var py = bird.confused > 0 ? -2.5 : Math.max(-2, Math.min(2, bird.vy / 150));
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(x + 2, y + py, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(x + 3, y + py - 1.2, 1, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawStar(x, y, r) {
+      ctx.beginPath();
+      for (var i = 0; i < 10; i++) {
+        var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+        if (i === 0) ctx.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+        else ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    function drawDizzyStars() {
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#a16207';
+      ctx.lineWidth = 1.5;
+      for (var i = 0; i < 3; i++) {
+        var a = time * 6 + i * Math.PI * 2 / 3;
+        drawStar(bird.x + Math.cos(a) * 20, bird.y - bird.r - 8 + Math.sin(a) * 6, 6);
+      }
+    }
+
+    function drawBubble() {
+      var bb = bird.bubble;
+      var pop = Math.min(1, bb.age / 0.15);
+      ctx.font = '900 17px "Trebuchet MS", sans-serif';
+      var tw = ctx.measureText(bb.text).width;
+      var bw = tw + 22, bh = 32;
+      var bx = Math.min(W - bw - 6, Math.max(6, bird.x + 6));
+      var by = bird.y - bird.r - bh - 22;
+      if (by < playTop() + 4) by = bird.y + bird.r + 14;   // ganz oben: Blase unter den Vogel
+      ctx.save();
+      ctx.translate(bx + bw / 2, by + bh / 2);
+      ctx.scale(pop, pop);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.5;
+      roundRect(-bw / 2, -bh / 2, bw, bh, 14);
+      ctx.fill(); ctx.stroke();
+      // Zipfel zum Vogel
+      var tipX = Math.max(-bw / 2 + 10, Math.min(bw / 2 - 10, bird.x - (bx + bw / 2)));
+      var below = by > bird.y;
+      var edge = below ? -bh / 2 : bh / 2;
+      ctx.beginPath();
+      ctx.moveTo(tipX - 7, edge); ctx.lineTo(tipX, edge + (below ? -10 : 10)); ctx.lineTo(tipX + 7, edge);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(tipX - 7, edge); ctx.lineTo(tipX, edge + (below ? -10 : 10)); ctx.lineTo(tipX + 7, edge); ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(bb.text, 0, 1);
+      ctx.restore();
+    }
+
+    function drawHeart(x, y, s, full) {
+      ctx.fillStyle = full ? '#f43f5e' : '#e2e8f0';
+      ctx.beginPath();
+      ctx.moveTo(x, y + s * 0.35);
+      ctx.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.35);
+      ctx.bezierCurveTo(x - s * 0.5, y + s * 0.65, x, y + s * 0.85, x, y + s);
+      ctx.bezierCurveTo(x, y + s * 0.85, x + s * 0.5, y + s * 0.65, x + s * 0.5, y + s * 0.35);
+      ctx.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.35);
+      ctx.fill();
+    }
+
+    function drawHud() {
+      // Weißes Schild oben: Herzen, Fortschritt, Aufgabe.
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      roundRect(8, 8, W - 16, HUD_H - 14, 22);
+      ctx.fill();
+      for (var i = 0; i < HEARTS; i++) drawHeart(30 + i * 28, 16, 22, i < hearts);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#b45309';
+      ctx.font = '900 20px "Trebuchet MS", sans-serif';
+      ctx.fillText('⭐ ' + score, W - 22, 28);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+      ctx.fillText('Tor ' + Math.min(gateNo + 1, GATES_PER_ROUND) + ' / ' + GATES_PER_ROUND, W / 2, 28);
+
+      var midY = 76;
+      if (feedback && !feedback.good) {
+        ctx.fillStyle = '#dc2626';
+        ctx.font = '900 34px "Trebuchet MS", sans-serif';
+        ctx.fillText(feedback.text, W / 2, midY);
+        return;
+      }
+      if (!problem) return;
+      if (problem.kind === 'count') {
+        var n = problem.answer, perRow = n > 5 ? Math.ceil(n / 2) : n;
+        var size = Math.min(30, (W - 40) / perRow);
+        ctx.font = Math.round(size) + 'px sans-serif';
+        for (var k = 0; k < n; k++) {
+          var row = k < perRow ? 0 : 1;
+          var col = row === 0 ? k : k - perRow;
+          var inRow = row === 0 ? perRow : n - perRow;
+          var rows = n > perRow ? 2 : 1;
+          var x = W / 2 + (col - (inRow - 1) / 2) * size * 1.15;
+          var y = midY + (rows === 2 ? (row === 0 ? -size * 0.55 : size * 0.55) : 0);
+          ctx.fillText(problem.animal, x, y);
+        }
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '900 ' + (W < 380 ? 38 : 44) + 'px "Trebuchet MS", sans-serif';
+        ctx.fillText(problem.text, W / 2, midY);
+      }
+    }
+
+    function draw() {
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      drawBackground();
+      if (gates) for (var i = 0; i < gates.length; i++) {
+        ctx.globalAlpha = Math.min(1, gates[i].age * 2.5);
+        drawGate(gates[i]);
+        ctx.globalAlpha = 1;
+      }
+      drawGround();
+      if (particles) for (var p = 0; p < particles.length; p++) {
+        var pt = particles[p];
+        ctx.globalAlpha = Math.max(0, Math.min(1, pt.life));
+        ctx.fillStyle = pt.color;
+        if (pt.feather) {
+          ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot);
+          ctx.beginPath();
+          if (ctx.ellipse) ctx.ellipse(0, 0, 8, 3.5, 0, 0, Math.PI * 2); else ctx.arc(0, 0, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.stroke();
+          ctx.restore();
+        } else {
+          ctx.beginPath(); ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      if (bird) drawBird();
+      if (floaters) for (var f = 0; f < floaters.length; f++) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, floaters[f].life));
+        ctx.fillStyle = '#b45309';
+        ctx.font = '900 26px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(floaters[f].text, floaters[f].x, floaters[f].y);
+      }
+      ctx.globalAlpha = 1;
+      if (state === 'ready' || state === 'play' || state === 'over') drawHud();
+      if (feedback && feedback.good && state === 'play') {
+        ctx.fillStyle = '#16a34a';
+        ctx.font = '900 30px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(feedback.text, W / 2, HUD_H + 34);
+      }
+      if (state === 'ready') {
+        ctx.fillStyle = 'rgba(15,23,42,0.75)';
+        roundRect(W / 2 - 150, playBottom() - 120, 300, 56, 20);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 22px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👆 Tippen = Flattern!', W / 2, playBottom() - 92);
+      }
+    }
+
+    var lastT = 0;
+    function frame(t) {
+      var dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0.016;
+      lastT = t;
+      update(dt);
+      draw();
+      window.requestAnimationFrame(frame);
+    }
+
+    // =====================================================================
+    // MENÜS (HTML über dem Canvas)
+    // =====================================================================
+    var overlay = document.getElementById('overlay');
+
+    function show(html) {
+      overlay.innerHTML = '<div class="card">' + html + '</div>';
+      overlay.className = '';
+    }
+    function hideOverlay() { overlay.className = 'hidden'; }
+
+    function renderOverlay() {
+      window.__appStarted = true;
+      if (state === 'ready' || state === 'play') { hideOverlay(); return; }
+      if (state === 'over' && !endShown) { hideOverlay(); return; }
+
+      if (noDevice) {
+        show('<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1>' +
+          '<p class="hint">Auf diesem Gerät gibt es noch kein Profil. Lege zuerst in der Zahlen-Safari eins an!</p>' +
+          '<a class="btn btn-safari" href="../zahlen-safari/index.html">🦁 Zur Zahlen-Safari</a>');
+        return;
+      }
+      if (!profilesLoaded) { show('<div class="big-emoji">🐤</div><p class="sub">Lädt ...</p>'); return; }
+
+      if (state === 'profiles') {
+        var html = '<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1><p class="sub">Wer fliegt?</p><div class="profiles">';
+        for (var i = 0; i < profiles.length; i++) {
+          var p = profiles[i];
+          html += '<button class="profile" data-profile="' + esc(p.id) + '"><span class="av">' + esc(p.avatar) + '</span>' +
+            esc(p.name) + '<small>🎟️ ' + ticketsOf(p) + '</small></button>';
+        }
+        html += '</div><p class="tiny"><a href="../index.html">← LernKumpel</a></p>';
+        show(html);
+        return;
+      }
+
+      var prof = getProfile();
+      if (!prof) { state = 'profiles'; renderOverlay(); return; }
+      var tickets = ticketsOf(prof);
+      var canFly = tickets >= TICKET_COST;
+      var lvl = getLevel(levelId);
+      var safariLink = '../zahlen-safari/index.html';
+      var best = (prof.fliegerBest && prof.fliegerBest[levelId]) || 0;
+      var html2 = '';
+
+      if (state === 'over' && roundResult) {
+        html2 += '<div class="big-emoji">' + (roundResult.full ? '🏆' : roundResult.score >= 5 ? '🎉' : '🐤') + '</div>' +
+          '<h1 class="title">' + (roundResult.full ? 'Alle Tore geschafft!' : 'Gelandet!') + '</h1>' +
+          '<p class="sub">' + esc(lvl.name) + '</p>' +
+          '<div class="row">' +
+            '<div class="stat"><b>' + roundResult.score + '</b>richtig</div>' +
+            '<div class="stat"><b>+' + roundResult.coins + '</b>🪙 Münzen</div>' +
+            '<div class="stat"><b>' + roundResult.best + '</b>' + (roundResult.newBest && roundResult.score > 0 ? '🌟 Neuer Rekord!' : 'Rekord') + '</div>' +
+          '</div>';
+      } else {
+        html2 += '<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1>' +
+          '<p class="sub">Flieg durch das Tor mit der richtigen Zahl!</p>';
+      }
+
+      html2 += '<div class="row" style="margin-top:12px">' +
+        '<button class="chip" data-action="profiles">' + esc(prof.avatar) + ' ' + esc(prof.name) + '</button>' +
+        '<span class="chip ticket">🎟️ × ' + tickets + '</span>' +
+        '<button class="toggle" data-action="sound">' + (soundOn ? '🔊' : '🔇') + '</button>' +
+        '</div>';
+
+      if (state !== 'over') {
+        html2 += '<div class="levels">';
+        for (var j = 0; j < LEVELS.length; j++) {
+          var L = LEVELS[j];
+          html2 += '<button class="lvl' + (L.id === levelId ? ' on' : '') + '" data-level="' + L.id + '">' + esc(L.name) + '<small>' + esc(L.desc) + '</small></button>';
+        }
+        html2 += '</div>';
+        if (best > 0) html2 += '<p class="tiny" style="margin-top:2px">Dein Rekord hier: ' + best + ' ⭐</p>';
+      }
+
+      html2 += '<button class="btn btn-go" data-action="fly"' + (canFly ? '' : ' disabled') + '>' +
+        (state === 'over' ? 'Nochmal fliegen' : 'Losfliegen!') + ' · ' + TICKET_COST + ' 🎟️</button>';
+
+      if (!canFly) {
+        html2 += '<p class="hint">Keine Tickets mehr! 🎟️<br>Rechne eine Runde in der Zahlen-Safari - dafür gibt es ein neues Ticket.</p>' +
+          '<a class="btn btn-safari" href="' + safariLink + '">🦁 Zur Zahlen-Safari</a>';
+      } else if (state === 'over') {
+        html2 += '<button class="btn btn-plain" data-action="menu">Anderes Level</button>';
+      }
+      html2 += '<p class="tiny"><a href="' + safariLink + '">🦁 Zahlen-Safari</a> · <a href="../index.html">LernKumpel</a></p>';
+      show(html2);
+    }
+
+    overlay.addEventListener('click', function (e) {
+      var el = e.target;
+      while (el && el !== overlay && !el.getAttribute('data-action') && !el.getAttribute('data-level') && !el.getAttribute('data-profile')) el = el.parentNode;
+      if (!el || el === overlay) return;
+      initAudio();
+      var action = el.getAttribute('data-action');
+      var lvl = el.getAttribute('data-level');
+      var prof = el.getAttribute('data-profile');
+      if (prof) {
+        activeProfileId = prof; store('zf_profile', prof);
+        state = 'menu'; renderOverlay();
+      } else if (lvl) {
+        levelId = lvl; store('zf_level', lvl);
+        renderOverlay();
+      } else if (action === 'profiles') {
+        state = 'profiles'; renderOverlay();
+      } else if (action === 'sound') {
+        soundOn = !soundOn; store('zf_sound', soundOn ? 'on' : 'off');
+        if (!soundOn && window.speechSynthesis) window.speechSynthesis.cancel();
+        renderOverlay();
+      } else if (action === 'menu') {
+        state = 'menu'; endShown = false; bird = newBird(); renderOverlay();
+      } else if (action === 'fly') {
+        startFlight();
+      }
+    });
+
+    function startFlight() {
+      var p = getProfile();
+      var tickets = ticketsOf(p);
+      if (!p || tickets < TICKET_COST) return;
+      // Ticket sofort abbuchen - neu laden gibt es nicht zurück.
+      saveProfile({ tickets: tickets - TICKET_COST });
+      p.tickets = tickets - TICKET_COST;
+      resetRound();
+      state = 'ready';
+      hideOverlay();
+    }
+
+    // =====================================================================
+    // EINGABE: ganzer Bildschirm = ein großer Knopf
+    // =====================================================================
+    canvas.addEventListener('touchstart', function (e) { e.preventDefault(); flap(); }, { passive: false });
+    canvas.addEventListener('mousedown', function (e) { e.preventDefault(); flap(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.keyCode === 32 || e.keyCode === 38 || e.keyCode === 13) {
+        if (state === 'ready' || state === 'play') { e.preventDefault(); flap(); }
+      }
+    });
+
+    // Nur der Vogel für den Hintergrund im Menü - die erste Aufgabe gibt es erst beim Start.
+    bird = newBird();
+    particles = [];
+    renderOverlay();
+    window.requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

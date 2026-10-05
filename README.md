@@ -66,6 +66,22 @@ Im Pose-Theater machen Kinder pantomimische Bewegungs-Posen nach, die über die 
 - ⭐ **Punktesystem:** Die Übereinstimmung zur Ziel-Pose bestimmt die Punkte.
 - 🪙 **Gemeinsames Münzsystem:** Dieselben Profile und Münzen wie in den anderen LernKumpel-Apps.
 
+### 5. Zahlen-Flieger (Belohnungs-Spiel)
+
+👉 **[Zahlen-Flieger spielen](https://mainkai.github.io/LernKumpel/zahlen-flieger/)**
+
+Ein Flappy-Bird für Rechen-Anfänger: Oben steht eine Aufgabe, und der Vogel fliegt durch das Tor mit der richtigen Zahl. Gespielt wird mit **Tickets**, die es nur in der Zahlen-Safari gibt - so wird aus "noch eine Runde rechnen" wieder ein Ziel, auch wenn dort schon alles gesammelt ist.
+
+**Features:**
+
+- 🎟️ **Ticket-Kreislauf:** Jede fertige Safari-Runde bringt 1 Ticket, eine perfekte Runde 2. Ein Flug kostet 1 Ticket. Mehr als 5 Tickets lassen sich nicht ansparen, damit sich Rechnen und Fliegen abwechseln. Jedes Profil bekommt einmalig 2 Willkommens-Tickets.
+- 👆 **Ein-Finger-Steuerung:** Tippen irgendwo auf den Bildschirm (oder Leertaste) = Flattern. Boden und Decke tun nicht weh.
+- 💗 **Sanfte Fehler:** 3 Herzen, kein harter "Game Over". Bei einem falschen Tor wird die richtige Lösung angezeigt und vorgelesen. Eine Runde hat 15 Tore (~1,5 Minuten).
+- 🔊 **Vorlesen:** Die Aufgabe wird per Sprachausgabe des Browsers vorgelesen - auch Kinder, die noch nicht lesen, können mitspielen.
+- 🐞 **Sechs Stufen:** Zählen (Tiere zählen, 1-10), Kindergarten, Schulanfänger, 1., 2. und 3. Klasse. Die Denkzeit pro Tor ist auf jedem Bildschirm gleich lang.
+- 🪙 **Belohnung:** 2 Münzen pro richtigem Tor, +10 für eine ganze Runde, Rekord pro Stufe.
+- 📱 **Alte Handys:** Reines ES5 + Canvas, ohne React/Babel/Tailwind - startet sofort.
+
 ## 🚀 Geplante Apps (Roadmap)
 
 - Weitere Lern-Abenteuer folgen.
@@ -127,8 +143,10 @@ LernKumpel/
 │   └── index.html           # Vorlesen-App
 ├── mal-atelier/
 │   └── index.html           # Malen + KI
-└── pose-theater/
-    └── index.html           # Posen + Kamera-Pose-Erkennung
+├── pose-theater/
+│   └── index.html           # Posen + Kamera-Pose-Erkennung
+└── zahlen-flieger/
+    └── index.html           # Belohnungs-Spiel (Tickets aus der Zahlen-Safari)
 ```
 
 ## 🛠️ Lokale Entwicklung / Setup
@@ -169,7 +187,7 @@ Im Projekt liegt eine Vorlage unter `firestore.rules`, die zu den aktuell verwen
 > **⚠️ Nach einem Update der Zahlen-Safari immer zuerst die Regeln hochladen!**
 > `validProfileData()` erlaubt per `hasOnly()` nur eine feste Liste von Profil-Feldern.
 > Kommen neue Felder dazu (aktuell `xp`, `treats`, `petLevels`, `petOutfits`,
-> `petAccessories` für Rangleiter und Tiere), lehnt Firestore ohne aktualisierte
+> `petAccessories` für Rangleiter und Tiere, `tickets` und `fliegerBest` für den Zahlen-Flieger), lehnt Firestore ohne aktualisierte
 > Regeln **jeden** Profil-Schreibvorgang ab: Die Runde wird gespielt, aber Münzen,
 > XP und Sticker landen nie in der Datenbank - sichtbar nur in der Browser-Konsole.
 

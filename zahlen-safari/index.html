@@ -444,6 +444,17 @@
         const TREAT_BOX_PRICE = 250;      // Kiste, wenn schon alles gefunden ist: Leckerli
         const TREATS_PER_BOX = 5;
 
+        // --- FLIEGER-TICKETS ---
+        // Jede fertige Runde bringt ein Ticket für eine Runde Zahlen-Flieger
+        // (../zahlen-flieger), eine perfekte Runde zwei. Mehr als MAX_TICKETS lassen
+        // sich nicht ansparen - so wechseln sich Rechnen und Fliegen ab.
+        // WELCOME_TICKETS muss zum Wert in zahlen-flieger/index.html passen.
+        const TICKETS_PER_ROUND = 1;
+        const TICKETS_PER_PERFECT_ROUND = 2;
+        const MAX_TICKETS = 5;
+        const WELCOME_TICKETS = 2;
+        const getTickets = (p) => (p && typeof p.tickets === 'number' ? p.tickets : WELCOME_TICKETS);
+
         // --- SPIELSTUFEN ---
         // Die IDs sind bewusst Zahlen: die Bestenliste speichert level als int/float
         // (siehe firestore.rules), Strings würde die Datenbank ablehnen.
@@ -1687,6 +1698,9 @@
             }
             earnedCoins += rankUpCoins;
 
+            const ticketsBefore = getTickets(profile);
+            const ticketsAfter = Math.max(ticketsBefore, Math.min(MAX_TICKETS, ticketsBefore + (perfectRound ? TICKETS_PER_PERFECT_ROUND : TICKETS_PER_ROUND)));
+
             // --- AKTIVES TIER LERNT MIT ---
             let petLevelUp = null;
             const nextPetLevels = Object.assign({}, petLevels);
@@ -1714,7 +1728,9 @@
               rankUps,
               rankUpCoins,
               treats: earnedTreats,
-              petLevelUp
+              petLevelUp,
+              tickets: ticketsAfter - ticketsBefore,
+              ticketsFull: ticketsAfter >= MAX_TICKETS
             });
 
             let rank = null;
@@ -1752,7 +1768,8 @@
                 adventureStars: (profile.adventureStars || 0) + earnedAdventureStar,
                 xp: nextXp,
                 treats: treats + earnedTreats,
-                petLevels: nextPetLevels
+                petLevels: nextPetLevels,
+                tickets: ticketsAfter
               });
             } catch (e) {
               // Ohne catch würde die Runde im letzten Bildschirm hängen bleiben. Häufigste
@@ -2112,6 +2129,7 @@
                       <button onClick={() => { playClick(); setScreen('highscores'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><Trophy size={20} className="text-yellow-600"/> <span className="text-xs">Bestenliste</span></button>
                       <button onClick={() => { playClick(); setScreen('shop'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><ShoppingCart size={20} className="text-blue-500"/> <span className="text-xs">Shop</span></button>
                       <button onClick={() => { playClick(); setScreen('stickers'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors"><BookOpen size={20} className="text-pink-500"/> <span className="text-xs">Sticker</span></button>
+                      <a href={'../zahlen-flieger/index.html?profile=' + encodeURIComponent(activeProfileId)} onClick={playClick} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-sky-100 hover:bg-sky-200 text-sky-900"><span className="text-xl">🐤</span> <span className="text-xs">Flieger · {getTickets(profile)} 🎟️</span></a>
                       {ownedPets.length > 0 && <button onClick={() => { playClick(); setScreen('pets'); }} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-emerald-100 hover:bg-emerald-200 text-emerald-900"><span className="text-xl">🐾</span> <span className="text-xs">Gehege</span></button>}
                       {fullStickerAlbum && <button onClick={() => { playClick(); setScreen('adventure'); }} className="font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors bg-amber-100 hover:bg-amber-200 text-amber-900"><span className="text-xl">🗺️</span> <span className="text-xs">Abenteuerbuch</span></button>}
                     </div>
@@ -2570,6 +2588,13 @@
                       </div>
                     )}
 
+                    {roundRewards.tickets > 0 && (
+                      <div className="flex-1 bg-sky-50 rounded-2xl p-3 border border-sky-200 flex flex-col items-center justify-center animate-pop-in">
+                        <div className="text-sm font-bold text-sky-800 mb-1">Ticket</div>
+                        <div className="font-black text-xl text-sky-600 flex items-center gap-1">+{roundRewards.tickets} 🎟️</div>
+                      </div>
+                    )}
+
                     {roundRewards.sticker && (
                       <div className="flex-1 bg-pink-50 rounded-2xl p-3 border border-pink-200 flex flex-col items-center justify-center animate-pop-in" style={{ animationDelay: '0.5s' }}>
                         <div className="text-sm font-bold text-pink-800 mb-1">Neuer Sticker!</div>
@@ -2631,6 +2656,15 @@
                       <div className="font-black text-yellow-900 text-lg uppercase tracking-wider">Glückwunsch!</div>
                       <div className="font-bold text-yellow-800 mt-1">Du bist auf <span className="text-xl font-black text-yellow-600 bg-white px-2 py-0.5 rounded-md shadow-sm mx-1">Platz {roundRank}</span> der Bestenliste!</div>
                     </div>
+                  )}
+
+                  {!isBoxRewardResult && getTickets(profile) > 0 && (
+                    <a href={'../zahlen-flieger/index.html?profile=' + encodeURIComponent(activeProfileId)} className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-black text-lg py-3 rounded-xl mb-3 shadow-[0_4px_0_0_rgb(3,105,161)] active:shadow-none active:translate-y-1 transition-all">
+                      🐤 Zahlen-Flieger spielen ({getTickets(profile)} 🎟️)
+                    </a>
+                  )}
+                  {!isBoxRewardResult && roundRewards.ticketsFull && (
+                    <p className="text-xs font-bold text-sky-700 -mt-1 mb-3">Dein Ticket-Beutel ist voll ({MAX_TICKETS} 🎟️) - flieg doch mal eine Runde!</p>
                   )}
 
                   <div className="flex gap-3">
