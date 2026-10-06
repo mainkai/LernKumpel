@@ -20,6 +20,7 @@ const evalPrompt = (task) => `Du bist ein KI-Bildbewerter für Kinderzeichnungen
                     Bewerte, wie gut die Zeichnung zur Aufgabe passt.
                     Außerdem soll die Qualität (Farben, Details) der Zeichnung berücksichtigt werden.
                     Je mehr Details, Kreativität und Farbauswahl, desto höher die Bewertung.
+                    Hat die Aufgabe eine besondere Regel (z.B. nur bestimmte Farben oder Formen), zählt das Einhalten der Regel mehr als viele Farben.
                     Wenn das Bild schlecht ist, kannst du es mit einem lustigen / sarkastischen Spruch kommentieren (aber in Worten, die kleine Kinder noch verstehen).
                     Antworte nur als JSON mit den Feldern:
                     - score: ganze Zahl 0 bis 100
