@@ -903,6 +903,8 @@
 
           const onPointerDown = (event) => {
             event.preventDefault();
+            // Keep receiving moves while the stroke passes under the toolbar overlay.
+            event.currentTarget.setPointerCapture?.(event.pointerId);
             const point = pointFromEvent(event);
             const isErasing = isEraserPointerEvent(event);
             erasingRef.current = isErasing;
@@ -1505,14 +1507,15 @@
                         onPointerMove={onPointerMove}
                         onPointerUp={onPointerUp}
                         onPointerLeave={onPointerUp}
+                        onPointerCancel={onPointerUp}
                         className="w-full h-full bg-white rounded-xl touch-none shrink-0 grow border-4 border-slate-300"
                         style={{ cursor: tool === 'fill' ? 'crosshair' : 'default' }}
                       />
 
                       {/* Bottom Overlay Bar */}
                       <div className="absolute bottom-4 left-4 right-4 pointer-events-none z-10">
-                        <div className="pointer-events-auto mx-auto w-full flex justify-center overflow-visible">
-                          <div className="flex flex-nowrap items-center gap-2 bg-white/70 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
+                        <div className="pointer-events-none mx-auto w-full flex justify-center overflow-visible">
+                          <div className="pointer-events-auto flex flex-nowrap items-center gap-2 bg-white/70 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
                             <button onClick={() => setTool('brush')} title="Stift" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'brush' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🖌️</button>
                             <button onClick={() => setTool('fill')} title="Fill" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'fill' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🪣</button>
                             <div className="w-px h-8 bg-slate-200 mx-1"></div>
