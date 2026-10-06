@@ -56,6 +56,16 @@
                  box-shadow: 0 3px 8px rgba(15,23,42,0.2); font-size: 22px; line-height: 40px; text-align: center;
                  text-decoration: none; -webkit-tap-highlight-color: transparent; }
       .lk-home:active { transform: scale(0.92); }
+      .avimg { border-radius: 50%; vertical-align: middle; background: #fff; }
+      .look { background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 18px; padding: 10px; margin-top: 12px; }
+      .look h2 { font-size: 16px; margin: 0 0 6px; color: #0369a1; }
+      #preview { display: block; width: 180px; height: 90px; margin: 0 auto 6px; }
+      .skins { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 6px; }
+      .skin { border: 3px solid #e2e8f0; background: #fff; border-radius: 14px; padding: 4px 6px; min-width: 62px;
+              font: inherit; font-weight: bold; font-size: 11px; color: #64748b; cursor: pointer; }
+      .skin b { display: block; font-size: 24px; line-height: 1.2; }
+      .skin.on { border-color: #0ea5e9; background: #e0f2fe; color: #0c4a6e; }
+      .skin.locked { opacity: 0.45; cursor: default; }
       .toggle { border: 0; background: #f1f5f9; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 
@@ -133,6 +143,38 @@
     var FLOOR_LINES = ['Boing!', 'Hui!', 'Hopsa!', 'Trampolin!', 'Huiii!'];
     var HAPPY_LINES = ['Juhu!', 'Hihi!', 'Jippie!', 'Ich kann rechnen!', 'Piep piep!', 'Yeah!'];
     var CONFUSED_LINES = ['Hä?', 'Huch?', 'Ups!', 'Oh-oh!', 'Nanu?'];
+    var BIRD_ONLY_LINES = ['Mein Schnabel!', 'Piep piep!'];
+
+    // Statt des Vogels kann man selbst fliegen: Am Steuer sitzt der Avatar aus dem
+    // Mal-Atelier (oder das Profil-Tier). Der Papierflieger ist für alle da, die
+    // anderen Fluggeräte gibt es in den Überraschungskisten der Zahlen-Safari -
+    // die IDs müssen zu SURPRISE_REWARDS in zahlen-safari/index.html passen.
+    var VEHICLES = [
+      { id: 'bird', name: 'Vogel', icon: '🐤', free: true, color: '#fde047' },
+      { id: 'veh-paper', name: 'Papierflieger', icon: '✈️', free: true, color: '#f8fafc' },
+      { id: 'veh-propeller', name: 'Propeller', icon: '🛩️', color: '#ef4444' },
+      { id: 'veh-rocket', name: 'Rakete', icon: '🚀', color: '#e2e8f0' },
+      { id: 'veh-balloon', name: 'Ballon', icon: '🎈', color: '#f97316' },
+      { id: 'veh-ufo', name: 'Ufo', icon: '🛸', color: '#a78bfa' },
+      { id: 'veh-heli', name: 'Hubschrauber', icon: '🚁', color: '#facc15' },
+      { id: 'veh-broom', name: 'Zauberbesen', icon: '🧹', color: '#fde047' }
+    ];
+    // Zubehör aus der Zahlen-Safari (PET_ACCESSORIES dort). Platz am Kopf in
+    // Kopf-Radien: x/y = Mitte (negativ = links/oben), s = Größe. eye: sitzt auf den Augen.
+    var ACCESSORIES = {
+      'acc-flower': { icon: '🌸', x: -0.6, y: -0.75, s: 0.8 },
+      'acc-cap': { icon: '🧢', x: 0, y: -0.85, s: 1.4 },
+      'acc-party': { draw: 'party' },
+      'acc-bow': { icon: '🎀', x: 0.5, y: -0.9, s: 0.9 },
+      'acc-scarf': { icon: '🧣', x: 0, y: 0.95, s: 1.1 },
+      'acc-glasses': { icon: '🕶️', x: 0, y: 0, s: 1.25, eye: true },
+      'acc-helmet': { icon: '⛑️', x: 0, y: -0.75, s: 1.5 },
+      'acc-headphones': { icon: '🎧', x: 0, y: -0.25, s: 2.2 },
+      'acc-tophat': { icon: '🎩', x: 0, y: -1.2, s: 1.4 },
+      'acc-crown': { icon: '👑', x: 0, y: -1.15, s: 1.2 },
+      'acc-wizardhat': { draw: 'wizard' },
+      'acc-halo': { draw: 'halo' }
+    };
 
     // =====================================================================
     // KLEINE HELFER
@@ -252,6 +294,7 @@
       bonk: function () { tone(140, 0, 0.16, 'square', 0.08, 90); tone(1400, 0.12, 0.6, 'sine', 0.07, 300); },
       tonk: function () { tone(900, 0, 0.05, 'square', 0.05); tone(260, 0.03, 0.18, 'triangle', 0.14, 180); },
       boing: function () { tone(160, 0, 0.3, 'sine', 0.16, 560); },
+      beep: function () { tone(880, 0, 0.08, 'square', 0.05); tone(1175, 0.1, 0.12, 'square', 0.05); },
       tweet: function () { tone(1800, 0, 0.08, 'sine', 0.07, 2500); tone(2200, 0.1, 0.1, 'sine', 0.07, 1700); },
       end: function () { tone(523, 0, 0.15, 'triangle', 0.15); tone(659, 0.15, 0.15, 'triangle', 0.15); tone(784, 0.3, 0.15, 'triangle', 0.15); tone(1047, 0.45, 0.35, 'triangle', 0.15); }
     };
@@ -318,6 +361,44 @@
       return typeof p.tickets === 'number' ? p.tickets : WELCOME_TICKETS;
     }
 
+    function getVehicle(id) {
+      for (var i = 0; i < VEHICLES.length; i++) if (VEHICLES[i].id === id) return VEHICLES[i];
+      return VEHICLES[0];
+    }
+    function ownsVehicle(p, v) {
+      return v.free || !!(p && p.surpriseRewards && p.surpriseRewards.indexOf(v.id) !== -1);
+    }
+    function ownsAccessory(p, id) {
+      return !!(p && p.petAccessories && p.petAccessories.indexOf(id) !== -1 && ACCESSORIES[id]);
+    }
+
+    // Aussehen des Fliegers: wird bei jeder Profiländerung neu bestimmt, nicht pro Frame.
+    var skinId = 'bird', accessoryId = '';
+    var pilotImg = null, pilotImgSrc = '';
+
+    function refreshLook() {
+      var p = getProfile();
+      var v = getVehicle(p && p.fliegerSkin);
+      skinId = ownsVehicle(p, v) ? v.id : 'bird';
+      accessoryId = p && ownsAccessory(p, p.fliegerAccessory) ? p.fliegerAccessory : '';
+      var src = (p && p.avatarImage) || '';
+      if (src === pilotImgSrc) return;
+      pilotImgSrc = src;
+      pilotImg = null;
+      if (!src) return;
+      var img = new Image();
+      img.onload = function () { if (pilotImgSrc === src) pilotImg = img; };
+      img.src = src;
+    }
+
+    // Kleines rundes Profilbild fürs Menü: selbst gemalter Avatar oder Tier-Emoji.
+    function avatarHtml(p, size) {
+      if (p && p.avatarImage) {
+        return '<img class="avimg" src="' + esc(p.avatarImage) + '" alt="" style="width:' + size + 'px;height:' + size + 'px">';
+      }
+      return esc(p ? p.avatar : '');
+    }
+
     auth.signInAnonymously().catch(function (e) { console.error('Auth error', e); });
     auth.onAuthStateChanged(function (user) {
       if (!user) return;
@@ -337,6 +418,7 @@
               for (var i = 0; i < profiles.length; i++) if (profiles[i].id === wanted) activeProfileId = wanted;
               if (!activeProfileId && profiles.length === 1) activeProfileId = profiles[0].id;
             }
+            refreshLook();
             if (state === 'loading') state = activeProfileId ? 'menu' : 'profiles';
             if (state === 'menu' || state === 'profiles') renderOverlay();
           }, function (err) { console.error('Profile error:', err); });
@@ -396,6 +478,14 @@
                blink: 0, nextBlink: 2, bubble: null };
     }
 
+    // Ohne Vogel gibt es keinen Schnabel zum Piepen.
+    function pickLine(list) {
+      if (skinId === 'bird') return pick(list);
+      var out = [];
+      for (var i = 0; i < list.length; i++) if (BIRD_ONLY_LINES.indexOf(list[i]) === -1) out.push(list[i]);
+      return pick(out);
+    }
+
     function birdSay(text, seconds) {
       bird.bubble = { text: text, t: seconds || 1.4, age: 0 };
     }
@@ -403,7 +493,7 @@
     function feathers(count) {
       for (var i = 0; i < count; i++) {
         particles.push({ feather: true, x: bird.x, y: bird.y, vx: -60 + Math.random() * 120, vy: -120 - Math.random() * 120,
-                         rot: Math.random() * 6, vr: -6 + Math.random() * 12, life: 1.4 + Math.random() * 0.6, color: '#fde047' });
+                         rot: Math.random() * 6, vr: -6 + Math.random() * 12, life: 1.4 + Math.random() * 0.6, color: getVehicle(skinId).color });
       }
     }
 
@@ -508,7 +598,7 @@
         feedback = { good: true, text: pick(PRAISE), t: 1.2 };
         sfx.good();
         bird.happy = 1; bird.spin = 1;
-        if (Math.random() < 0.4) { birdSay(pick(HAPPY_LINES), 1.1); setTimeout(sfx.tweet, 350); }
+        if (Math.random() < 0.4) { birdSay(pickLine(HAPPY_LINES), 1.1); setTimeout(skinId === 'bird' ? sfx.tweet : sfx.beep, 350); }
       } else {
         if (g) {
           g.wrong = true;
@@ -655,7 +745,7 @@
           g.shake = 0.4;
           bird.xEyes = 0.6; bird.dizzy = 2; bird.bump = 4; bird.squash = 0.25;
           bird.vy = -80;
-          birdSay(pick(BONK_LINES), 1.6);
+          birdSay(pickLine(BONK_LINES), 1.6);
         }
         if (!g.resolved && bird.x >= g.x) {
           resolveGate(g);
@@ -803,11 +893,37 @@
       if (invuln > 0 && Math.floor(invuln * 10) % 2 === 0 && state === 'play') ctx.globalAlpha = 0.55;
       ctx.save();
       ctx.translate(bird.x, bird.y);
-      // Salto nach einem richtigen Tor
-      ctx.rotate(bird.rot - (1 - bird.spin) * Math.PI * 2 * (bird.spin > 0 ? 1 : 0));
+      // Salto nach einem richtigen Tor. Der Ballon kippt kaum, er schaukelt nur.
+      var tilt = skinId === 'veh-balloon' ? bird.rot * 0.25 + Math.sin(time * 2) * 0.05 : bird.rot;
+      ctx.rotate(tilt - (1 - bird.spin) * Math.PI * 2 * (bird.spin > 0 ? 1 : 0));
       var sq = Math.min(1, bird.squash / 0.25);
       ctx.scale(1 + sq * 0.35, 1 - sq * 0.3);
-      var r = bird.r;
+      if (skinId === 'bird') drawBirdBody(bird.r);
+      else drawVehicle(skinId);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      if (bird.dizzy > 0) drawDizzyStars();
+      if (bird.confused > 0) {
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = '900 24px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('?', bird.x + 4 + Math.sin(time * 12) * 3, bird.y - bird.r - 16);
+      }
+      if (bird.bubble) drawBubble();
+    }
+
+    // Beule auf dem Kopf (wächst kurz an, schrumpft dann langsam)
+    function drawBump(x, y) {
+      var b = Math.min(1, bird.bump) * (bird.bump > 3.6 ? (4 - bird.bump) / 0.4 : 1);
+      ctx.fillStyle = '#fb7185';
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 3 + 5 * b, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath(); ctx.arc(x - 2, y - 1 - 2 * b, 1.6 * b, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawBirdBody(r) {
       // Körper
       ctx.fillStyle = '#facc15';
       ctx.strokeStyle = '#ca8a04';
@@ -828,32 +944,196 @@
       ctx.fill(); ctx.stroke();
       ctx.restore();
       drawEye(7, -6);
-      // Beule auf dem Kopf (wächst kurz an, schrumpft dann langsam)
-      if (bird.bump > 0) {
-        var b = Math.min(1, bird.bump) * (bird.bump > 3.6 ? (4 - bird.bump) / 0.4 : 1);
-        ctx.fillStyle = '#fb7185';
-        ctx.strokeStyle = '#e11d48';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(1, -r + 1, 3 + 5 * b, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.beginPath(); ctx.arc(-1, -r - 2 * b, 1.6 * b, 0, Math.PI * 2); ctx.fill();
-      }
+      if (bird.bump > 0) drawBump(1, -r + 1);
       // Schnabel
       ctx.fillStyle = '#fb923c';
       ctx.beginPath(); ctx.moveTo(r - 3, -1); ctx.lineTo(r + 11, 3); ctx.lineTo(r - 3, 8); ctx.closePath(); ctx.fill();
       // Wange
       ctx.fillStyle = 'rgba(251,113,133,0.55)';
       ctx.beginPath(); ctx.arc(3, 4, 3.5, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      ctx.globalAlpha = 1;
-      if (bird.dizzy > 0) drawDizzyStars();
-      if (bird.confused > 0) {
-        ctx.fillStyle = '#7c3aed';
-        ctx.font = '900 24px "Trebuchet MS", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('?', bird.x + 4 + Math.sin(time * 12) * 3, bird.y - bird.r - 16);
+      drawAccessory(accessoryId, 0, 0, r, 0.4, -0.35);
+    }
+
+    // =====================================================================
+    // FLUGGERÄTE MIT PILOT
+    // Koordinaten: (0,0) ist die Mitte der Trefferfläche, +x zeigt nach vorne.
+    // =====================================================================
+    function ellipsePath(x, y, rx, ry) {
+      ctx.beginPath();
+      if (ctx.ellipse) { ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); return; }
+      ctx.save(); ctx.translate(x, y); ctx.scale(rx / ry, 1); ctx.arc(0, 0, ry, 0, Math.PI * 2); ctx.restore();
+    }
+    function polygon(points) {
+      ctx.beginPath();
+      ctx.moveTo(points[0], points[1]);
+      for (var i = 2; i < points.length; i += 2) ctx.lineTo(points[i], points[i + 1]);
+      ctx.closePath();
+    }
+    function paint(fill, stroke, width) {
+      ctx.fillStyle = fill; ctx.fill();
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = width || 2.5; ctx.stroke(); }
+    }
+    function circlePath(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }
+
+    // Der Pilot: runder Avatar (Bild) oder das Tier-Emoji des Profils. Weil das
+    // Avatar-Bild keine beweglichen Augen hat, zeigen Pflaster, Beule und Herzchen
+    // die Gefühle.
+    function drawPilot(x, y, hr) {
+      if (pilotImg) {
+        ctx.save();
+        circlePath(x, y, hr); ctx.clip();
+        ctx.drawImage(pilotImg, x - hr, y - hr, hr * 2, hr * 2);
+        if (bird.xEyes > 0) { ctx.fillStyle = 'rgba(148,163,184,0.35)'; ctx.fillRect(x - hr, y - hr, hr * 2, hr * 2); }
+        ctx.restore();
+        circlePath(x, y, hr);
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      } else {
+        var p = getProfile();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = Math.round(hr * 1.9) + 'px sans-serif';
+        ctx.fillText((p && p.avatar) || '🙂', x, y + hr * 0.12);
       }
-      if (bird.bubble) drawBubble();
+      if (bird.xEyes > 0) {
+        // Pflaster-Kreuz
+        ctx.save();
+        ctx.translate(x - hr * 0.35, y - hr * 0.45);
+        ctx.fillStyle = '#fcd9b6'; ctx.strokeStyle = '#d6a77a'; ctx.lineWidth = 1;
+        for (var k = 0; k < 2; k++) {
+          ctx.rotate(k === 0 ? 0.6 : -1.2);
+          roundRect(-hr * 0.5, -hr * 0.14, hr, hr * 0.28, 2); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (bird.bump > 0) drawBump(x + hr * 0.2, y - hr + 1);
+      if (bird.happy > 0) {
+        for (var i = 0; i < 2; i++) {
+          var rise = (time * 18 + i * 9) % 18;
+          ctx.globalAlpha = Math.max(0, 1 - rise / 18);
+          drawHeart(x + (i ? hr * 0.9 : -hr * 1.1), y - hr - 2 - rise, 9, true);
+        }
+        ctx.globalAlpha = 1;
+      }
+      drawAccessory(accessoryId, x, y, hr, 0, -0.1);
+    }
+
+    function drawVehicle(id) {
+      var spin, flame;
+      if (id === 'veh-paper') {
+        drawPilot(-4, -9, 12);
+        polygon([26, 2, -24, -4, -6, 4]); paint('#ffffff', '#64748b', 2);
+        polygon([26, 2, -6, 4, -20, 11]); paint('#cbd5e1', '#64748b', 2);
+      } else if (id === 'veh-propeller') {
+        polygon([-24, 2, -34, -13, -20, -2]); paint('#ef4444', '#991b1b');
+        drawPilot(-2, -8, 12);
+        ellipsePath(0, 6, 28, 10); paint('#ef4444', '#991b1b');
+        ellipsePath(-2, 3, 18, 2.5); paint('rgba(255,255,255,0.45)');
+        ellipsePath(-2, 10, 13, 4); paint('#b91c1c', '#7f1d1d', 2);
+        circlePath(27, 6, 4); paint('#64748b', '#334155', 2);
+        spin = Math.abs(Math.sin(time * 40));
+        ellipsePath(31, 6, 2.2, 3 + 12 * spin); paint('rgba(30,41,59,0.7)');
+      } else if (id === 'veh-rocket') {
+        // Flamme: beim Flattern größer
+        flame = 9 + 14 * bird.flap + Math.sin(time * 50) * 3;
+        polygon([-27, -7, -27 - flame, 0, -27, 7]); paint('#fb923c');
+        polygon([-27, -4, -27 - flame * 0.6, 0, -27, 4]); paint('#fde047');
+        polygon([-18, -8, -30, -19, -8, -8]); paint('#ef4444', '#991b1b', 2);
+        polygon([-18, 8, -30, 19, -8, 8]); paint('#ef4444', '#991b1b', 2);
+        ellipsePath(0, 0, 30, 11); paint('#f1f5f9');
+        ctx.save(); ellipsePath(0, 0, 30, 11); ctx.clip();
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(19, -12, 14, 24);
+        ctx.restore();
+        ellipsePath(0, 0, 30, 11); ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5; ctx.stroke();
+        circlePath(2, 0, 11); paint('#bae6fd');
+        drawPilot(2, 0, 9);
+        circlePath(2, 0, 11); ctx.strokeStyle = '#475569'; ctx.lineWidth = 3; ctx.stroke();
+      } else if (id === 'veh-balloon') {
+        ellipsePath(0, -24, 17, 18); paint('#f97316');
+        ctx.save(); ellipsePath(0, -24, 17, 18); ctx.clip();
+        ellipsePath(0, -24, 6, 18); paint('#fde047');
+        ctx.restore();
+        ellipsePath(0, -24, 17, 18); ctx.strokeStyle = '#9a3412'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-11, -10); ctx.lineTo(-10, 11); ctx.moveTo(11, -10); ctx.lineTo(10, 11); ctx.stroke();
+        if (bird.flap > 0.1) {
+          flame = 4 + 8 * bird.flap;
+          polygon([-3, -6, 0, -6 - flame, 3, -6]); paint('#fb923c');
+        }
+        drawPilot(0, 4, 9.5);
+        roundRect(-12, 10, 24, 11, 3); paint('#a16207', '#713f12', 2);
+        ctx.strokeStyle = 'rgba(113,63,18,0.6)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-12, 15.5); ctx.lineTo(12, 15.5); ctx.stroke();
+      } else if (id === 'veh-ufo') {
+        ctx.beginPath(); ctx.arc(0, 2, 17, Math.PI, 0); ctx.closePath(); paint('rgba(186,230,253,0.55)');
+        drawPilot(0, -6, 11);
+        ctx.beginPath(); ctx.arc(0, 2, 17, Math.PI, 0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 2, 13, Math.PI * 1.15, Math.PI * 1.4); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+        ellipsePath(0, 11, 14, 5); paint('#7c3aed', '#4c1d95', 2);
+        ellipsePath(0, 6, 31, 8); paint('#a78bfa', '#5b21b6');
+        for (var i = 0; i < 5; i++) {
+          circlePath(-20 + i * 10, 7, 2.6);
+          paint((Math.floor(time * 6) + i) % 2 ? '#fde047' : '#fef9c3');
+        }
+      } else if (id === 'veh-heli') {
+        roundRect(-36, -1, 24, 6, 3); paint('#eab308', '#a16207', 2);
+        spin = Math.abs(Math.sin(time * 35));
+        ellipsePath(-36, 2, 1.8, 2 + 7 * spin); paint('rgba(30,41,59,0.7)');
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(-16, 21); ctx.lineTo(16, 21); ctx.moveTo(-8, 16); ctx.lineTo(-10, 21); ctx.moveTo(8, 16); ctx.lineTo(10, 21); ctx.stroke();
+        circlePath(0, 2, 17); paint('#facc15', '#a16207');
+        circlePath(3, 0, 12); paint('#e0f2fe');
+        drawPilot(3, 0, 10.5);
+        circlePath(3, 0, 12); ctx.strokeStyle = '#a16207'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, -20); ctx.strokeStyle = '#475569'; ctx.lineWidth = 3; ctx.stroke();
+        spin = Math.abs(Math.cos(time * 30));
+        ellipsePath(0, -21, 4 + 28 * spin, 2); paint('rgba(30,41,59,0.75)');
+      } else if (id === 'veh-broom') {
+        for (var s = 0; s < 3; s++) {
+          var age = (time * 2 + s / 3) % 1;
+          ctx.globalAlpha = 1 - age;
+          ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1;
+          drawStar(-48 - age * 26, 8 + Math.sin((time + s) * 5) * 6, 3.5);
+        }
+        ctx.globalAlpha = 1;
+        polygon([-26, 6, -44, -1, -47, 10, -44, 21, -26, 14]); paint('#facc15', '#a16207', 2);
+        ctx.strokeStyle = 'rgba(161,98,7,0.7)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-28, 10); ctx.lineTo(-45, 4); ctx.moveTo(-28, 10); ctx.lineTo(-46, 10); ctx.moveTo(-28, 10); ctx.lineTo(-45, 17); ctx.stroke();
+        polygon([-4, 2, -26, -2 + Math.sin(time * 12) * 4, -18, 12]); paint('#7c3aed', '#4c1d95', 2);
+        drawPilot(0, -6, 12);
+        roundRect(-28, 7, 58, 5, 2.5); paint('#92400e', '#78350f', 1.5);
+        roundRect(-29, 5, 5, 9, 2); paint('#dc2626');
+      }
+    }
+
+    // Zubehör sitzt am Kopf: (x,y) Kopfmitte, hr Kopfradius, eyeX/eyeY wo die Augen sind.
+    function drawAccessory(id, x, y, hr, eyeX, eyeY) {
+      var a = ACCESSORIES[id];
+      if (!a) return;
+      if (a.draw === 'party') {
+        ctx.save(); ctx.translate(x + hr * 0.15, y - hr * 0.8); ctx.rotate(0.25);
+        polygon([-hr * 0.5, 0, 0, -hr * 1.3, hr * 0.5, 0]); paint('#ec4899', '#9d174d', 1.5);
+        ctx.strokeStyle = '#fde047'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-hr * 0.3, -hr * 0.45); ctx.lineTo(hr * 0.28, -hr * 0.4); ctx.moveTo(-hr * 0.14, -hr * 0.9); ctx.lineTo(hr * 0.12, -hr * 0.88); ctx.stroke();
+        circlePath(0, -hr * 1.35, hr * 0.18); paint('#fde047');
+        ctx.restore();
+      } else if (a.draw === 'wizard') {
+        ctx.save(); ctx.translate(x, y - hr * 0.75); ctx.rotate(-0.1);
+        ellipsePath(0, 0, hr * 1.05, hr * 0.22); paint('#4338ca', '#1e1b4b', 1.5);
+        polygon([-hr * 0.6, 0, hr * 0.25, -hr * 1.55, hr * 0.6, 0]); paint('#4338ca', '#1e1b4b', 1.5);
+        ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 0.8;
+        drawStar(-hr * 0.05, -hr * 0.5, hr * 0.2);
+        drawStar(hr * 0.2, -hr * 0.95, hr * 0.13);
+        ctx.restore();
+      } else if (a.draw === 'halo') {
+        ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1;
+        for (var i = 0; i < 4; i++) {
+          var ang = time * 2.5 + i * Math.PI / 2;
+          drawStar(x + Math.cos(ang) * hr * 0.9, y - hr * 1.3 + Math.sin(ang) * hr * 0.25, hr * 0.22);
+        }
+      } else {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = Math.round(hr * a.s) + 'px sans-serif';
+        ctx.fillText(a.icon, x + (a.eye ? eyeX : a.x) * hr, y + (a.eye ? eyeY : a.y) * hr);
+      }
     }
 
     // Auge mit Gesichtsausdruck: X (k.o.), Spirale (schwindelig), ^ (fröhlich), zu (blinzeln).
@@ -1061,6 +1341,7 @@
         ctx.textAlign = 'center';
         ctx.fillText('👆 Tippen = Flattern!', W / 2, playBottom() - 92);
       }
+      drawPreview();
     }
 
     var lastT = 0;
@@ -1077,9 +1358,30 @@
     // =====================================================================
     var overlay = document.getElementById('overlay');
 
+    var previewCanvas = null;
+
     function show(html) {
       overlay.innerHTML = '<div class="card">' + html + '</div>';
       overlay.className = '';
+      previewCanvas = document.getElementById('preview');
+    }
+
+    // Zeichnet den Flieger zusätzlich klein in die Menükarte (das große Canvas liegt
+    // dort unter dem halb durchsichtigen Menü).
+    function drawPreview() {
+      if (!previewCanvas || !bird || state !== 'menu' || overlay.className === 'hidden') return;
+      var mainCtx = ctx, sx = bird.x, sy = bird.y, sbub = bird.bubble;
+      var k = previewCanvas.height / 72;
+      ctx = previewCanvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      ctx.setTransform(k, 0, 0, k, 0, 0);
+      bird.x = previewCanvas.width / k / 2;
+      bird.y = 44 + Math.sin(time * 3) * 2;
+      bird.bubble = null;
+      drawBird();
+      bird.x = sx; bird.y = sy; bird.bubble = sbub;
+      ctx = mainCtx;
     }
     function hideOverlay() { overlay.className = 'hidden'; }
 
@@ -1095,6 +1397,14 @@
       }
       if (state === 'over' && !endShown) { hideOverlay(); return; }
 
+      // Das Firebase-compat-SDK speichert den Login nur unter http(s) - unter file://
+      // gibt es bei jedem Laden ein neues, leeres "Gerät" ohne Profile.
+      if (noDevice && window.location.protocol === 'file:') {
+        show('<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1>' +
+          '<p class="hint">Der Flieger findet die Profile nur, wenn er über einen Webserver läuft (nicht als file://).<br>' +
+          'Im Projektordner z.B. <code>python3 -m http.server</code> starten und <code>http://localhost:8000/zahlen-flieger/</code> öffnen.</p>');
+        return;
+      }
       if (noDevice) {
         show('<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1>' +
           '<p class="hint">Auf diesem Gerät gibt es noch kein Profil. Lege zuerst in der Zahlen-Safari eins an!</p>' +
@@ -1107,7 +1417,7 @@
         var html = '<div class="big-emoji">🐤</div><h1 class="title">Zahlen-<span>Flieger</span></h1><p class="sub">Wer fliegt?</p><div class="profiles">';
         for (var i = 0; i < profiles.length; i++) {
           var p = profiles[i];
-          html += '<button class="profile" data-profile="' + esc(p.id) + '"><span class="av">' + esc(p.avatar) + '</span>' +
+          html += '<button class="profile" data-profile="' + esc(p.id) + '"><span class="av">' + avatarHtml(p, 48) + '</span>' +
             esc(p.name) + '<small>🎟️ ' + ticketsOf(p) + '</small></button>';
         }
         html += '</div><p class="tiny"><a href="../index.html">← LernKumpel</a></p>';
@@ -1139,7 +1449,7 @@
       }
 
       html2 += '<div class="row" style="margin-top:12px">' +
-        '<button class="chip" data-action="profiles">' + esc(prof.avatar) + ' ' + esc(prof.name) + '</button>' +
+        '<button class="chip" data-action="profiles">' + avatarHtml(prof, 24) + ' ' + esc(prof.name) + '</button>' +
         '<span class="chip ticket">🎟️ × ' + tickets + '</span>' +
         '<button class="toggle" data-action="sound">' + (soundOn ? '🔊' : '🔇') + '</button>' +
         '</div>';
@@ -1166,20 +1476,68 @@
       } else if (state === 'over') {
         html2 += '<button class="btn btn-plain" data-action="menu">Anderes Level</button>';
       }
+      if (state !== 'over') html2 += lookHtml(prof);
       html2 += '<p class="tiny"><a href="' + safariLink + '">🦁 Zahlen-Safari</a> · <a href="../index.html">LernKumpel</a></p>';
       show(html2);
     }
 
+    // "Dein Flieger": Fluggerät und Zubehör wählen, oben eine Vorschau.
+    function lookHtml(prof) {
+      var h = '<div class="look"><h2>Dein Flieger</h2><canvas id="preview" width="360" height="180"></canvas><div class="skins">';
+      var locked = false;
+      for (var i = 0; i < VEHICLES.length; i++) {
+        var v = VEHICLES[i];
+        if (ownsVehicle(prof, v)) {
+          h += '<button class="skin' + (v.id === skinId ? ' on' : '') + '" data-skin="' + v.id + '"><b>' + v.icon + '</b>' + esc(v.name) + '</button>';
+        } else {
+          locked = true;
+          h += '<span class="skin locked"><b>' + v.icon + '</b>🎁</span>';
+        }
+      }
+      h += '</div>';
+      if (locked) h += '<p class="tiny" style="margin:0 0 6px">🎁 Mehr Fluggeräte gibt es in den Überraschungskisten der Zahlen-Safari.</p>';
+      var accIds = [];
+      for (var id in ACCESSORIES) if (ACCESSORIES.hasOwnProperty(id) && ownsAccessory(prof, id)) accIds.push(id);
+      if (accIds.length) {
+        h += '<div class="skins"><button class="skin' + (accessoryId ? '' : ' on') + '" data-acc="none"><b>🚫</b>Ohne</button>';
+        for (var j = 0; j < accIds.length; j++) {
+          var a = ACCESSORIES[accIds[j]];
+          var icon = a.icon || (a.draw === 'party' ? '🥳' : a.draw === 'wizard' ? '🧙' : '✨');
+          h += '<button class="skin' + (accIds[j] === accessoryId ? ' on' : '') + '" data-acc="' + accIds[j] + '"><b>' + icon + '</b></button>';
+        }
+        h += '</div>';
+      }
+      if (!prof.avatarImage && skinId !== 'bird') {
+        h += '<p class="tiny" style="margin:0">Tipp: Im <a href="../mal-atelier/index.html">Mal-Atelier</a> kannst du dich selbst malen - dann sitzt DU am Steuer!</p>';
+      }
+      return h + '</div>';
+    }
+
+    function setLook(fields) {
+      var p = getProfile();
+      if (!p) return;
+      for (var k in fields) if (fields.hasOwnProperty(k)) p[k] = fields[k];
+      saveProfile(fields);
+      refreshLook();
+      renderOverlay();
+    }
+
     overlay.addEventListener('click', function (e) {
       var el = e.target;
-      while (el && el !== overlay && !el.getAttribute('data-action') && !el.getAttribute('data-level') && !el.getAttribute('data-profile') && !el.getAttribute('data-mode')) el = el.parentNode;
+      while (el && el !== overlay && !el.getAttribute('data-action') && !el.getAttribute('data-level') && !el.getAttribute('data-profile') && !el.getAttribute('data-mode') && !el.getAttribute('data-skin') && !el.getAttribute('data-acc')) el = el.parentNode;
       if (!el || el === overlay) return;
       initAudio();
       var action = el.getAttribute('data-action');
       var lvl = el.getAttribute('data-level');
       var prof = el.getAttribute('data-profile');
       var newMode = el.getAttribute('data-mode');
-      if (newMode) {
+      var skin = el.getAttribute('data-skin');
+      var acc = el.getAttribute('data-acc');
+      if (skin) {
+        setLook({ fliegerSkin: skin });
+      } else if (acc) {
+        setLook({ fliegerAccessory: acc === 'none' ? '' : acc });
+      } else if (newMode) {
         mode = newMode; store('zf_mode', newMode);
         renderOverlay();
       } else if (action === 'resume') {
@@ -1189,6 +1547,7 @@
         if (state === 'play' && problem && !nextPending) say(problem.speak);
       } else if (prof) {
         activeProfileId = prof; store('zf_profile', prof);
+        refreshLook();
         state = 'menu'; renderOverlay();
       } else if (lvl) {
         levelId = lvl; store('zf_level', lvl);

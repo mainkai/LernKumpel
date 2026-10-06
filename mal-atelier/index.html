@@ -486,6 +486,197 @@
           };
         };
 
+        // --- AVATAR (Sonderaufgabe) ---
+        // Der Avatar landet als kleines rundes Bild im Profil (global_profiles.avatarImage)
+        // und erscheint in allen LernKumpel-Apps. AVATAR_MAX_CHARS muss zu firestore.rules passen.
+        const AVATAR_SIZE = 256;
+        const AVATAR_MAX_CHARS = 150000;
+        const AVATAR_STYLES = [
+          { key: 'kinderbuch', label: 'Kinderbuch', icon: '📖', text: '' },
+          { key: 'astronaut', label: 'Astronaut', icon: '🧑‍🚀', text: 'Die Figur trägt einen weißen Astronautenanzug mit Helm, das Visier ist offen und das Gesicht gut sichtbar.' },
+          { key: 'pirat', label: 'Pirat', icon: '🏴‍☠️', text: 'Die Figur ist als Pirat verkleidet: Piratenhut mit Totenkopf und gestreiftes Hemd.' },
+          { key: 'ritter', label: 'Ritter', icon: '🛡️', text: 'Die Figur trägt eine glänzende Ritterrüstung mit Helm, das Visier ist offen und das Gesicht gut sichtbar.' },
+          { key: 'superheld', label: 'Superheld', icon: '🦸', text: 'Die Figur ist ein Superheld mit bunter Augenmaske und Umhang.' },
+          { key: 'zauberer', label: 'Zauberer', icon: '🧙', text: 'Die Figur trägt einen spitzen Zauberhut mit Sternen und einen Zaubermantel.' },
+          { key: 'koenig', label: 'König/in', icon: '👑', text: 'Die Figur trägt eine goldene Krone und einen roten königlichen Umhang.' },
+          { key: 'tier', label: 'Tierkostüm', icon: '🦊', text: 'Die Figur trägt ein kuscheliges Fuchs-Kostüm mit Kapuze und Fuchsohren, das Gesicht bleibt frei.' },
+          { key: 'roboter', label: 'Roboter', icon: '🤖', text: 'Die Figur ist ein freundlicher Roboter mit Antennen, aber mit demselben Gesicht, derselben Haarfarbe und Frisur.' }
+        ];
+        const buildAvatarPrompt = (style, fromPhoto) => [
+          'Erstelle aus diesem Bild einen Cartoon-Avatar im Stil eines fröhlichen Kinderbuchs.',
+          fromPhoto
+            ? 'Das Bild enthält ein Foto. Mache daraus eine gezeichnete Cartoon-Figur (nicht fotorealistisch), die die wichtigsten Merkmale behält: Haarfarbe, Frisur, Augenfarbe, Hautton und Brille, falls vorhanden.'
+            : 'Das Bild ist eine Kinderzeichnung, ein Selbstporträt. Behalte die Ideen der Zeichnung bei: Haarfarbe, Frisur, Farben und Kleidung.',
+          'Zeige nur Kopf und Schultern, von vorne, freundlich lächelnd, mit großen Augen, klaren dunklen Konturen und kräftigen Farben.',
+          'Der Kopf steht genau in der Bildmitte und füllt den größten Teil des Bildes, damit er gut in einen runden Ausschnitt passt.',
+          'Quadratisches Bild, schlichter einfarbiger hellblauer Hintergrund, kein Text.',
+          style?.text || ''
+        ].filter(Boolean).join(' ');
+
+        const loadImage = (src) => new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Bild konnte nicht geladen werden.'));
+          img.src = src;
+        });
+
+        const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('Bild konnte nicht gelesen werden.'));
+          reader.readAsDataURL(blob);
+        });
+
+        // Externe Bild-URLs würden das Canvas "verunreinigen" (CORS) - deshalb vorher als data:-URL holen.
+        const ensureDataUrl = async (url) => {
+          if (!url || url.startsWith('data:')) return url;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('KI-Bild konnte nicht geladen werden.');
+          return blobToDataUrl(await response.blob());
+        };
+
+        // Rund ausschneiden und so klein kodieren, dass es ins Profil-Dokument passt.
+        // WebP kann Transparenz und ist klein; Browser ohne WebP-Export liefern PNG, dann wird verkleinert.
+        const encodeAvatar = (source) => {
+          for (const size of [AVATAR_SIZE, 224, 192, 160, 128]) {
+            const out = document.createElement('canvas');
+            out.width = size;
+            out.height = size;
+            const ctx = out.getContext('2d');
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(source, 0, 0, source.width, source.height, 0, 0, size, size);
+            const dataUrl = out.toDataURL('image/webp', 0.85);
+            if (dataUrl.length <= AVATAR_MAX_CHARS) return dataUrl;
+          }
+          throw new Error('Der Avatar ist zu groß zum Speichern.');
+        };
+
+        const ProfileAvatar = ({ profile, size = 40, className = '' }) => (
+          profile?.avatarImage
+            ? <img src={profile.avatarImage} alt="" className={`rounded-full inline-block shrink-0 bg-white ${className}`} style={{ width: size, height: size }} />
+            : <span className={`inline-block leading-none ${className}`} style={{ fontSize: Math.round(size * 0.8) }}>{profile?.avatar}</span>
+        );
+
+        // Ausschnitt wählen: Bild verschieben (ziehen) und zoomen, der Kreis zeigt den späteren Avatar.
+        const CircleCropper = ({ src, title, confirmLabel, outputSize, onConfirm, onCancel }) => {
+          const VIEW = 360;
+          const canvasRef = useRef(null);
+          const imgRef = useRef(null);
+          const dragRef = useRef(null);
+          const [zoom, setZoom] = useState(1);
+          const [offset, setOffset] = useState({ x: 0, y: 0 });
+          const [ready, setReady] = useState(false);
+          const [loadError, setLoadError] = useState('');
+
+          useEffect(() => {
+            let cancelled = false;
+            setReady(false);
+            setZoom(1);
+            setOffset({ x: 0, y: 0 });
+            loadImage(src)
+              .then((img) => { if (!cancelled) { imgRef.current = img; setReady(true); } })
+              .catch((err) => { if (!cancelled) setLoadError(err.message); });
+            return () => { cancelled = true; };
+          }, [src]);
+
+          const paint = (ctx, size, withGuide) => {
+            const img = imgRef.current;
+            if (!img) return;
+            const k = size / VIEW;
+            const base = Math.max(size / img.width, size / img.height) * zoom;
+            const w = img.width * base;
+            const h = img.height * base;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, (size - w) / 2 + offset.x * k, (size - h) / 2 + offset.y * k, w, h);
+            if (withGuide) {
+              ctx.fillStyle = 'rgba(15, 23, 42, 0.5)';
+              ctx.beginPath();
+              ctx.rect(0, 0, size, size);
+              ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+              ctx.fill('evenodd');
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 3;
+              ctx.setLineDash([10, 8]);
+              ctx.beginPath();
+              ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+          };
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas || !ready) return;
+            paint(canvas.getContext('2d'), VIEW, true);
+          }, [ready, zoom, offset]);
+
+          const onPointerDown = (event) => {
+            event.preventDefault();
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            dragRef.current = { x: event.clientX, y: event.clientY, start: offset };
+          };
+          const onPointerMove = (event) => {
+            const drag = dragRef.current;
+            if (!drag) return;
+            const rect = canvasRef.current.getBoundingClientRect();
+            const k = VIEW / Math.max(1, rect.width);
+            setOffset({ x: drag.start.x + (event.clientX - drag.x) * k, y: drag.start.y + (event.clientY - drag.y) * k });
+          };
+          const onPointerUp = () => { dragRef.current = null; };
+
+          const confirm = () => {
+            const out = document.createElement('canvas');
+            out.width = outputSize;
+            out.height = outputSize;
+            paint(out.getContext('2d'), outputSize, false);
+            onConfirm(out);
+          };
+
+          return (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-5 text-center animate-pop-in">
+                <p className="font-black text-xl text-slate-800 mb-1">{title}</p>
+                <p className="text-sm text-slate-500 font-semibold mb-3">Ziehen zum Verschieben, Regler zum Zoomen.</p>
+                {loadError ? (
+                  <p className="text-red-500 font-semibold my-6">{loadError}</p>
+                ) : (
+                  <canvas
+                    ref={canvasRef}
+                    width={VIEW}
+                    height={VIEW}
+                    onPointerDown={onPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerUp}
+                    className="w-full max-w-[360px] aspect-square mx-auto rounded-2xl bg-slate-100 touch-none cursor-move"
+                  />
+                )}
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="text-lg">🔍</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.02"
+                    value={zoom}
+                    onChange={(event) => setZoom(Number(event.target.value))}
+                    className="flex-1 accent-indigo-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <button onClick={onCancel} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl">Abbrechen</button>
+                  <button onClick={confirm} disabled={!ready} className="bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white font-black py-3 rounded-xl">{confirmLabel}</button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
                 // --- CUSTOM HOOKS ---
         function useAudio() {
           const ctxRef = useRef(null);
@@ -562,6 +753,19 @@
           const [evaluationModel, setEvaluationModel] = useState(DEFAULT_EVALUATION_MODEL);
           const [imageEditModel, setImageEditModel] = useState(DEFAULT_IMAGE_EDIT_MODEL);
           const [selectedDifficulty, setSelectedDifficulty] = useState(DIFFICULTY_OPTIONS[0].key);
+
+          // Sonderaufgabe "Mein Avatar"
+          const [avatarStyleKey, setAvatarStyleKey] = useState(AVATAR_STYLES[0].key);
+          const [avatarPrompt, setAvatarPrompt] = useState('');
+          const [isAvatarPromptOpen, setIsAvatarPromptOpen] = useState(false);
+          const [avatarPhotoUsed, setAvatarPhotoUsed] = useState(false);
+          const [avatarResultUrl, setAvatarResultUrl] = useState('');
+          const [avatarCrop, setAvatarCrop] = useState(null); // { src, target: 'photo' | 'result' }
+          const [avatarNotice, setAvatarNotice] = useState('');
+          const [photoGate, setPhotoGate] = useState(null); // { a, b, answer }
+          const [isPhotoUnlocked, setIsPhotoUnlocked] = useState(false);
+          const avatarPhotoUsedRef = useRef(false);
+          const photoInputRef = useRef(null);
 
           const canvasRef = useRef(null);
           const canvasCssSizeRef = useRef({ width: 0, height: 0 });
@@ -683,7 +887,7 @@
           }, []);
 
           useEffect(() => {
-            if (screen !== 'game') return;
+            if (screen !== 'game' && screen !== 'avatar') return;
             resizeCanvasToDisplay(false);
           }, [screen, roundIndex, resizeCanvasToDisplay]);
 
@@ -693,7 +897,17 @@
           }, [currentTask]);
 
           useEffect(() => {
-            if (screen !== 'game') return;
+            const style = AVATAR_STYLES.find((entry) => entry.key === avatarStyleKey);
+            setAvatarPrompt(buildAvatarPrompt(style, avatarPhotoUsed));
+          }, [avatarStyleKey, avatarPhotoUsed]);
+
+          const markAvatarPhotoUsed = (value) => {
+            avatarPhotoUsedRef.current = value;
+            setAvatarPhotoUsed(value);
+          };
+
+          useEffect(() => {
+            if (screen !== 'game' && screen !== 'avatar') return;
             const canvas = canvasRef.current;
             if (!canvas) return;
 
@@ -818,19 +1032,31 @@
             return exportCanvas.toDataURL('image/png');
           };
 
+          // Jeder Undo-Schritt merkt sich, ob schon ein Foto im Bild war - sonst
+          // könnte "Rückgängig" nach "Neu" ein Foto ohne KI-Umwandlung zurückholen.
+          const pushUndo = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            snapshot.photoUsed = avatarPhotoUsedRef.current;
+            undoStackRef.current.push(snapshot);
+            if (undoStackRef.current.length > UNDO_LIMIT) {
+              undoStackRef.current.shift();
+            }
+            setCanUndo(undoStackRef.current.length > 0);
+          };
+
           const clearCanvas = () => {
             playClick();
             const canvas = canvasRef.current;
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-            if (undoStackRef.current.length > UNDO_LIMIT) {
-              undoStackRef.current.shift();
-            }
-            setCanUndo(undoStackRef.current.length > 0);
+            pushUndo();
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             setGeneratedImageUrl('');
+            markAvatarPhotoUsed(false);
           };
 
           const pointFromEvent = (event) => {
@@ -923,6 +1149,7 @@
             ctx.putImageData(previousState, 0, 0);
             setCanUndo(undoStackRef.current.length > 0);
             setGeneratedImageUrl('');
+            markAvatarPhotoUsed(Boolean(previousState.photoUsed));
           };
 
           const onPointerDown = (event) => {
@@ -933,15 +1160,7 @@
             const isErasing = isEraserPointerEvent(event);
             erasingRef.current = isErasing;
 
-            const canvas = canvasRef.current;
-            if (canvas) {
-              const ctx = canvas.getContext('2d');
-              undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-              if (undoStackRef.current.length > UNDO_LIMIT) {
-                undoStackRef.current.shift();
-              }
-              setCanUndo(undoStackRef.current.length > 0);
-            }
+            pushUndo();
 
             if (tool === 'fill' && !isErasing) {
               fillCanvasAtPoint(point);
@@ -1240,6 +1459,163 @@
             }
           };
 
+          // --- SONDERAUFGABE: MEIN AVATAR ---
+          const openAvatarTask = () => {
+            initAudio(); playClick();
+            setAvatarResultUrl('');
+            setAvatarNotice('');
+            setAvatarCrop(null);
+            setErrorText('');
+            setTool('brush');
+            markAvatarPhotoUsed(false);
+            undoStackRef.current = [];
+            setCanUndo(false);
+            setScreen('avatar');
+          };
+
+          const requestPhoto = () => {
+            playClick();
+            setErrorText('');
+            if (isPhotoUnlocked) {
+              photoInputRef.current?.click();
+              return;
+            }
+            setPhotoGate({ a: 11 + Math.floor(Math.random() * 9), b: 11 + Math.floor(Math.random() * 9), answer: '', wrong: false });
+          };
+
+          // Eltern-Frage: Das Foto geht zur Umwandlung an den KI-Dienst, das sollen Erwachsene freigeben.
+          const confirmPhotoGate = () => {
+            if (!photoGate) return;
+            if (Number(photoGate.answer) !== photoGate.a * photoGate.b) {
+              setPhotoGate({ ...photoGate, answer: '', wrong: true });
+              return;
+            }
+            setIsPhotoUnlocked(true);
+            setPhotoGate(null);
+            photoInputRef.current?.click();
+          };
+
+          const onPhotoSelected = async (event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            if (!file) return;
+            try {
+              setAvatarCrop({ src: await blobToDataUrl(file), target: 'photo' });
+            } catch (err) {
+              setErrorText(err.message);
+            }
+          };
+
+          const saveAvatarImage = async (avatarImage) => {
+            if (!activeProfileId) return;
+            await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), { avatarImage });
+            playTada();
+            setAvatarNotice(avatarImage ? 'saved' : 'removed');
+          };
+
+          const onAvatarCropConfirm = async (croppedCanvas) => {
+            const target = avatarCrop?.target;
+            setAvatarCrop(null);
+            try {
+              setErrorText('');
+              if (target === 'photo') {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                pushUndo();
+                canvas.getContext('2d').drawImage(croppedCanvas, 0, 0, canvas.width, canvas.height);
+                markAvatarPhotoUsed(true);
+                return;
+              }
+              await saveAvatarImage(encodeAvatar(croppedCanvas));
+            } catch (err) {
+              console.error(err);
+              setErrorText(err.message || 'Avatar konnte nicht gespeichert werden.');
+            }
+          };
+
+          const saveDrawingAsAvatar = async () => {
+            if (avatarPhotoUsed) {
+              setErrorText('Fotos werden nur als KI-Cartoon gespeichert. Nutze den KI-Zauber!');
+              return;
+            }
+            try {
+              setErrorText('');
+              await saveAvatarImage(encodeAvatar(canvasRef.current));
+            } catch (err) {
+              console.error(err);
+              setErrorText(err.message || 'Avatar konnte nicht gespeichert werden.');
+            }
+          };
+
+          const removeAvatar = async () => {
+            playClick();
+            try {
+              await saveAvatarImage('');
+            } catch (err) {
+              setErrorText(err.message || 'Avatar konnte nicht entfernt werden.');
+            }
+          };
+
+          // Fotos machen das PNG schnell mehrere MB groß - für die KI reicht ein 768er JPEG.
+          const getAvatarSourceDataUrl = () => {
+            const canvas = canvasRef.current;
+            const out = document.createElement('canvas');
+            out.width = 768;
+            out.height = 768;
+            out.getContext('2d').drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 768, 768);
+            return out.toDataURL('image/jpeg', 0.9);
+          };
+
+          const createAvatarWithAi = async () => {
+            if (!profile || !activeProfileId || isBusy) return;
+
+            if ((profile.coins || 0) < AI_EDIT_COST) {
+              setErrorText(`Du brauchst mindestens ${AI_EDIT_COST} Münzen für den KI-Zauber.`);
+              return;
+            }
+
+            try {
+              setIsBusy(true);
+              setIsGeneratingImage(true);
+              setErrorText('');
+              setAvatarNotice('');
+
+              const style = AVATAR_STYLES.find((entry) => entry.key === avatarStyleKey);
+              const prompt = (avatarPrompt || '').trim() || buildAvatarPrompt(style, avatarPhotoUsed);
+              const result = await callOpenRouter({
+                model: imageEditModel,
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: prompt },
+                      { type: 'image_url', image_url: { url: getAvatarSourceDataUrl() } }
+                    ]
+                  }
+                ]
+              });
+
+              const generatedUrl = extractGeneratedImageUrl(result);
+              if (!generatedUrl) {
+                throw new Error('Die KI hat kein Bild zurückgegeben. Prüfe Modell/API-Key.');
+              }
+              const resultDataUrl = await ensureDataUrl(generatedUrl);
+
+              await updateDoc(doc(db, DB_COLLECTIONS.profiles, activeProfileId), {
+                coins: (profile.coins || 0) - AI_EDIT_COST
+              });
+
+              playSuccess();
+              setAvatarResultUrl(resultDataUrl);
+            } catch (err) {
+              console.error(err);
+              setErrorText(err.message || 'KI-Avatar konnte nicht erstellt werden.');
+            } finally {
+              setIsGeneratingImage(false);
+              setIsBusy(false);
+            }
+          };
+
           const finishGame = async (finalScore) => {
             const coins = Math.floor(finalScore / 10);
             setEarnedCoins(coins);
@@ -1283,6 +1659,72 @@
             playClick(); setScreen('start');
           };
 
+          // Werkzeugleiste fürs Malen - im Spiel über dem Bild, beim Avatar darunter.
+          const renderDrawToolbar = () => (
+            <div className="pointer-events-auto flex flex-nowrap items-center gap-2 bg-white/70 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
+              <button onClick={() => setTool('brush')} title="Stift" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'brush' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🖌️</button>
+              <button onClick={() => setTool('fill')} title="Fill" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'fill' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🪣</button>
+              <div className="w-px h-8 bg-slate-200 mx-1"></div>
+              <button onClick={undoLastAction} disabled={!canUndo} title="Undo" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-amber-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">↩️</button>
+              <button onClick={clearCanvas} title="Neu" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-red-100 transition-colors">🧽</button>
+
+              <div className="relative">
+                <button
+                  onClick={() => { setIsPaletteOpen(!isPaletteOpen); setIsThicknessOpen(false); }}
+                  className="w-14 h-14 bg-white/95 backdrop-blur-md flex items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
+                  title="Farbe wählen"
+                >
+                  <div className="w-8 h-8 rounded-full border-2 border-slate-300 shadow-sm" style={{ backgroundColor: brushColor }}></div>
+                </button>
+
+                {isPaletteOpen && (
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
+                    <div className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl flex flex-wrap gap-2 w-[200px] border border-slate-200 animate-pop-in">
+                      {BRUSH_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => { setBrushColor(color); setIsPaletteOpen(false); }}
+                          className={`w-10 h-10 rounded-full border-4 transition-transform ${brushColor === color ? 'border-indigo-500 scale-110 shadow-md' : 'border-slate-300 hover:scale-110 shadow-sm'}`}
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <button
+                  onClick={() => { setIsThicknessOpen(!isThicknessOpen); setIsPaletteOpen(false); setTool('brush'); }}
+                  className="w-14 h-14 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
+                  title="Pinselgröße"
+                >
+                  <div className="w-2 rounded-full bg-slate-700 mx-auto" style={{ height: '14px', width: Math.max(2, Math.min(10, brushSize / 3)) + 'px' }}></div>
+                  <span className="text-[10px] font-bold text-slate-500 mt-1 leading-none">{brushSize}</span>
+                </button>
+
+                {isThicknessOpen && (
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
+                    <div className="bg-white/95 backdrop-blur-md py-4 px-5 rounded-2xl shadow-xl border border-slate-200 animate-pop-in flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full border border-slate-100 shadow-inner">
+                        <div className="rounded-full bg-slate-700" style={{ width: Math.min(brushSize, 30), height: Math.min(brushSize, 30) }}></div>
+                      </div>
+                      <input
+                        type="range"
+                        min="2"
+                        max="40"
+                        value={brushSize}
+                        onChange={(event) => setBrushSize(Number(event.target.value))}
+                        className="w-32 accent-indigo-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+
           const TopBar = () => {
             if (!profile || screen === 'setup' || screen === 'profile_select' || screen === 'loading') return null;
 
@@ -1295,7 +1737,7 @@
                   }}
                   className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md pointer-events-auto border-2 border-white/70"
                 >
-                  <span className="text-2xl">{profile.avatar}</span>
+                  <ProfileAvatar profile={profile} size={30} />
                   <span className="font-bold text-slate-800 hidden sm:inline">{profile.name}</span>
                   <Users size={16} className="text-indigo-500 ml-1" />
                 </button>
@@ -1329,7 +1771,7 @@
                         onClick={() => selectProfile(p.id)}
                         className="bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-300 rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
                       >
-                        <div className="text-5xl">{p.avatar}</div>
+                        <ProfileAvatar profile={p} size={56} />
                         <div className="font-bold text-slate-700 text-lg truncate w-full">{p.name}</div>
                       </button>
                     ))}
@@ -1435,6 +1877,22 @@
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-fuchsia-50 to-amber-50 border-2 border-fuchsia-200 rounded-2xl p-4 mb-6 flex items-center gap-4 text-left">
+                    <div className="w-16 h-16 rounded-full bg-white border-4 border-fuchsia-200 flex items-center justify-center shrink-0 overflow-hidden">
+                      <ProfileAvatar profile={profile} size={profile?.avatarImage ? 56 : 44} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-fuchsia-900">✨ Sonderaufgabe: Mein Avatar</p>
+                      <p className="text-sm text-slate-600 font-medium">Male dich selbst in den Kreis! Dein Avatar fliegt im Zahlen-Flieger mit und erscheint in allen LernKumpel-Apps.</p>
+                    </div>
+                    <button
+                      onClick={openAvatarTask}
+                      className="shrink-0 bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-black px-4 py-3 rounded-xl shadow"
+                    >
+                      {profile?.avatarImage ? 'Neu malen' : 'Los!'}
+                    </button>
                   </div>
 
                   <details
@@ -1549,68 +2007,7 @@
                       {/* Bottom Overlay Bar */}
                       <div className="absolute bottom-4 left-4 right-4 pointer-events-none z-10">
                         <div className="pointer-events-none mx-auto w-full flex justify-center overflow-visible">
-                          <div className="pointer-events-auto flex flex-nowrap items-center gap-2 bg-white/70 backdrop-blur-md p-1 shadow-lg rounded-2xl border-2 border-slate-200/50">
-                            <button onClick={() => setTool('brush')} title="Stift" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'brush' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🖌️</button>
-                            <button onClick={() => setTool('fill')} title="Fill" className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl transition-all ${tool === 'fill' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>🪣</button>
-                            <div className="w-px h-8 bg-slate-200 mx-1"></div>
-                            <button onClick={undoLastAction} disabled={!canUndo} title="Undo" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-amber-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">↩️</button>
-                            <button onClick={clearCanvas} title="Neu" className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-slate-600 hover:bg-red-100 transition-colors">🧽</button>
-
-                            <div className="relative">
-                              <button
-                                onClick={() => { setIsPaletteOpen(!isPaletteOpen); setIsThicknessOpen(false); }}
-                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
-                                title="Farbe wählen"
-                              >
-                                <div className="w-8 h-8 rounded-full border-2 border-slate-300 shadow-sm" style={{ backgroundColor: brushColor }}></div>
-                              </button>
-
-                              {isPaletteOpen && (
-                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
-                                  <div className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl flex flex-wrap gap-2 w-[200px] border border-slate-200 animate-pop-in">
-                                    {BRUSH_COLORS.map((color) => (
-                                      <button
-                                        key={color}
-                                        onClick={() => { setBrushColor(color); setIsPaletteOpen(false); }}
-                                        className={`w-10 h-10 rounded-full border-4 transition-transform ${brushColor === color ? 'border-indigo-500 scale-110 shadow-md' : 'border-slate-300 hover:scale-110 shadow-sm'}`}
-                                        style={{ backgroundColor: color }}
-                                        title={color}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="relative">
-                              <button
-                                onClick={() => { setIsThicknessOpen(!isThicknessOpen); setIsPaletteOpen(false); setTool('brush'); }}
-                                className="w-14 h-14 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center shadow rounded-2xl border-2 border-slate-200/50 transition-all hover:bg-slate-50"
-                                title="Pinselgröße"
-                              >
-                                <div className="w-2 rounded-full bg-slate-700 mx-auto" style={{ height: '14px', width: Math.max(2, Math.min(10, brushSize / 3)) + 'px' }}></div>
-                                <span className="text-[10px] font-bold text-slate-500 mt-1 leading-none">{brushSize}</span>
-                              </button>
-
-                              {isThicknessOpen && (
-                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2">
-                                  <div className="bg-white/95 backdrop-blur-md py-4 px-5 rounded-2xl shadow-xl border border-slate-200 animate-pop-in flex flex-col items-center gap-3">
-                                    <div className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full border border-slate-100 shadow-inner">
-                                      <div className="rounded-full bg-slate-700" style={{ width: Math.min(brushSize, 30), height: Math.min(brushSize, 30) }}></div>
-                                    </div>
-                                    <input
-                                      type="range"
-                                      min="2"
-                                      max="40"
-                                      value={brushSize}
-                                      onChange={(event) => setBrushSize(Number(event.target.value))}
-                                      className="w-32 accent-indigo-500"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          {renderDrawToolbar()}
                         </div>
                       </div>
                     </div>
@@ -1726,6 +2123,194 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            );
+          }
+
+          if (screen === 'avatar') {
+            const fliegerLink = `../zahlen-flieger/index.html?profile=${encodeURIComponent(activeProfileId || '')}`;
+
+            return (
+              <div className="min-h-screen bg-fuchsia-50 relative flex flex-col items-center justify-center p-4 pt-24 font-sans">
+                <TopBar />
+
+                <div className="bg-white rounded-[2rem] shadow-2xl border border-fuchsia-100 w-full max-w-3xl p-6 md:p-8 animate-pop-in">
+                  <p className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-1">🧑‍🎨 Male dich selbst!</p>
+                  <p className="text-slate-600 font-medium mb-4">Alles im Kreis wird dein Avatar. Male dein Gesicht groß in die Mitte.</p>
+
+                  <div className="relative w-full max-w-[560px] mx-auto aspect-square">
+                    <canvas
+                      ref={canvasRef}
+                      onPointerDown={(e) => { setIsPaletteOpen(false); setIsThicknessOpen(false); onPointerDown(e); }}
+                      onPointerMove={onPointerMove}
+                      onPointerUp={onPointerUp}
+                      onPointerLeave={onPointerUp}
+                      onPointerCancel={onPointerUp}
+                      className="w-full h-full bg-white rounded-2xl touch-none border-4 border-slate-300"
+                      style={{ cursor: tool === 'fill' ? 'crosshair' : 'default' }}
+                    />
+                    {/* Alles außerhalb des Kreises abgedunkelt: das wird nicht Teil des Avatars. */}
+                    <div
+                      className="absolute inset-[4px] rounded-xl pointer-events-none"
+                      style={{ background: 'radial-gradient(circle closest-side, transparent 99%, rgba(15, 23, 42, 0.18) 100%)' }}
+                    />
+                    <div className="absolute inset-[4px] rounded-full border-4 border-dashed border-fuchsia-300 pointer-events-none" />
+                  </div>
+
+                  <div className="flex justify-center mt-3">{renderDrawToolbar()}</div>
+
+                  <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    <button
+                      onClick={requestPhoto}
+                      className="bg-white hover:bg-sky-50 text-sky-700 border-2 border-sky-200 font-bold py-2 px-4 rounded-xl shadow"
+                    >
+                      📷 Foto einfügen
+                    </button>
+                    <button
+                      onClick={saveDrawingAsAvatar}
+                      disabled={isBusy || avatarPhotoUsed}
+                      title={avatarPhotoUsed ? 'Fotos werden nur als KI-Cartoon gespeichert' : 'Die Zeichnung direkt als Avatar nehmen'}
+                      className="bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white font-black py-2 px-4 rounded-xl shadow"
+                    >
+                      ✅ Zeichnung als Avatar
+                    </button>
+                  </div>
+                  {avatarPhotoUsed && (
+                    <p className="text-center text-xs font-bold text-sky-700 mt-2">Mit Foto geht es nur über den KI-Zauber: gespeichert wird der Cartoon, nicht das Foto.</p>
+                  )}
+                  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelected} />
+
+                  <div className="bg-fuchsia-50 border-2 border-fuchsia-100 rounded-2xl p-4 mt-5">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <p className="font-black text-fuchsia-900">🪄 KI-Avatar: Wie möchtest du aussehen?</p>
+                      <button
+                        onClick={() => setIsAvatarPromptOpen((prev) => !prev)}
+                        className="w-8 h-8 rounded-full bg-white text-fuchsia-700 border-2 border-fuchsia-300 shadow flex items-center justify-center text-xs font-black hover:bg-fuchsia-100 shrink-0"
+                        title="Prompt bearbeiten"
+                        aria-label="Prompt bearbeiten"
+                      >
+                        ⚙️
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {AVATAR_STYLES.map((style) => (
+                        <button
+                          key={style.key}
+                          onClick={() => { playClick(); setAvatarStyleKey(style.key); }}
+                          className={`rounded-xl border-2 px-2 py-2 font-bold text-sm flex flex-col items-center gap-1 transition ${avatarStyleKey === style.key ? 'bg-fuchsia-500 text-white border-fuchsia-500' : 'bg-white text-slate-700 border-fuchsia-100 hover:bg-fuchsia-100'}`}
+                        >
+                          <span className="text-2xl leading-none">{style.icon}</span>
+                          {style.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {isAvatarPromptOpen && (
+                      <textarea
+                        value={avatarPrompt}
+                        onChange={(event) => setAvatarPrompt(event.target.value)}
+                        rows={5}
+                        className="w-full mt-3 resize-y rounded-lg border border-fuchsia-200 px-2 py-1 text-xs text-slate-700"
+                      />
+                    )}
+
+                    <button
+                      onClick={createAvatarWithAi}
+                      disabled={isBusy || isApiKeyMissing}
+                      className="mt-3 w-full bg-fuchsia-500 hover:bg-fuchsia-600 disabled:bg-slate-400 text-white font-black py-3 rounded-xl shadow flex items-center justify-center gap-2"
+                    >
+                      {isGeneratingImage ? '⏳ Zaubern...' : <>🪄 KI-Avatar zaubern <span className="opacity-80 font-semibold px-1 bg-white/20 rounded">-{AI_EDIT_COST}🪙</span></>}
+                    </button>
+                    {isApiKeyMissing && <p className="text-xs font-bold text-red-600 mt-2">Für den KI-Zauber fehlt der OpenRouter API-Key (KI-Einstellungen auf der Startseite).</p>}
+
+                    {avatarResultUrl && (
+                      <div className="mt-4 flex flex-col sm:flex-row items-center gap-4">
+                        <img src={avatarResultUrl} alt="KI-Avatar" className="w-40 h-40 rounded-full object-cover border-4 border-fuchsia-300 bg-white shadow" />
+                        <div className="flex-1 w-full space-y-2">
+                          <button
+                            onClick={() => { playClick(); setAvatarCrop({ src: avatarResultUrl, target: 'result' }); }}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl shadow"
+                          >
+                            ✅ Als Avatar nehmen
+                          </button>
+                          <p className="text-xs text-slate-500 font-semibold text-center">Gefällt dir nicht? Ändere die Zeichnung oder den Stil und zaubere nochmal.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {avatarNotice === 'saved' && profile?.avatarImage && (
+                    <div className="mt-5 bg-green-50 border-2 border-green-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 animate-score-reveal">
+                      <img src={profile.avatarImage} alt="Dein Avatar" className="w-24 h-24 rounded-full border-4 border-white shadow bg-white" />
+                      <div className="flex-1 text-center sm:text-left">
+                        <p className="font-black text-green-800 text-xl">Dein Avatar ist fertig! 🎉</p>
+                        <p className="text-sm text-slate-600 font-medium">Im Zahlen-Flieger kannst du jetzt selbst einsteigen.</p>
+                      </div>
+                      <a href={fliegerLink} className="bg-sky-500 hover:bg-sky-600 text-white font-black py-3 px-4 rounded-xl shadow shrink-0">✈️ Zum Flieger</a>
+                    </div>
+                  )}
+                  {avatarNotice === 'removed' && <p className="mt-4 text-center font-bold text-slate-600">Avatar entfernt - jetzt siehst du wieder dein Tier {profile?.avatar}.</p>}
+
+                  {errorText && <p className="text-red-500 font-semibold text-sm mt-3 text-center">{errorText}</p>}
+
+                  <div className="flex items-center justify-between gap-3 mt-6">
+                    <button
+                      onClick={() => { playClick(); setScreen('start'); }}
+                      className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-full shadow"
+                      aria-label="Zurück zur Startseite"
+                      title="Zurück"
+                    >
+                      ⬅️
+                    </button>
+                    {profile?.avatarImage && (
+                      <div className="flex items-center gap-2">
+                        <ProfileAvatar profile={profile} size={40} />
+                        <button onClick={removeAvatar} disabled={isBusy} className="text-sm text-slate-500 font-bold hover:text-red-600 underline">
+                          Avatar entfernen
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {photoGate && (
+                  <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 text-center animate-pop-in">
+                      <p className="text-4xl mb-2">👨‍👩‍👧</p>
+                      <p className="font-black text-xl text-slate-800 mb-2">Frage für Erwachsene</p>
+                      <p className="text-sm text-slate-600 font-medium mb-4 text-left">
+                        Ein Foto wird zur Umwandlung an den KI-Dienst (OpenRouter und den gewählten Bildanbieter) geschickt.
+                        Gespeichert wird nur der fertige Cartoon-Avatar, nicht das Foto. Bitte zur Freigabe ausrechnen:
+                      </p>
+                      <p className="font-black text-2xl text-slate-800 mb-2">{photoGate.a} × {photoGate.b} = ?</p>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        autoFocus
+                        value={photoGate.answer}
+                        onChange={(event) => setPhotoGate({ ...photoGate, answer: event.target.value, wrong: false })}
+                        onKeyDown={(event) => { if (event.key === 'Enter') confirmPhotoGate(); }}
+                        className="w-40 mx-auto block bg-slate-50 border-2 border-indigo-200 rounded-xl px-4 py-2 font-bold text-slate-800 text-xl text-center"
+                      />
+                      {photoGate.wrong && <p className="text-red-500 font-bold text-sm mt-2">Das stimmt leider nicht.</p>}
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        <button onClick={() => setPhotoGate(null)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl">Abbrechen</button>
+                        <button onClick={confirmPhotoGate} className="bg-indigo-500 hover:bg-indigo-600 text-white font-black py-3 rounded-xl">Foto wählen</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {avatarCrop && (
+                  <CircleCropper
+                    src={avatarCrop.src}
+                    title={avatarCrop.target === 'photo' ? 'Foto einpassen' : 'Avatar-Ausschnitt'}
+                    confirmLabel={avatarCrop.target === 'photo' ? 'Einfügen' : 'Speichern'}
+                    outputSize={avatarCrop.target === 'photo' ? 1024 : AVATAR_SIZE * 2}
+                    onConfirm={onAvatarCropConfirm}
+                    onCancel={() => setAvatarCrop(null)}
+                  />
+                )}
               </div>
             );
           }

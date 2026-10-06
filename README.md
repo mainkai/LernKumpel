@@ -21,7 +21,7 @@ Die Zahlen-Safari hilft Kindern, spielerisch Kopfrechnen zu üben.
 - 🎖️ **Endlose Rangleiter:** Jede Runde bringt Erfahrungspunkte (XP = Rundenpunkte). Die Ränge hören nie auf - nach `Zahlen-Sternenkind` geht es mit `II`, `III`, … weiter. Jeder Aufstieg zahlt Münzen und Leckerli, damit Münzen auch dann noch einen Sinn haben, wenn schon alles gekauft ist.
 - 🪙 **Shop-System:** Richtige Antworten bringen Münzen. Damit können Kinder neue, liebevoll gestaltete Themes (Baustelle 🚧, Weltraum 🚀, Einhorn 🦄 etc.) freischalten.
 - ❄️ **Saison-Themes:** Weihnachten 🎄, Ostern 🐣, Sommer 🏖️ und Halloween 🎃 sind nur in ihrem Zeitraum im Shop. Einmal gekauft bleiben sie für immer nutzbar und belegen keinen der begrenzten Theme-Slots.
-- 🐾 **Tiere, Gehege & Kunststücke:** 14 Tiere mit eigenen Lauf-Animationen. Antippen (oder von selbst, alle 14-30 Sekunden) macht das Tier ein Kunststück mit Sprechblase - und findet manchmal Münzen. Tiere sammeln Stufen (durchs Mitspielen und durch Füttern mit Leckerli 🍖), höhere Stufen finden öfter Münzen. Im **Gehege** laufen alle Tiere gemeinsam herum, dort wird gefüttert und Zubehör (12 Hüte, Brillen, Kronen …) angezogen.
+- 🐾 **Tiere, Gehege & Kunststücke:** 14 Tiere mit eigenen Lauf-Animationen (die Überraschungskisten enthalten außerdem Knöpfe und Fluggeräte für den Zahlen-Flieger). Antippen (oder von selbst, alle 14-30 Sekunden) macht das Tier ein Kunststück mit Sprechblase - und findet manchmal Münzen. Tiere sammeln Stufen (durchs Mitspielen und durch Füttern mit Leckerli 🍖), höhere Stufen finden öfter Münzen. Im **Gehege** laufen alle Tiere gemeinsam herum, dort wird gefüttert und Zubehör (12 Hüte, Brillen, Kronen …) angezogen.
 - 🎁 **Stickerheft:** Besonders gute Runden werden mit zufälligen Sammel-Stickern belohnt.
 - ⭐ **Abenteuerbuch & Bonus-Stern:** Ist das Stickerheft voll, wird ein neues Abenteuerbuch mit Sternen-Welten freigeschaltet. Außerdem gibt es pro Runde einen Joker-Stern, der eine schwere Aufgabe überspringen kann oder am Ende Bonuspunkte bringt.
 - 👥 **Multi-User fähig:** Geschwister können sich ein Tablet teilen. Die App merkt sich alle Profile und Spielstände auf dem Gerät.
@@ -52,6 +52,7 @@ Das Mal-Atelier verbindet freies Zeichnen mit kindgerechter KI-Unterstützung.
 - 🧠 **KI-Bewertung:** Die KI bewertet auf einer Skala von 0–100%, wie gut die Zeichnung zur Aufgabe passt.
 - 🪙 **Gemeinsames Profilsystem:** Dieselben Profile und Münzen wie in Zahlen-Safari und Lese-Fuchs.
 - ✨ **KI-Zauberbild:** Gegen Münz-Einsatz wird aus der Kinderzeichnung ein KI-Bild (Image-Edit) erzeugt.
+- 🧑‍🎨 **Sonderaufgabe "Mein Avatar":** Kinder malen sich selbst in einen runden Ausschnitt. Optional (hinter einer Eltern-Frage) lässt sich ein Foto einfügen. Per KI wird daraus ein Kinderbuch-Cartoon, auf Wunsch verkleidet (Astronaut, Pirat, Ritter, Zauberer …). Fotos werden nur als KI-Cartoon gespeichert, nie das Foto selbst. Der Avatar (rund, meist 10-30 KB WebP im Profil, max. 150 KB) erscheint in allen LernKumpel-Apps.
 
 ### 4. Pose-Theater (Bewegung + Kamera)
 
@@ -62,6 +63,7 @@ Im Pose-Theater machen Kinder pantomimische Bewegungs-Posen nach, die über die 
 **Features:**
 
 - 🎭 **Pose nachmachen:** Jede Runde zeigt eine Ziel-Pose (z.B. Arme hoch, Stern, Hocke).
+- 🧑‍🎨 **Avatar-Kopf:** Wer im Mal-Atelier einen Avatar gemalt hat, sieht ihn als Kopf auf dem erkannten Skelett (abschaltbar).
 - 📷 **Kamera + Bilderkennung:** Die Körperhaltung wird in Echtzeit über Pose-Erkennung ausgewertet.
 - ⭐ **Punktesystem:** Die Übereinstimmung zur Ziel-Pose bestimmt die Punkte.
 - 🪙 **Gemeinsames Münzsystem:** Dieselben Profile und Münzen wie in den anderen LernKumpel-Apps.
@@ -78,6 +80,7 @@ Ein Flappy-Bird für Rechen-Anfänger: Oben steht eine Aufgabe, und der Vogel fl
 - 👆 **Ein-Finger-Steuerung:** Tippen irgendwo auf den Bildschirm (oder Leertaste) = Flattern. Boden und Decke tun nicht weh.
 - 💗 **Sanfte Fehler:** 3 Herzen, kein harter "Game Over". Bei einem falschen Tor wird die richtige Lösung angezeigt und vorgelesen - die nächste Aufgabe wartet, bis der Satz zu Ende ist. Eine Runde hat 15 Tore (~1,5 Minuten).
 - 🔊 **Vorlesen:** Die Aufgabe wird per Sprachausgabe des Browsers vorgelesen - auch Kinder, die noch nicht lesen, können mitspielen.
+- ✈️ **Selbst fliegen:** Statt des Vogels sitzt der eigene Avatar (oder das Profil-Tier) am Steuer - im Papierflieger für alle, oder in Propeller-Flieger, Rakete, Heißluftballon, Ufo, Hubschrauber oder Zauberbesen aus den Überraschungskisten der Zahlen-Safari. Gekauftes Tier-Zubehör (Krone, Sonnenbrille, Zauberhut …) lässt sich Vogel oder Pilot aufsetzen.
 - 🚀 **Zwei Tempo-Modi:** *Gemütlich* (15 Tore, fast gleichbleibendes Tempo) oder *Immer schneller* (startet langsam, ohne Torlimit, jede richtige Antwort macht schneller, ein Fehler bremst wieder etwas). Rekorde werden pro Modus getrennt gespeichert.
 - 🐞 **Sechs Stufen:** Zählen (Tiere zählen, 1-10), Kindergarten, Schulanfänger, 1., 2. und 3. Klasse. Die Denkzeit pro Tor ist auf jedem Bildschirm gleich lang.
 - 🪙 **Belohnung:** 2 Münzen pro richtigem Tor, +10 für eine ganze Runde, Rekord pro Stufe.

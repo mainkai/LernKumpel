@@ -37,7 +37,10 @@ service cloud.firestore {
         'petOutfits',
         'petAccessories',
         'tickets',
-        'fliegerBest'
+        'fliegerBest',
+        'avatarImage',
+        'fliegerSkin',
+        'fliegerAccessory'
       ]);
     }
 
@@ -61,7 +64,11 @@ service cloud.firestore {
         && (!data.keys().hasAny(['petOutfits']) || data.petOutfits is map)
         && (!data.keys().hasAny(['petAccessories']) || data.petAccessories is list)
         && (!data.keys().hasAny(['tickets']) || (data.tickets is int && data.tickets >= 0 && data.tickets <= 20))
-        && (!data.keys().hasAny(['fliegerBest']) || data.fliegerBest is map);
+        && (!data.keys().hasAny(['fliegerBest']) || data.fliegerBest is map)
+        // Selbst gemalter Avatar (Mal-Atelier) als kleines data:-Bild, '' = kein Avatar.
+        && (!data.keys().hasAny(['avatarImage']) || (data.avatarImage is string && data.avatarImage.size() <= 150000))
+        && (!data.keys().hasAny(['fliegerSkin']) || (data.fliegerSkin is string && data.fliegerSkin.size() <= 40))
+        && (!data.keys().hasAny(['fliegerAccessory']) || (data.fliegerAccessory is string && data.fliegerAccessory.size() <= 40));
     }
 
     function canAccessProfile(profileId) {

@@ -559,6 +559,12 @@
         };
 
         const AVATAR_POOL = ['🦊', '🐰', '🦁', '🐶', '🐱', '🐭', '🐹', '🐻', '🐼', '🐨', '🐯', '🐸', '🐵', '🦉', '🐧'];
+        // Selbst gemalter Avatar aus dem Mal-Atelier, sonst das Tier-Emoji.
+        const ProfileAvatar = ({ profile, size = 40, className = '' }) => (
+          profile?.avatarImage
+            ? <img src={profile.avatarImage} alt="" className={`rounded-full inline-block shrink-0 bg-white ${className}`} style={{ width: size, height: size }} />
+            : <span className={`inline-block leading-none ${className}`} style={{ fontSize: Math.round(size * 0.8) }}>{profile?.avatar}</span>
+        );
         const STICKER_POOL = ['🍎', '🦋', '🦖', '🐙', '🦄', '🐉', '🪐', '🚀', '🏰', '💎', '🧸', '🍕', '🍦', '🎈', '🎁', '👑', '⚽', '🎨', '🎸', '🌈'];
         const ADVENTURE_WORLDS = [
           { id: 'meadow', name: 'Sternenwiese', icon: '🌼', accent: 'from-yellow-300 via-amber-200 to-orange-200', text: 'text-amber-800', starsRequired: 4, reward: 'Blumenwiese wird lebendig', coinReward: 500, themeSlotReward: 1 },
@@ -584,7 +590,15 @@
           { id: 'pet-turtle', type: 'pet', name: 'Ruhe-Schildkröte', icon: '🐢', motionClass: 'animate-pet-turtle-crawl', lane: 0, sound: 'boing', phrases: ['Langsam, aber sicher.', 'Ich komme schon noch.', 'Denk ruhig nach.'] },
           { id: 'pet-unicorn', type: 'pet', name: 'Galopp-Einhorn', icon: '🦄', motionClass: 'animate-pet-unicorn-gallop', lane: 1, sound: 'magic', phrases: ['Regenbogen-Galopp!', 'Du zauberst Zahlen!', 'Glitzer für dich!'] },
           { id: 'pet-ghost', type: 'pet', name: 'Kicher-Geist', icon: '👻', motionClass: 'animate-pet-ghost-drift', lane: 2, sound: 'magic', phrases: ['Huuuh!', 'Erschreckt?', 'Ich schwebe nur so rum.'] },
-          { id: 'pet-crab', type: 'pet', name: 'Seitwärts-Krabbe', icon: '🦀', motionClass: 'animate-pet-crab-scuttle', lane: 0, sound: 'squeak', phrases: ['Klick-klack!', 'Immer seitwärts!', 'Zange hoch!'] }
+          { id: 'pet-crab', type: 'pet', name: 'Seitwärts-Krabbe', icon: '🦀', motionClass: 'animate-pet-crab-scuttle', lane: 0, sound: 'squeak', phrases: ['Klick-klack!', 'Immer seitwärts!', 'Zange hoch!'] },
+          // Fluggeräte für den Zahlen-Flieger: dort sitzt der eigene Avatar (oder das Tier) am Steuer.
+          // Die IDs müssen zu VEHICLES in zahlen-flieger/index.html passen.
+          { id: 'veh-propeller', type: 'vehicle', name: 'Propeller-Flieger', icon: '🛩️', sound: 'honk' },
+          { id: 'veh-rocket', type: 'vehicle', name: 'Rakete', icon: '🚀', sound: 'magic' },
+          { id: 'veh-balloon', type: 'vehicle', name: 'Heißluftballon', icon: '🎈', sound: 'boing' },
+          { id: 'veh-ufo', type: 'vehicle', name: 'Ufo', icon: '🛸', sound: 'magic' },
+          { id: 'veh-heli', type: 'vehicle', name: 'Hubschrauber', icon: '🚁', sound: 'honk' },
+          { id: 'veh-broom', type: 'vehicle', name: 'Zauberbesen', icon: '🧹', sound: 'magic' }
         ];
 
         // --- TIERE: STUFEN, KUNSTSTÜCKE, ZUBEHÖR ---
@@ -1972,7 +1986,7 @@
             return (
               <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none" style={{ paddingLeft: 68 }}>
                 <button onClick={() => { setActiveProfileId(null); setScreen('profile_select'); playClick(); }} className="relative bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-md hover:bg-sky-50 transition-colors pointer-events-auto border-2 border-white/50 animate-slide-up">
-                  <span className="text-2xl">{profile.avatar}</span>
+                  <ProfileAvatar profile={profile} size={30} />
                   {/* Rang-Abzeichen am Avatar: kostet keine Breite in der Leiste. */}
                   <span className="absolute -top-1 left-6 bg-indigo-500 text-white text-[10px] font-black rounded-full px-1.5 border-2 border-white shadow-sm" title={'Rang ' + rankInfo.rank + ' - ' + rankInfo.title}>
                     {rankInfo.rank}
@@ -2028,7 +2042,7 @@
                         onClick={() => { setActiveProfileId(p.id); setCurrentThemeId(p.activeTheme || 'classic'); setScreen('start'); playClick(); }}
                         className="bg-gray-50 hover:bg-sky-50 border-2 border-gray-200 hover:border-sky-300 rounded-2xl p-4 flex flex-col items-center gap-3 transition-all active:scale-95 shadow-sm"
                       >
-                        <div className="text-5xl">{p.avatar}</div>
+                        <ProfileAvatar profile={p} size={56} />
                         <div className="font-bold text-gray-800 text-lg truncate w-full">{p.name}</div>
                       </button>
                     ))}
@@ -2243,7 +2257,7 @@
                           🎁 {SURPRISE_BOX_PRICE} 🪙
                         </button>
                       </div>
-                      {allBoxesOpened && <div className="text-xs font-bold text-emerald-700">Alle Tiere und Knöpfe sind gefunden!</div>}
+                      {allBoxesOpened && <div className="text-xs font-bold text-emerald-700">Alle Tiere, Knöpfe und Fluggeräte sind gefunden!</div>}
 
                       <div className="flex items-center justify-between gap-3 border-t-2 border-fuchsia-100 pt-3">
                         <div className="text-left min-w-0">
@@ -2654,6 +2668,11 @@
                       {roundRewards.unlockedWorlds.length > 0 && <div className="font-bold text-emerald-700 mt-1">Neue Welt fertig: {roundRewards.unlockedWorlds.map((world) => world.name).join(', ')}</div>}
                       {roundRewards.worldRewardCoins > 0 && <div className="text-sm text-emerald-700 mt-1">Welt-Belohnung: +{roundRewards.worldRewardCoins} Münzen und +{roundRewards.unlockedWorlds.reduce((sum, world) => sum + (world.themeSlotReward || 0), 0)} Theme-Slot</div>}
                       {roundRewards.boxReward && <div className="font-bold text-fuchsia-800 mt-1">Überraschungskiste geöffnet: {roundRewards.boxReward.icon} {roundRewards.boxReward.name}</div>}
+                      {roundRewards.boxReward?.type === 'vehicle' && (
+                        <div className="font-bold text-sky-800 mt-1">
+                          Ein neues Fluggerät für den <a className="underline" href={`../zahlen-flieger/index.html?profile=${encodeURIComponent(activeProfileId || '')}`}>Zahlen-Flieger</a>! Dort kannst du einsteigen.
+                        </div>
+                      )}
                     </div>
                   )}
 
