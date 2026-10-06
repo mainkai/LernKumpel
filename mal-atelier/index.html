@@ -130,25 +130,43 @@
           { value: 'bytedance-seed/seed-1.6-flash', label: 'Seed 1.6 Flash - 0.0000981 $/request, fast, good' },
           { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini - 0.0041 $/request, fast and good' },
           { value: 'bytedance-seed/seed-2.0-mini', label: 'Seed-2.0-Mini - 0.00033 $/request, very fast, good' },
-          { value: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast - 0.000316 $/request, fast, good' },
-          { value: 'google/gemini-2.5-flash-lite-preview-09-2025', label: 'Gemini 2.5 Flash Lite Preview 09-2025 - ? $/request, very fast, ok' },
-          { value: 'nvidia/nemotron-nano-12b-v2-vl:free', label: 'Nemotron Nano 12B 2 VL (free) - 0 $/request, slow, ok' },
           { value: 'openai/gpt-5-nano', label: 'GPT-5 Nano - 0.000425 $/request, slow, ok' },
           { value: 'openrouter/free', label: 'Free Models Router - 0 $/request, fast enough, good output. Fails often' },
-          { value: 'moonshotai/kimi-k2.5', label: 'Kimi K2.5 - 0.00319 $/request, very slow, not so good' }
+          { value: 'moonshotai/kimi-k2.5', label: 'Kimi K2.5 - 0.00319 $/request, very slow, not so good' },
+          { value: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash - ~0.0012 $/request, new, untested' },
+          { value: 'google/gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite - ~0.0006 $/request, new, untested' },
+          { value: 'openai/gpt-6-luna', label: 'GPT-6 Luna - ~0.00016 $/request, new, untested' },
+          { value: 'qwen/qwen3.8-flash', label: 'Qwen3.8 Flash - ~0.0002 $/request, new, untested' },
+          { value: 'qwen/qwen3.7-flash', label: 'Qwen3.7 Flash - ~0.00005 $/request, new, untested' },
+          { value: 'bytedance-seed/seed-2-1-turbo', label: 'Seed 2.1 Turbo - ~0.0008 $/request, new, untested' },
+          { value: 'xiaomi/mimo-v2.6-flash', label: 'MiMo-V2.6-Flash - ~0.0002 $/request, new, untested' },
+          { value: 'deepseek/deepseek-v4.1-flash', label: 'DeepSeek V4.1 Flash - ~0.00025 $/request, new, untested' },
+          { value: 'z-ai/glm-5.3-flash', label: 'GLM 5.3 Flash - ~0.0002 $/request, new, untested' },
+          { value: 'x-ai/grok-4.7', label: 'Grok 4.7 - ~0.0028 $/request, new, untested' },
+          { value: 'google/gemma-4-26b-a4b-it:free', label: 'Gemma 4 26B A4B (free) - 0 $/request, new, untested' }
         ];
         const DEFAULT_EVALUATION_MODEL = EVALUATION_MODEL_OPTIONS[0].value;
         const IMAGE_EDIT_MODEL_OPTIONS = [
           { value: 'black-forest-labs/flux.2-klein-4b', label: 'FLUX.2 Klein 4B - 0.015 $/img, fast, cheap and good' },
-          { value: 'sourceful/riverflow-v2-fast', label: 'Riverflow V2 Fast - 0.02 $/img' },
           { value: 'google/gemini-2.5-flash-image', label: 'Nano Banana (Gemini 2.5 Flash Image) - 0.0393 $/img, fast, output good' },
           { value: 'bytedance-seed/seedream-4.5', label: 'Seedream 4.5 - 0.04 $/img, output not convincing' },
           { value: 'openai/gpt-5-image-mini', label: 'GPT-5 Image Mini - 0.0447 $/img, very slow, output is nice though' },
-          { value: 'google/gemini-3.1-flash-image-preview', label: 'Nano Banana 2 (Gemini 3.1 Flash Image Preview) - 0.0678 $/img, fast, very nice output' },
+          { value: 'google/gemini-3.1-flash-image', label: 'Nano Banana 2 (Gemini 3.1 Flash Image) - 0.0678 $/img, fast, very nice output' },
           { value: 'black-forest-labs/flux.2-flex', label: 'FLUX.2 Flex - 0.1 $/img, fast, good' },
           { value: 'black-forest-labs/flux.2-max', label: 'FLUX.2 Max - 0.1 $/img, slow, quality ok' },
-          { value: 'google/gemini-3-pro-image-preview', label: 'Nano Banana Pro (Gemini 3 Pro Image Preview)- 0.139 $/img, extremely slow, very nice output' },
-          { value: 'sourceful/riverflow-v2-pro', label: 'Riverflow V2 Pro - 0.15 $/img' }
+          { value: 'google/gemini-3-pro-image', label: 'Nano Banana Pro (Gemini 3 Pro Image) - 0.139 $/img, extremely slow, very nice output' },
+          { value: 'tencent/hy-image-v3.5-preview', label: 'Hunyuan Image 3.5 Preview - ~0.007 $/img, new, untested' },
+          { value: 'meta/muse-image', label: 'Muse Image - ~0.01 $/img, new, untested' },
+          { value: 'krea/krea-2-medium-turbo', label: 'Krea 2 Medium Turbo - ~0.015 $/img, new, untested' },
+          { value: 'bytedance-seed/seedream-5-0-flash', label: 'Seedream 5.0 Flash - ~0.018 $/img, new, untested' },
+          { value: 'sourceful/riverflow-v2.5-fast', label: 'Riverflow V2.5 Fast - ~0.019 $/img, new, untested' },
+          { value: 'black-forest-labs/flux-3-image', label: 'FLUX 3 Image - ~0.02 $/img, new, untested' },
+          { value: 'qwen/qwen-image-3', label: 'Qwen Image 3 - ~0.033 $/img, new, untested' },
+          { value: 'google/gemini-3.1-flash-lite-image', label: 'Gemini 3.1 Flash Lite Image - ~0.035 $/img, new, untested' },
+          { value: 'bytedance-seed/seedream-5-0-lite', label: 'Seedream 5.0 Lite - ~0.035 $/img, new, untested' },
+          { value: 'x-ai/grok-imagine-image-2.0', label: 'Grok Imagine Image 2.0 - ~0.05 $/img, new, untested' },
+          { value: 'openai/gpt-image-2', label: 'GPT Image 2 - ? $/img, new, untested' },
+          { value: 'sourceful/riverflow-v2.5-pro', label: 'Riverflow V2.5 Pro - ~0.13 $/img, new, untested' }
         ];
         const DEFAULT_IMAGE_EDIT_MODEL = IMAGE_EDIT_MODEL_OPTIONS[0].value;
         const DIFFICULTY_OPTIONS = [
