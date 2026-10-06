@@ -76,8 +76,9 @@ Ein Flappy-Bird für Rechen-Anfänger: Oben steht eine Aufgabe, und der Vogel fl
 
 - 🎟️ **Ticket-Kreislauf:** Jede fertige Safari-Runde bringt 1 Ticket, eine perfekte Runde 2. Ein Flug kostet 1 Ticket. Mehr als 5 Tickets lassen sich nicht ansparen, damit sich Rechnen und Fliegen abwechseln. Jedes Profil bekommt einmalig 2 Willkommens-Tickets.
 - 👆 **Ein-Finger-Steuerung:** Tippen irgendwo auf den Bildschirm (oder Leertaste) = Flattern. Boden und Decke tun nicht weh.
-- 💗 **Sanfte Fehler:** 3 Herzen, kein harter "Game Over". Bei einem falschen Tor wird die richtige Lösung angezeigt und vorgelesen. Eine Runde hat 15 Tore (~1,5 Minuten).
+- 💗 **Sanfte Fehler:** 3 Herzen, kein harter "Game Over". Bei einem falschen Tor wird die richtige Lösung angezeigt und vorgelesen - die nächste Aufgabe wartet, bis der Satz zu Ende ist. Eine Runde hat 15 Tore (~1,5 Minuten).
 - 🔊 **Vorlesen:** Die Aufgabe wird per Sprachausgabe des Browsers vorgelesen - auch Kinder, die noch nicht lesen, können mitspielen.
+- 🚀 **Zwei Tempo-Modi:** *Gemütlich* (15 Tore, fast gleichbleibendes Tempo) oder *Immer schneller* (startet langsam, ohne Torlimit, jede richtige Antwort macht schneller, ein Fehler bremst wieder etwas). Rekorde werden pro Modus getrennt gespeichert.
 - 🐞 **Sechs Stufen:** Zählen (Tiere zählen, 1-10), Kindergarten, Schulanfänger, 1., 2. und 3. Klasse. Die Denkzeit pro Tor ist auf jedem Bildschirm gleich lang.
 - 🪙 **Belohnung:** 2 Münzen pro richtigem Tor, +10 für eine ganze Runde, Rekord pro Stufe.
 - 📱 **Alte Handys:** Reines ES5 + Canvas, ohne React/Babel/Tailwind - startet sofort.

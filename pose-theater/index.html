@@ -20,6 +20,12 @@
         .animate-pop-in { animation: popIn 0.28s ease-out; }
 
         body { overscroll-behavior-y: none; }
+      /* Gleicher Home-Knopf in allen LernKumpel-Apps (immer links oben). */
+      .lk-home { position: fixed; top: 12px; left: 12px; z-index: 1000; width: 44px; height: 44px; box-sizing: border-box;
+                 border-radius: 999px; background: rgba(255,255,255,0.92); border: 2px solid rgba(255,255,255,0.7);
+                 box-shadow: 0 3px 8px rgba(15,23,42,0.2); font-size: 22px; line-height: 40px; text-align: center;
+                 text-decoration: none; -webkit-tap-highlight-color: transparent; }
+      .lk-home:active { transform: scale(0.92); }
     </style>
 
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -39,6 +45,7 @@
     </script>
 </head>
 <body class="bg-violet-100">
+    <a class="lk-home" href="../index.html" title="Zum LernKumpel-Hauptmenü" aria-label="Zum LernKumpel-Hauptmenü">🏠</a>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -534,23 +541,6 @@
             }
           }, [screen]);
 
-          useEffect(() => {
-            if (screen !== 'game') return;
-
-            let cancelled = false;
-
-            const initGameCamera = async () => {
-              const ready = await ensureCameraAndPose();
-              if (!ready || cancelled) return;
-            };
-
-            initGameCamera();
-
-            return () => {
-              cancelled = true;
-            };
-          }, [screen, ensureCameraAndPose]);
-
           const stopCamera = useCallback(() => {
             if (countdownTimeoutRef.current) {
               clearTimeout(countdownTimeoutRef.current);
@@ -655,6 +645,23 @@
               return false;
             }
           }, [isCameraSupported, drawPoseOverlay, currentPose]);
+
+          useEffect(() => {
+            if (screen !== 'game') return;
+
+            let cancelled = false;
+
+            const initGameCamera = async () => {
+              const ready = await ensureCameraAndPose();
+              if (!ready || cancelled) return;
+            };
+
+            initGameCamera();
+
+            return () => {
+              cancelled = true;
+            };
+          }, [screen, ensureCameraAndPose]);
 
           const saveProfile = async () => {
             const name = setupName.trim();
@@ -846,7 +853,7 @@
             if (!profile || screen === 'setup' || screen === 'profile_select' || screen === 'loading') return null;
 
             return (
-              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30 pointer-events-none">
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30 pointer-events-none" style={{ paddingLeft: 68 }}>
                 <button
                   onClick={() => {
                     stopCamera();
@@ -1085,7 +1092,7 @@
                             aria-label="Zurück zur Startseite"
                             title="Zurück"
                           >
-                            🏠
+                            ⬅️
                           </button>
 
                           {feedback === 'try_again' && (

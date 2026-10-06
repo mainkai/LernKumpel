@@ -16,7 +16,7 @@
              -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
       #game { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
       #overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto;
-                 background: rgba(186, 230, 253, 0.92); padding: 16px; box-sizing: border-box; }
+                 background: rgba(186, 230, 253, 0.92); padding: 64px 16px 16px; box-sizing: border-box; }
       #overlay.hidden { display: none; }
       .card { background: #fff; border-radius: 28px; max-width: 440px; margin: 0 auto; padding: 20px 18px;
               box-shadow: 0 10px 30px rgba(2, 132, 199, 0.25); text-align: center; }
@@ -50,6 +50,12 @@
       .stat b { display: block; font-size: 26px; color: #0f172a; }
       .tiny { font-size: 13px; color: #64748b; font-weight: bold; margin-top: 12px; }
       .tiny a { color: #0369a1; }
+      /* Gleicher Home-Knopf in allen LernKumpel-Apps (immer links oben). */
+      .lk-home { position: fixed; top: 12px; left: 12px; z-index: 1000; width: 44px; height: 44px; box-sizing: border-box;
+                 border-radius: 999px; background: rgba(255,255,255,0.92); border: 2px solid rgba(255,255,255,0.7);
+                 box-shadow: 0 3px 8px rgba(15,23,42,0.2); font-size: 22px; line-height: 40px; text-align: center;
+                 text-decoration: none; -webkit-tap-highlight-color: transparent; }
+      .lk-home:active { transform: scale(0.92); }
       .toggle { border: 0; background: #f1f5f9; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 
@@ -80,6 +86,7 @@
 <body>
   <canvas id="game"></canvas>
   <div id="overlay"><div class="card"><div class="big-emoji">🐤</div><p class="sub">Lädt ...</p></div></div>
+  <a id="home" class="lk-home" href="../index.html" title="Zum LernKumpel-Hauptmenü" aria-label="Zum LernKumpel-Hauptmenü">🏠</a>
 
   <script>
   (function () {
@@ -95,6 +102,18 @@
     var COINS_PER_CORRECT = 2;
     var COINS_FULL_ROUND = 10;    // alle Tore geschafft, mit mindestens einem Herz
     var BASE_HEIGHT = 640;        // logische Spielhöhe, alles skaliert darauf
+
+    // Fluggeschwindigkeit (logische Pixel pro Sekunde). Im Hochformat ist das Tor
+    // erst kurz vor dem Vogel zu sehen - deshalb lieber gemütlich.
+    var SPEED_START = 78, SPEED_STEP = 2, SPEED_MAX = 112;
+    // Modus "Immer schneller": startet langsam, ohne Torlimit, jede richtige
+    // Antwort macht schneller und die Denkzeit etwas kürzer.
+    var TURBO_START = 55, TURBO_STEP = 4, TURBO_MAX = 170, TURBO_SLOWDOWN = 8;
+    var TURBO_THINK_STEP = 0.03, TURBO_THINK_MIN = 0.5;
+    // Pause nach einer Antwort, bevor die nächste Aufgabe kommt (Sekunden).
+    // Nach einer falschen Antwort wird zusätzlich gewartet, bis die Lösung
+    // fertig vorgelesen ist - höchstens SPEECH_WAIT_MAX.
+    var NEXT_DELAY_GOOD = 0.5, NEXT_DELAY_BAD = 1.5, SPEECH_WAIT_MAX = 5;
 
     // Denkzeit pro Tor in Sekunden: die Aufgabe erscheint, sobald das letzte Tor
     // durchflogen ist, das nächste Tor kommt erst nach dieser Zeit an.
@@ -336,6 +355,7 @@
     // CANVAS & LAYOUT
     // =====================================================================
     var canvas = document.getElementById('game');
+    var homeBtn = document.getElementById('home');
     var ctx = canvas.getContext('2d');
     var W = 360, H = BASE_HEIGHT, scale = 1, dpr = 1;
     var HUD_H = 118, GROUND_H = 54;
@@ -359,8 +379,11 @@
     // =====================================================================
     // SPIELZUSTAND
     // =====================================================================
-    var state = 'loading';      // loading | profiles | menu | ready | play | over
+    var state = 'loading';      // loading | profiles | menu | ready | play | paused | over
     var levelId = load('zf_level') || 'k';
+    var mode = load('zf_mode') === 'turbo' ? 'turbo' : 'normal';
+    var pausedFrom = null;      // ready | play, solange "Flug abbrechen?" offen ist
+    var nextPending = false, nextTimer = 0, nextWaited = 0;  // Wartezeit bis zur nächsten Aufgabe
     var bird, gates, particles, floaters, clouds;
     var hearts, score, gateNo, streak, speed, coinsEarned;
     var problem, feedback, invuln, groundX, overTimer, endShown, roundResult;
@@ -401,7 +424,9 @@
     function resetRound() {
       bird = newBird();
       gates = []; particles = []; floaters = [];
-      hearts = HEARTS; score = 0; gateNo = 0; streak = 0; speed = 95; coinsEarned = 0;
+      hearts = HEARTS; score = 0; gateNo = 0; streak = 0; coinsEarned = 0;
+      speed = mode === 'turbo' ? TURBO_START : SPEED_START;
+      nextPending = false;
       feedback = null; invuln = 0; groundX = 0; overTimer = 0; endShown = false; roundResult = null;
       nextProblem();
       birdSay('Los geht\'s!', 1.6);
@@ -433,7 +458,9 @@
       }
       // Gleich viel Denkzeit, egal wie breit der Bildschirm ist. Auf breiten
       // Bildschirmen taucht das Tor deshalb mitten im Bild auf (blendet ein).
-      var dist = speed * lvl.think;
+      var think = lvl.think;
+      if (mode === 'turbo') think *= Math.max(TURBO_THINK_MIN, 1 - TURBO_THINK_STEP * score);
+      var dist = speed * think;
       gates.push({ x: bird.x + dist, w: 64, gaps: gaps, resolved: false, problem: problem, age: 0 });
     }
 
@@ -475,7 +502,7 @@
       if (g && g.correct) {
         g.popped = true;
         score++; streak++; coinsEarned += COINS_PER_CORRECT;
-        speed = Math.min(140, speed + 3);
+        speed = mode === 'turbo' ? Math.min(TURBO_MAX, speed + TURBO_STEP) : Math.min(SPEED_MAX, speed + SPEED_STEP);
         burst(gate.x, (g.y0 + g.y1) / 2, '#facc15', 18);
         floaters.push({ x: gate.x, y: (g.y0 + g.y1) / 2, text: '+1 ⭐', life: 1.1 });
         feedback = { good: true, text: pick(PRAISE), t: 1.2 };
@@ -493,16 +520,36 @@
         feedback = { good: false, text: p.solved, t: 2.2 };
         sfx.bad();
         say((g ? 'Fast! ' : '') + p.speakSolved);
+        // Bei "Immer schneller" nach einem Fehler wieder etwas Tempo rausnehmen.
+        if (mode === 'turbo') speed = Math.max(TURBO_START, speed - TURBO_SLOWDOWN);
       }
-      if (hearts <= 0 || gateNo >= GATES_PER_ROUND) { endRound(); return; }
-      // Nächste Aufgabe kommt etwas später, damit die Lösung kurz stehen bleibt.
-      var delay = feedback.good ? 500 : 1500;
-      setTimeout(function () {
-        if (state !== 'play') return;
-        nextProblem();
-        spawnGate();
-      }, delay);
+      if (hearts <= 0 || (mode === 'normal' && gateNo >= GATES_PER_ROUND)) { endRound(); return; }
+      // Nächste Aufgabe kommt etwas später, damit die Lösung kurz stehen bleibt
+      // (läuft über update(), damit die Pause-Taste auch diese Zeit anhält).
+      nextPending = true;
+      nextTimer = feedback.good ? NEXT_DELAY_GOOD : NEXT_DELAY_BAD;
+      nextWaited = 0;
     }
+
+    function isSpeaking() {
+      return soundOn && window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+    }
+
+    function updateNext(dt) {
+      if (!nextPending) return;
+      nextTimer -= dt;
+      nextWaited += dt;
+      if (nextTimer > 0) return;
+      // Die Lösung nicht mitten im Satz abwürgen (say() bricht laufende Sprache ab).
+      if (isSpeaking() && nextWaited < SPEECH_WAIT_MAX) return;
+      nextPending = false;
+      nextProblem();
+      spawnGate();
+    }
+
+    // Rekorde getrennt pro Modus, "Immer schneller" kennt kein Torlimit.
+    function bestKey() { return mode === 'turbo' ? levelId + '_turbo' : levelId; }
+    function bestOf(p) { return (p && p.fliegerBest && p.fliegerBest[bestKey()]) || 0; }
 
     function endRound() {
       state = 'over';
@@ -510,13 +557,13 @@
       var full = hearts > 0 && gateNo >= GATES_PER_ROUND;
       if (full) coinsEarned += COINS_FULL_ROUND;
       var p = getProfile();
-      var best = (p && p.fliegerBest && p.fliegerBest[levelId]) || 0;
+      var best = bestOf(p);
       roundResult = { score: score, coins: coinsEarned, full: full, newBest: score > best, best: Math.max(best, score) };
       if (p) {
         var bestMap = {};
         var old = p.fliegerBest || {};
         for (var k in old) if (old.hasOwnProperty(k)) bestMap[k] = old[k];
-        bestMap[levelId] = roundResult.best;
+        bestMap[bestKey()] = roundResult.best;
         saveProfile({ coins: (p.coins || 0) + coinsEarned, fliegerBest: bestMap });
       }
       if (full) { bird.happy = 99; birdSay('Geschafft!', 99); }
@@ -534,6 +581,7 @@
         clouds[c].x -= (state === 'play' ? speed : 25) * 0.18 * clouds[c].s * dt;
         if (clouds[c].x < -160) { clouds[c].x = W + 100 + Math.random() * 300; clouds[c].y = 140 + Math.random() * 260; }
       }
+      if (state === 'paused') return;
       if (state === 'ready' || state === 'menu' || state === 'profiles' || state === 'loading') {
         if (bird) { bird.y = (playTop() + playBottom()) / 2 + Math.sin(time * 3) * 10; bird.rot = 0; bird.flap = (Math.sin(time * 10) + 1) / 2; updateBirdFx(dt); }
         groundX -= 40 * dt;
@@ -589,6 +637,7 @@
       updateBirdFx(dt);
       if (invuln > 0) invuln -= dt;
       if (feedback) { feedback.t -= dt; if (feedback.t <= 0) feedback = null; }
+      updateNext(dt);
       groundX -= speed * dt;
 
       for (var i = gates.length - 1; i >= 0; i--) {
@@ -908,21 +957,30 @@
       ctx.fill();
     }
 
+    // Rechter Rand des Home-Knopfs in Spielkoordinaten.
+    function homeRight() {
+      var r = homeBtn.getBoundingClientRect();
+      return r.right * dpr / scale;
+    }
+
     function drawHud() {
       // Weißes Schild oben: Herzen, Fortschritt, Aufgabe.
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       roundRect(8, 8, W - 16, HUD_H - 14, 22);
       ctx.fill();
-      for (var i = 0; i < HEARTS; i++) drawHeart(30 + i * 28, 16, 22, i < hearts);
+      // Links oben liegt der Home-Knopf (HTML) über dem Schild.
+      var heartsX = homeRight() + 18;
+      for (var i = 0; i < HEARTS; i++) drawHeart(heartsX + i * 26, 16, 20, i < hearts);
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'right';
       ctx.fillStyle = '#b45309';
       ctx.font = '900 20px "Trebuchet MS", sans-serif';
-      ctx.fillText('⭐ ' + score, W - 22, 28);
-      ctx.textAlign = 'center';
+      ctx.fillText('⭐ ' + score, W - 22, 26);
       ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
-      ctx.fillText('Tor ' + Math.min(gateNo + 1, GATES_PER_ROUND) + ' / ' + GATES_PER_ROUND, W / 2, 28);
+      ctx.font = 'bold 13px "Trebuchet MS", sans-serif';
+      ctx.fillText(mode === 'turbo' ? '🚀 Tor ' + (gateNo + 1)
+        : 'Tor ' + Math.min(gateNo + 1, GATES_PER_ROUND) + '/' + GATES_PER_ROUND, W - 22, 46);
+      ctx.textAlign = 'center';
 
       var midY = 76;
       if (feedback && !feedback.good) {
@@ -987,14 +1045,14 @@
         ctx.fillText(floaters[f].text, floaters[f].x, floaters[f].y);
       }
       ctx.globalAlpha = 1;
-      if (state === 'ready' || state === 'play' || state === 'over') drawHud();
+      if (state === 'ready' || state === 'play' || state === 'paused' || state === 'over') drawHud();
       if (feedback && feedback.good && state === 'play') {
         ctx.fillStyle = '#16a34a';
         ctx.font = '900 30px "Trebuchet MS", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(feedback.text, W / 2, HUD_H + 34);
       }
-      if (state === 'ready') {
+      if (state === 'ready' || pausedFrom === 'ready') {
         ctx.fillStyle = 'rgba(15,23,42,0.75)';
         roundRect(W / 2 - 150, playBottom() - 120, 300, 56, 20);
         ctx.fill();
@@ -1028,6 +1086,13 @@
     function renderOverlay() {
       window.__appStarted = true;
       if (state === 'ready' || state === 'play') { hideOverlay(); return; }
+      if (state === 'paused') {
+        show('<div class="big-emoji">🐤</div><h1 class="title">Pause</h1>' +
+          '<p class="sub">Möchtest du zurück ins LernKumpel-Hauptmenü? Der Flug ist dann vorbei.</p>' +
+          '<button class="btn btn-go" data-action="resume">Weiterfliegen</button>' +
+          '<a class="btn btn-plain" href="../index.html">🏠 Zum Hauptmenü</a>');
+        return;
+      }
       if (state === 'over' && !endShown) { hideOverlay(); return; }
 
       if (noDevice) {
@@ -1056,13 +1121,13 @@
       var canFly = tickets >= TICKET_COST;
       var lvl = getLevel(levelId);
       var safariLink = '../zahlen-safari/index.html';
-      var best = (prof.fliegerBest && prof.fliegerBest[levelId]) || 0;
+      var best = bestOf(prof);
       var html2 = '';
 
       if (state === 'over' && roundResult) {
         html2 += '<div class="big-emoji">' + (roundResult.full ? '🏆' : roundResult.score >= 5 ? '🎉' : '🐤') + '</div>' +
           '<h1 class="title">' + (roundResult.full ? 'Alle Tore geschafft!' : 'Gelandet!') + '</h1>' +
-          '<p class="sub">' + esc(lvl.name) + '</p>' +
+          '<p class="sub">' + esc(lvl.name) + (mode === 'turbo' ? ' · 🚀 Immer schneller' : '') + '</p>' +
           '<div class="row">' +
             '<div class="stat"><b>' + roundResult.score + '</b>richtig</div>' +
             '<div class="stat"><b>+' + roundResult.coins + '</b>🪙 Münzen</div>' +
@@ -1085,7 +1150,10 @@
           var L = LEVELS[j];
           html2 += '<button class="lvl' + (L.id === levelId ? ' on' : '') + '" data-level="' + L.id + '">' + esc(L.name) + '<small>' + esc(L.desc) + '</small></button>';
         }
-        html2 += '</div>';
+        html2 += '</div><div class="levels">' +
+          '<button class="lvl' + (mode === 'normal' ? ' on' : '') + '" data-mode="normal">🐤 Gemütlich<small>' + GATES_PER_ROUND + ' Tore, gleiches Tempo</small></button>' +
+          '<button class="lvl' + (mode === 'turbo' ? ' on' : '') + '" data-mode="turbo">🚀 Immer schneller<small>Langsam los, ohne Torlimit</small></button>' +
+          '</div>';
         if (best > 0) html2 += '<p class="tiny" style="margin-top:2px">Dein Rekord hier: ' + best + ' ⭐</p>';
       }
 
@@ -1104,13 +1172,22 @@
 
     overlay.addEventListener('click', function (e) {
       var el = e.target;
-      while (el && el !== overlay && !el.getAttribute('data-action') && !el.getAttribute('data-level') && !el.getAttribute('data-profile')) el = el.parentNode;
+      while (el && el !== overlay && !el.getAttribute('data-action') && !el.getAttribute('data-level') && !el.getAttribute('data-profile') && !el.getAttribute('data-mode')) el = el.parentNode;
       if (!el || el === overlay) return;
       initAudio();
       var action = el.getAttribute('data-action');
       var lvl = el.getAttribute('data-level');
       var prof = el.getAttribute('data-profile');
-      if (prof) {
+      var newMode = el.getAttribute('data-mode');
+      if (newMode) {
+        mode = newMode; store('zf_mode', newMode);
+        renderOverlay();
+      } else if (action === 'resume') {
+        state = pausedFrom || 'play'; pausedFrom = null;
+        lastT = 0;
+        hideOverlay();
+        if (state === 'play' && problem && !nextPending) say(problem.speak);
+      } else if (prof) {
         activeProfileId = prof; store('zf_profile', prof);
         state = 'menu'; renderOverlay();
       } else if (lvl) {
@@ -1140,6 +1217,17 @@
       state = 'ready';
       hideOverlay();
     }
+
+    // Home-Knopf: im Menü direkt zum Hauptmenü, mitten im Flug erst nachfragen
+    // (Kinder tippen viel - ein versehentlicher Treffer soll den Flug nicht kosten).
+    homeBtn.addEventListener('click', function (e) {
+      if (state !== 'ready' && state !== 'play') return;
+      e.preventDefault();
+      pausedFrom = state;
+      state = 'paused';
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      renderOverlay();
+    });
 
     // =====================================================================
     // EINGABE: ganzer Bildschirm = ein großer Knopf
